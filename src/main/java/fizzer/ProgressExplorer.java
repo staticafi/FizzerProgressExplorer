@@ -23,10 +23,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JSplitPane analysesSplitPane;
 
     private AnalysisPlainInputsViewer analysisNoneViewer;
-    private AnalysisPlainInputsViewer analysisSensitivityViewer;
-    private AnalysisTypedMinimizationViewer analysisTypedMinimizationViewer;
-    private AnalysisMinimizationViewer analysisMinimizationViewer;
     private AnalysisPlainInputsViewer analysisBitshareViewer;
+    private AnalysisPlainInputsViewer analysisLocalSearchViewer;
+    private AnalysisPlainInputsViewer analysisBitflipViewer;
+    private AnalysisPlainInputsViewer analysisTaintRequestViewer;
+    private AnalysisPlainInputsViewer analysisTaintResponseViewer;
     private JPanel analysisPanel;
 
     private JSlider zoomSlider;
@@ -79,16 +80,18 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysesInfo.setEditable(false);
 
         analysisNoneViewer = new AnalysisPlainInputsViewer(Analysis.Type.NONE);
-        analysisSensitivityViewer = new AnalysisPlainInputsViewer(Analysis.Type.SENSITIVITY);
-        analysisTypedMinimizationViewer = new AnalysisTypedMinimizationViewer();
-        analysisMinimizationViewer = new AnalysisMinimizationViewer(Analysis.Type.MINIMIZATION);
         analysisBitshareViewer = new AnalysisPlainInputsViewer(Analysis.Type.BITSHARE);
+        analysisLocalSearchViewer = new AnalysisPlainInputsViewer(Analysis.Type.LOCAL_SEARCH);
+        analysisBitflipViewer = new AnalysisPlainInputsViewer(Analysis.Type.BITFLIP);
+        analysisTaintRequestViewer = new AnalysisPlainInputsViewer(Analysis.Type.TAINT_REQ);
+        analysisTaintResponseViewer = new AnalysisPlainInputsViewer(Analysis.Type.TAINT_RES);
         analysisPanel = new JPanel(new CardLayout());
         analysisPanel.add(analysisNoneViewer, Analysis.Type.NONE.toString());
-        analysisPanel.add(analysisSensitivityViewer, Analysis.Type.SENSITIVITY.toString());
-        analysisPanel.add(analysisTypedMinimizationViewer, Analysis.Type.TYPED_MINIMIZATION.toString());
-        analysisPanel.add(analysisMinimizationViewer, Analysis.Type.MINIMIZATION.toString());
         analysisPanel.add(analysisBitshareViewer, Analysis.Type.BITSHARE.toString());
+        analysisPanel.add(analysisLocalSearchViewer, Analysis.Type.LOCAL_SEARCH.toString());
+        analysisPanel.add(analysisBitflipViewer, Analysis.Type.BITFLIP.toString());
+        analysisPanel.add(analysisTaintRequestViewer, Analysis.Type.TAINT_REQ.toString());
+        analysisPanel.add(analysisTaintResponseViewer, Analysis.Type.TAINT_RES.toString());
 
         zoomSlider = new JSlider(JSlider.HORIZONTAL, 10, 100, 100);
         zoomSlider.addChangeListener(this);
@@ -335,10 +338,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTree.setAnalysisIndex(analysesTable.getSelectedRow());
         activeAnalysisCard();
         analysisNoneViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisSensitivityViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisTypedMinimizationViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisMinimizationViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisBitshareViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisLocalSearchViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisBitflipViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisTaintRequestViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisTaintResponseViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         executionTreeViewer.onAnalysisChanged();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
@@ -429,10 +433,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         verticalBar.setValue(verticalBar.getMaximum());
 
         analysisNoneViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisSensitivityViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisTypedMinimizationViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisMinimizationViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisBitshareViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisLocalSearchViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisBitflipViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisTaintRequestViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisTaintResponseViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         executionTreeViewer.onLoad();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
@@ -450,10 +455,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTree.clear();
         ((DefaultListModel<PostAnalysis>)analysesTable.getModel()).clear();
         analysisNoneViewer.clear();
-        analysisSensitivityViewer.clear();
-        analysisTypedMinimizationViewer.clear();
-        analysisMinimizationViewer.clear();
         analysisBitshareViewer.clear();
+        analysisLocalSearchViewer.clear();
+        analysisBitflipViewer.clear();
+        analysisTaintRequestViewer.clear();
+        analysisTaintResponseViewer.clear();
         executionTreeViewer.clear();
         sourceC.clear();
         sourceLL.clear();

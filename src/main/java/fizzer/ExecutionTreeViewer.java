@@ -41,11 +41,11 @@ public class ExecutionTreeViewer extends JPanel {
     public static int borderSize = 50;
     public static Color[] edgeColors = new Color[] { Color.RED, Color.BLUE };
     public static Color nodeColorNoAnalysis = Color.BLACK;
+    public static Color nodeColorBitshare = Color.RED;
+    public static Color nodeColorLocalSearch = Color.GREEN;
+    public static Color nodeColorBitflip = Color.BLUE;
     public static Color nodeColorSensitivity = Color.GRAY;
-    public static Color nodeColorTypedMinimization = new Color(255, 50, 50);
-    public static Color nodeColorMinimization = Color.RED;
-    public static Color nodeColorBitshare = Color.GREEN;
-    public static Color nodeColorMinimizationBitshare = Color.MAGENTA;
+    public static Color nodeColorBitshareLocalSearch = Color.MAGENTA;
     public static Color nodeNoSensitiveBitsColor = Color.ORANGE;
     public static Color nodeMarkColor = Color.BLACK;
     public static Color hitCountColor = Color.BLACK;
@@ -369,7 +369,7 @@ public class ExecutionTreeViewer extends JPanel {
 
         int numSensitiveBits = node.getSensitiveBits(executionTree.getAnalysisIndex()).size();
 
-        if (!node.sensitivityApplied(executionTree.getAnalysisIndex())) {
+        if (!node.sensitivityApplied(executionTree.getAnalysisIndex()) && !node.bitflipApplied(executionTree.getAnalysisIndex())) {
             g.setColor(nodeColorNoAnalysis);
             g.drawRect(
                 Math.round(zoom * (node.getViewProps().x - nodeWidth/2)),
@@ -377,27 +377,37 @@ public class ExecutionTreeViewer extends JPanel {
                 Math.round(zoom * nodeWidth),
                 Math.round(zoom * nodeHeight)
                 );
-        } else if (!node.minimizationApplied(executionTree.getAnalysisIndex()) && !node.bitshareApplied(executionTree.getAnalysisIndex())) {
-            g.setColor(numSensitiveBits > 0 ? nodeColorSensitivity : nodeNoSensitiveBitsColor);
-            g.fillRect(
-                Math.round(zoom * (node.getViewProps().x - nodeWidth/2)),
-                Math.round(zoom * (node.getViewProps().y - nodeHeight/2)),
-                Math.round(zoom * nodeWidth),
-                Math.round(zoom * nodeHeight)
-                );
-        } else {
-            if (node.minimizationApplied(executionTree.getAnalysisIndex()) && node.bitshareApplied(executionTree.getAnalysisIndex()))
-                g.setColor(nodeColorMinimizationBitshare);
-            else if (node.minimizationApplied(executionTree.getAnalysisIndex()))
-                g.setColor(getAnalysis().getType() == Analysis.Type.MINIMIZATION ? nodeColorMinimization : nodeColorTypedMinimization);
-            else if (node.bitshareApplied(executionTree.getAnalysisIndex()))
-                g.setColor(nodeColorBitshare);
-            g.fillRect(
-                Math.round(zoom * (node.getViewProps().x - nodeWidth/2)),
-                Math.round(zoom * (node.getViewProps().y - nodeHeight/2)),
-                Math.round(zoom * nodeWidth),
-                Math.round(zoom * nodeHeight)
-                );
+        }
+        else {
+            Color nodeColor = null;
+            if (!node.sensitivityApplied(executionTree.getAnalysisIndex())) {
+                nodeColor = nodeColorNoAnalysis;
+            } else if (!node.localSearchApplied(executionTree.getAnalysisIndex()) && !node.bitshareApplied(executionTree.getAnalysisIndex())) {
+                nodeColor = numSensitiveBits > 0 ? nodeColorSensitivity : nodeNoSensitiveBitsColor;
+            } else {
+                if (node.localSearchApplied(executionTree.getAnalysisIndex()) && node.bitshareApplied(executionTree.getAnalysisIndex()))
+                    nodeColor = nodeColorBitshareLocalSearch;
+                else if (node.localSearchApplied(executionTree.getAnalysisIndex()))
+                    nodeColor = nodeColorLocalSearch;
+                else if (node.bitshareApplied(executionTree.getAnalysisIndex()))
+                    nodeColor = nodeColorBitshare;
+            }
+            if (node.bitflipApplied(executionTree.getAnalysisIndex())) {
+                nodeColor = nodeColor == null ? nodeColorBitflip :
+                    new Color((nodeColor.getRed() + nodeColorBitflip.getRed()) / 2,
+                            (nodeColor.getGreen() + nodeColorBitflip.getGreen()) / 2,
+                            (nodeColor.getBlue() + nodeColorBitflip.getBlue()) / 2
+                            );
+            }
+            if (nodeColor != null) {
+                g.setColor(nodeColor);
+                g.fillRect(
+                    Math.round(zoom * (node.getViewProps().x - nodeWidth/2)),
+                    Math.round(zoom * (node.getViewProps().y - nodeHeight/2)),
+                    Math.round(zoom * nodeWidth),
+                    Math.round(zoom * nodeHeight)
+                    );
+            }
         }
 
         if (node == getAnalysis().getNode()) {

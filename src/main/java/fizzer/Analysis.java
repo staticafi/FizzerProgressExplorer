@@ -12,19 +12,45 @@ public class Analysis {
 
     public static enum Type {
         NONE,
-        SENSITIVITY,
-        TYPED_MINIMIZATION,
-        MINIMIZATION,
-        BITSHARE;
+        BITSHARE,
+        LOCAL_SEARCH,
+        BITFLIP,
+        TAINT_REQ,
+        TAINT_RES;
 
         public static Type parse(String typeName) throws Exception {
             switch (typeName) {
                 case "NONE": return NONE;
-                case "SENSITIVITY": return SENSITIVITY;
-                case "TYPED_MINIMIZATION": return TYPED_MINIMIZATION;
-                case "MINIMIZATION": return MINIMIZATION;
                 case "BITSHARE": return BITSHARE;
+                case "LOCAL_SEARCH": return LOCAL_SEARCH;
+                case "BITFLIP": return BITFLIP;
+                case "TAINT_REQ": return TAINT_REQ;
+                case "TAINT_RES": return TAINT_RES;
                 default: throw new Exception("Unknown analysis name: " + typeName);
+            }
+        }
+    }
+
+    public static enum StartAttribute {
+        NONE,
+        REGULAR,
+        RESUMED;
+
+        public static StartAttribute parse(String typeName) throws Exception {
+            switch (typeName) {
+                case "NONE": return NONE;
+                case "REGULAR": return REGULAR;
+                case "RESUMED": return RESUMED;
+                default: throw new Exception("Unknown analysis start attribute name: " + typeName);
+            }
+        }
+
+        public static String getAbbreviation(StartAttribute attribute) {
+            switch (attribute) {
+                case NONE: return "N";
+                case REGULAR: return "R";
+                case RESUMED: return "X";
+                default: return "???";
             }
         }
     }
@@ -32,13 +58,15 @@ public class Analysis {
     public static enum StopAttribute {
         INSTANT,
         EARLY,
-        REGULAR;
+        REGULAR,
+        INTERRUPTED;
 
         public static StopAttribute parse(String typeName) throws Exception {
             switch (typeName) {
                 case "INSTANT": return INSTANT;
                 case "EARLY": return EARLY;
                 case "REGULAR": return REGULAR;
+                case "INTERRUPTED": return INTERRUPTED;
                 default: throw new Exception("Unknown analysis stop attribute name: " + typeName);
             }
         }
@@ -48,6 +76,7 @@ public class Analysis {
                 case INSTANT: return "I";
                 case EARLY: return "E";
                 case REGULAR: return "R";
+                case INTERRUPTED: return "X";
                 default: return "???";
             }
         }
@@ -94,50 +123,19 @@ public class Analysis {
         }
     }
 
-    public static enum TypedMinimizationStage {
-        SEED,
-        PARTIALS,
-        STEP;
-
-        public static TypedMinimizationStage parse(String typeName) throws Exception {
-            switch (typeName) {
-                case "SEED": return SEED;
-                case "PARTIALS": return PARTIALS;
-                case "STEP": return STEP;
-                default: throw new Exception("Unknown typed minimization stage name: " + typeName);
-            }
-        }
-    }
-
-    public static enum MinimizationStage {
-        TAKE_NEXT_SEED,
-        EXECUTE_SEED,
-        STEP,
-        PARTIALS,
-        PARTIALS_EXTENDED;
-
-        public static MinimizationStage parse(String typeName) throws Exception {
-            switch (typeName) {
-                case "TAKE_NEXT_SEED": return TAKE_NEXT_SEED;
-                case "EXECUTE_SEED": return EXECUTE_SEED;
-                case "STEP": return STEP;
-                case "PARTIALS": return PARTIALS;
-                case "PARTIALS_EXTENDED": return PARTIALS_EXTENDED;
-                default: throw new Exception("Unknown minimization stage name: " + typeName);
-            }
-        }
-    }
-
     public abstract class Info {
+        private StartAttribute startAttribute;
         private StopAttribute stopAttribute;
         private int numCoverageFailureResets;
 
-        public Info(StopAttribute  stopAttribute_) {
+        public Info(StartAttribute  startAttribute_, StopAttribute  stopAttribute_) {
+            startAttribute = startAttribute_;
             stopAttribute = stopAttribute_;
             numCoverageFailureResets = 0;
         }
 
         public Info(JSONObject infoJson) throws Exception {
+            startAttribute = StartAttribute.parse(infoJson.getString("start_attribute"));
             stopAttribute = StopAttribute.parse(infoJson.getString("stop_attribute"));
             numCoverageFailureResets = infoJson.getInt("num_coverage_failure_resets");
         }
@@ -175,7 +173,7 @@ public class Analysis {
         }
 
         public InputsListInfo() {
-            super(StopAttribute.REGULAR);
+            super(StartAttribute.NONE, StopAttribute.REGULAR);
             bits = new Vector<>();
         }
 
@@ -192,203 +190,32 @@ public class Analysis {
         }
     }
 
-    public class SensitivityInfo extends InputsListInfo {
-        public SensitivityInfo(JSONObject infoJson) throws Exception {
-            super(infoJson);
-        }
-    }
-
-    public class TypedMinimizationInfo extends Info {
-
-        public class TraceInfo {
-            public TypedMinimizationStage progressStage;
-            public long variablesHash;
-            public Vector<Object> variableValues;
-            public double functionValue;
-
-            public TraceInfo(JSONObject traceInfo) throws Exception {
-                progressStage = TypedMinimizationStage.parse(traceInfo.getString("progress_stage"));
-                variablesHash = traceInfo.getLong("variables_hash");
-                variableValues = new Vector<>();
-                JSONArray variableValuesJson = traceInfo.getJSONArray("variable_values");
-                if (variableValuesJson.length() != typesOfVariables.size())
-                    throw new Exception("The count of values of variables does not match the count of types of the variables.");
-                for (int j = 0; j != variableValuesJson.length(); ++j)
-                    switch (typesOfVariables.get(j)) {
-                        case BOOLEAN: variableValues.add(variableValuesJson.getBoolean(j)); break;
-                        case UINT8: variableValues.add(variableValuesJson.getInt(j)); break;
-                        case SINT8: variableValues.add(variableValuesJson.getInt(j)); break;
-                        case UINT16: variableValues.add(variableValuesJson.getInt(j)); break;
-                        case SINT16: variableValues.add(variableValuesJson.getInt(j)); break;
-                        case UINT32: variableValues.add(variableValuesJson.getInt(j)); break;
-                        case SINT32: variableValues.add(variableValuesJson.getInt(j)); break;
-                        case UINT64: variableValues.add(variableValuesJson.getLong(j)); break;
-                        case SINT64: variableValues.add(variableValuesJson.getLong(j)); break;
-                        case FLOAT32: variableValues.add(variableValuesJson.getFloat(j)); break;
-                        case FLOAT64: variableValues.add(variableValuesJson.getDouble(j)); break;
-                        default: throw new Exception("Unknown or unspecified type of input bits for variable's value.");
-                    }
-                try { functionValue = traceInfo.getDouble("function_value"); }
-                catch (JSONException e) { functionValue = Double.POSITIVE_INFINITY; }
-            }
-        }
-
-        public class MappingToInputBits {
-            public int inputStartBitIndex;
-            public Vector<Short> valueBitIndices;
-
-            public MappingToInputBits(int inputStartBitIndex_) {
-                inputStartBitIndex = inputStartBitIndex_;
-                valueBitIndices = new Vector<>();
-            }
-        }
-
-        public class ExceptionCacheHit {
-            public int traceIndex;
-            public long variablesHash;
-            public TypedMinimizationStage progressStage;
-
-            public ExceptionCacheHit(int traceIndex_, long variablesHash_, TypedMinimizationStage progressStage_) {
-                traceIndex = traceIndex_;
-                variablesHash = variablesHash_;
-                progressStage = progressStage_;
-            }
-        }
-
-        public Vector<TraceInfo> traces;
-        public Vector<Boolean> allInputBits;
-        public Vector<TypeOfInputBits> allInputTypes;
-        public Vector<MappingToInputBits> fromVariablesToInput;
-        public Vector<TypeOfInputBits> typesOfVariables;
-        public Vector<ExceptionCacheHit> executionCacheHits;
-            
-        public TypedMinimizationInfo(JSONObject infoJson) throws Exception {
-            super(infoJson);
-
-            traces = new Vector<>();
-            allInputBits = new Vector<>();
-            allInputTypes = new Vector<>();
-            fromVariablesToInput = new Vector<>();
-            typesOfVariables = new Vector<>();
-            executionCacheHits = new Vector<>();
-
-            JSONArray allInputBitsJson = infoJson.getJSONArray("all_input_bits");
-            for (int j = 0; j != allInputBitsJson.length(); ++j)
-                allInputBits.add(allInputBitsJson.getInt(j) == 1);
-
-            JSONArray allInputTypesJson = infoJson.getJSONArray("all_input_types");
-            for (int j = 0; j != allInputTypesJson.length(); ++j)
-                allInputTypes.add(TypeOfInputBits.parse(allInputTypesJson.getString(j)));
-
-            JSONArray fromVariablesToInputJson = infoJson.getJSONArray("from_variables_to_input");
-            for (int j = 0; j < fromVariablesToInputJson.length(); ++j) {
-                MappingToInputBits mapping = new MappingToInputBits(fromVariablesToInputJson.getInt(j));
-                int numBitIndices = fromVariablesToInputJson.getInt(++j);
-                for (int k = 0; k < numBitIndices; ++k)
-                    mapping.valueBitIndices.add((short)fromVariablesToInputJson.getInt(++j));
-                fromVariablesToInput.add(mapping);
-            }
-
-            JSONArray typesOfVariablesJson = infoJson.getJSONArray("types_of_variables");
-            for (int j = 0; j != typesOfVariablesJson.length(); ++j)
-                typesOfVariables.add(TypeOfInputBits.parse(typesOfVariablesJson.getString(j)));
-
-            JSONArray executionCacheHitsJson = infoJson.getJSONArray("execution_cache_hits");
-            for (int j = 0; j != executionCacheHitsJson.length(); j += 3)
-                executionCacheHits.add(new ExceptionCacheHit(
-                    executionCacheHitsJson.getInt(j + 0),
-                    executionCacheHitsJson.getLong(j + 1),
-                    TypedMinimizationStage.parse(executionCacheHitsJson.getString(j + 2))
-                    ));
-        }
-
-        @Override
-        public void readTraceInfo(JSONObject traceInfo, double analysisNodeValue) throws Exception {
-            traces.add(new TraceInfo(traceInfo));
-        }
-    }
-
-    public class MinimizationInfo extends Info {
-
-        public class ExceptionCacheHit {
-            public int traceIndex;
-            public long bitsHash;
-
-            public ExceptionCacheHit(int traceIndex_, long bitsHash_) {
-                traceIndex = traceIndex_;
-                bitsHash = bitsHash_;
-            }
-        }
-
-        public class StageChange {
-            public int index;
-            public MinimizationStage stage;
-
-            public StageChange(int index_, MinimizationStage stage_) {
-                index = index_;
-                stage = stage_;
-            }
-        }
-
-        public Vector<Vector<Boolean>> bits;
-        public Vector<Long> bitsHashes;
-        public Vector<Double> values;
-
-        public Vector<Integer> bitTranslation;
-        public Vector<Boolean> allInputBits;
-        public Vector<ExceptionCacheHit> executionCacheHits;
-        public Vector<StageChange> stageChanges;
-
-        public MinimizationInfo(JSONObject infoJson) throws Exception {
-            super(infoJson);
-
-            bits = new Vector<>();
-            bitsHashes = new Vector<>();
-            values = new Vector<>();
-
-            bitTranslation = new Vector<>();
-            JSONArray bitTranslationJson = infoJson.getJSONArray("bit_translation");
-            for (int j = 0; j != bitTranslationJson.length(); ++j)
-                bitTranslation.add(bitTranslationJson.getInt(j));
-
-            allInputBits = new Vector<>();
-            JSONArray allInputBitsJson = infoJson.getJSONArray("all_input_bits");
-            for (int j = 0; j != allInputBitsJson.length(); ++j)
-                allInputBits.add(allInputBitsJson.getInt(j) == 1);
-
-            executionCacheHits = new Vector<>();
-            JSONArray executionCacheHitsJson = infoJson.getJSONArray("execution_cache_hits");
-            for (int j = 0; j != executionCacheHitsJson.length(); j += 2)
-                executionCacheHits.add(new ExceptionCacheHit(
-                    executionCacheHitsJson.getInt(j),
-                    executionCacheHitsJson.getLong(j + 1)
-                    ));
-
-            stageChanges = new Vector<>();
-            JSONArray stageChangesJson = infoJson.getJSONArray("stage_changes");
-            for (int j = 0; j != stageChangesJson.length(); j += 2)
-                stageChanges.add(new StageChange(
-                    stageChangesJson.getInt(j),
-                    MinimizationStage.parse(stageChangesJson.getString(j + 1))
-                    ));
-        }
-
-        @Override
-        public void readTraceInfo(JSONObject traceInfo, double analysisNodeValue) throws Exception {
-            Vector<Boolean> traceBits = new Vector<>();
-            JSONArray bitsJson = traceInfo.getJSONArray("bits");
-            for (int j = 0; j != bitsJson.length(); ++j)
-                traceBits.add(bitsJson.getInt(j) == 1);
-            bits.add(traceBits);
-
-            bitsHashes.add(traceInfo.getLong("bits_hash"));
-            
-            values.add(analysisNodeValue);
-        }
-    }
-
     public class BitshareInfo extends InputsListInfo {
         public BitshareInfo(JSONObject infoJson) throws Exception {
+            super(infoJson);
+        }
+    }
+
+    public class LocalSearchInfo extends InputsListInfo {
+        public LocalSearchInfo(JSONObject infoJson) throws Exception {
+            super(infoJson);
+        }
+    }
+
+    public class BitflipInfo extends InputsListInfo {
+        public BitflipInfo(JSONObject infoJson) throws Exception {
+            super(infoJson);
+        }
+    }
+
+    public class TaintRequestInfo extends InputsListInfo {
+        public TaintRequestInfo(JSONObject infoJson) throws Exception {
+            super(infoJson);
+        }
+    }
+
+    public class TaintResponseInfo extends InputsListInfo {
+        public TaintResponseInfo(JSONObject infoJson) throws Exception {
             super(infoJson);
         }
     }
@@ -433,18 +260,21 @@ public class Analysis {
             throw new Exception("Cannot find analysis node by its guid. File: " + infoFile.getPath());
 
         switch (type) {
-            case SENSITIVITY:
-                setSensitiveBits(index, node, infoJson.getJSONArray("sensitive_bits"), infoFile.getPath());
-                info = new SensitivityInfo(infoJson);
-                break;
-            case TYPED_MINIMIZATION:
-                info = new TypedMinimizationInfo(infoJson);
-                break;
-            case MINIMIZATION:
-                info = new MinimizationInfo(infoJson);
-                break;
             case BITSHARE:
                 info = new BitshareInfo(infoJson);
+                break;
+            case LOCAL_SEARCH:
+                info = new LocalSearchInfo(infoJson);
+                break;
+            case BITFLIP:
+                info = new BitflipInfo(infoJson);
+                break;
+            case TAINT_REQ:
+                info = new TaintRequestInfo(infoJson);
+                break;
+            case TAINT_RES:
+                setSensitiveBits(index, node, infoJson.getJSONArray("sensitive_bits"), infoFile.getPath());
+                info = new TaintResponseInfo(infoJson);
                 break;
             default:
                 break;

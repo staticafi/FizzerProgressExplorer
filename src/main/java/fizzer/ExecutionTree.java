@@ -86,20 +86,23 @@ public class ExecutionTree {
             Node analysisNode = analyses[analysisIndex].getNode();
             if (analysisNode != null)
                 switch (analyses[analysisIndex].getType()) {
-                    case SENSITIVITY:
+                    case BITSHARE:
+                        if (!analysisNode.bitshareApplied(analysisIndex))
+                            analysisNode.setBitShareIndex(analysisIndex);
+                        break;
+                    case LOCAL_SEARCH:
+                        if (!analysisNode.localSearchApplied(analysisIndex))
+                            analysisNode.setLocalSearchIndex(analysisIndex);
+                        break;
+                    case BITFLIP:
+                        if (!analysisNode.localSearchApplied(analysisIndex))
+                            analysisNode.setLocalSearchIndex(analysisIndex);
+                        break;
+                    case TAINT_RES:
                         if (!analysisNode.sensitivityApplied(analysisIndex))
                             for (Node node = analysisNode; node != null; node = node.getParent())
                                 if (!node.sensitivityApplied(analysisIndex))
                                     node.setSensitivityIndex(analysisIndex);
-                        break;
-                    case TYPED_MINIMIZATION:
-                    case MINIMIZATION:
-                        if (!analysisNode.minimizationApplied(analysisIndex))
-                            analysisNode.setMinimizationIndex(analysisIndex);
-                        break;
-                    case BITSHARE:
-                        if (!analysisNode.bitshareApplied(analysisIndex))
-                            analysisNode.setBitShareIndex(analysisIndex);
                         break;
                     default:
                         // Nothing to do.

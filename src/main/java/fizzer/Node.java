@@ -49,9 +49,10 @@ public class Node {
 
     private TreeMap<Integer,HashSet<Integer>> sensitiveBits;
 
-    private int sensitivityIndex;
-    private int minimizationIndex;
     private int bitshareIndex;
+    private int localSearchIndex;
+    private int bitflipIndex;
+    private int sensitivityIndex;
 
     private int closedIndex;
 
@@ -94,9 +95,10 @@ public class Node {
         sensitiveBits = new TreeMap<Integer,HashSet<Integer>>();
         sensitiveBits.put(analysisIndex_, new HashSet<>());
 
-        sensitivityIndex = Integer.MAX_VALUE;
-        minimizationIndex = Integer.MAX_VALUE;
         bitshareIndex = Integer.MAX_VALUE;
+        localSearchIndex = Integer.MAX_VALUE;
+        bitflipIndex = Integer.MAX_VALUE;
+        sensitivityIndex = Integer.MAX_VALUE;
 
         closedIndex = Integer.MAX_VALUE;
 
@@ -127,16 +129,20 @@ public class Node {
         return this.parent;
     }
 
-    public void setSensitivityIndex(int index) {
-        this.sensitivityIndex = index;
-    }
-
-    public void setMinimizationIndex(int index) {
-        this.minimizationIndex = index;
-    }
-
     public void setBitShareIndex(int index) {
         this.bitshareIndex = index;
+    }
+
+    public void setLocalSearchIndex(int index) {
+        this.localSearchIndex = index;
+    }
+
+    public void setBitFlipIndex(int index) {
+        this.bitflipIndex = index;
+    }
+
+    public void setSensitivityIndex(int index) {
+        this.sensitivityIndex = index;
     }
 
     public void setClosedIndex(int index) {
@@ -185,16 +191,20 @@ public class Node {
         sensitiveBits.put(analysisIndex, bitIndices);
     }
 
-    public boolean sensitivityApplied(int analysisIndex) {
-        return sensitivityIndex <= analysisIndex;
-    }
-
-    public boolean minimizationApplied(int analysisIndex) {
-        return minimizationIndex <= analysisIndex;
-    }
-
     public boolean bitshareApplied(int analysisIndex) {
         return bitshareIndex <= analysisIndex;
+    }
+
+    public boolean localSearchApplied(int analysisIndex) {
+        return localSearchIndex <= analysisIndex;
+    }
+
+    public boolean bitflipApplied(int analysisIndex) {
+        return bitflipIndex <= analysisIndex;
+    }
+
+    public boolean sensitivityApplied(int analysisIndex) {
+        return sensitivityIndex <= analysisIndex;
     }
 
     public boolean isClosed(int analysisIndex) {
