@@ -1,0 +1,19 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "ProgressExplorer",
+            "request": "launch",
+            "mainClass": "fizzer.ProgressExplorer",
+            "projectName": "ProgressExplorer",
+            "stopOnEntry": false,
+            "vmArgs": "-Xss100m -Xms512m -Xmx10000m",
+            "cwd": "${workspaceFolder}",
+            "args": "../sbt-fizzer-private/dist/output/progress_recording"
+        }
+    ]
+}
