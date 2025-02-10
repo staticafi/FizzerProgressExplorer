@@ -59,7 +59,8 @@ public class Analysis {
         INSTANT,
         EARLY,
         REGULAR,
-        INTERRUPTED;
+        INTERRUPTED,
+        FAILED;
 
         public static StopAttribute parse(String typeName) throws Exception {
             switch (typeName) {
@@ -67,6 +68,7 @@ public class Analysis {
                 case "EARLY": return EARLY;
                 case "REGULAR": return REGULAR;
                 case "INTERRUPTED": return INTERRUPTED;
+                case "FAILED": return FAILED;
                 default: throw new Exception("Unknown analysis stop attribute name: " + typeName);
             }
         }
@@ -77,6 +79,7 @@ public class Analysis {
                 case EARLY: return "E";
                 case REGULAR: return "R";
                 case INTERRUPTED: return "X";
+                case FAILED: return "F";
                 default: return "???";
             }
         }
