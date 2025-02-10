@@ -6,7 +6,7 @@ import java.net.URL;
 
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.*;
 
 import fizzer.SourceMapping.LineColumn;
 
@@ -71,7 +71,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         sourceMapping = new SourceMapping();
         executionTree = new ExecutionTree();
 
-        analysesTable = new JTable(new DefaultTableModel(null, new Object[]{"Type", "Traces", "Strategy"}));
+        analysesTable = new JTable(new DefaultTableModel(null, new Object[]{"Index", "Type", "Traces", "Strategy"}));
+        analysesTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         analysesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         analysesTable.getSelectionModel().addListSelectionListener(this);
         analysesTable.setDefaultEditor(Object.class, null);
@@ -311,7 +312,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         information.append(System.lineSeparator());
         information.append("Input bytes: " + Integer.toUnsignedString(node.getNumInputBytes()));
         information.append(System.lineSeparator());
-        information.append("Sensitive Bits: " + Integer.toUnsignedString(node.getSensitiveBits(analysesTable.getSelectedRow()).size()));
+        information.append("Sensitive Bits: " + Integer.toUnsignedString(node.getSensitiveBits(executionTree.getAnalysisIndex()).size()));
         information.append(System.lineSeparator());
         information.append("Sensitivity applied: " + Boolean.toString(node.sensitivityApplied(executionTree.getAnalysisIndex())));
         information.append(System.lineSeparator());
@@ -334,6 +335,22 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysesInfo.append("Number of Traces: " + analysis.getNumTraces() + "\n");
         analysesInfo.append("Closed Node Guids: " + postAnalysis.getClosedNodeGuids() + "\n");
         analysesInfo.append("Strategy: " + postAnalysis.getStrategy() + "\n");
+    }
+
+    public void resizeColumnWidth(JTable table) {
+        final TableColumnModel columnModel = table.getColumnModel();
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int width = 15; // Min width
+            for (int row = 0; row < table.getRowCount(); row++) {
+                TableCellRenderer renderer = table.getCellRenderer(row, column);
+                Component comp = table.prepareRenderer(renderer, row, column);
+                width = Math.max(comp.getPreferredSize().width +1 , width);
+            }
+            width = Math.max(width, table.getColumnModel().getColumn(column).getPreferredWidth());
+            // if(width > 300)
+            //     width=300;
+            columnModel.getColumn(column).setPreferredWidth(width);
+        }
     }
 
     public void valueChanged(ListSelectionEvent e) {
@@ -422,6 +439,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             PostAnalysis postAnalysis = executionTree.getPostAnalyses()[i];
             Analysis analysis = executionTree.getAnalyses()[i];
             ((DefaultTableModel)analysesTable.getModel()).addRow(new Object[]{
+                analysis.getIndex(),
                 analysis.getType(),
                 //analysis.getStopAttribute(),
                 //analysis.getNumCoverageFailureResets(),
@@ -430,6 +448,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 postAnalysis.getStrategy()
             });
         }
+        resizeColumnWidth(analysesTable);
 
         sourceC.load();
         sourceLL.load();
