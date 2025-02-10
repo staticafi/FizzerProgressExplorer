@@ -447,11 +447,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             });
         }
         resizeColumnWidth(analysesTable);
+        analysesTable.scrollRectToVisible(analysesTable.getCellRect(executionTree.getAnalysisIndex(), 0, true));
+        analysesTable.setRowSelectionInterval(executionTree.getAnalysisIndex(), executionTree.getAnalysisIndex());
 
         sourceC.load();
         sourceLL.load();
-
-        analysesTable.setRowSelectionInterval(executionTree.getAnalysisIndex(), executionTree.getAnalysisIndex());
 
         // not working as expected
         JScrollBar verticalBar = listScrollPane.getVerticalScrollBar();
