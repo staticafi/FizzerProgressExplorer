@@ -330,6 +330,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysesInfo.setText(""); 
         analysesInfo.append("Post Analysis No. " + analysisIndex + "\n");
         analysesInfo.append("Type: " + analysis.getType() + "\n");
+        analysesInfo.append("Start Attribute: " + analysis.getStartAttribute() + "\n");
         analysesInfo.append("Stop Attribute: " + analysis.getStopAttribute() + "\n");
         analysesInfo.append("Coverage Failure Resets: " + analysis.getNumCoverageFailureResets() + "\n");
         analysesInfo.append("Number of Traces: " + analysis.getNumTraces() + "\n");
@@ -439,12 +440,9 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             PostAnalysis postAnalysis = executionTree.getPostAnalyses()[i];
             Analysis analysis = executionTree.getAnalyses()[i];
             ((DefaultTableModel)analysesTable.getModel()).addRow(new Object[]{
-                analysis.getIndex(),
+                analysis.getIndex() + 1,
                 analysis.getType(),
-                //analysis.getStopAttribute(),
-                //analysis.getNumCoverageFailureResets(),
                 analysis.getNumTraces(),
-                //postAnalysis.getClosedNodeGuids(),
                 postAnalysis.getStrategy()
             });
         }
