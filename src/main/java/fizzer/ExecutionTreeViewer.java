@@ -41,9 +41,9 @@ public class ExecutionTreeViewer extends JPanel {
     public static int borderSize = 50;
     public static Color[] edgeColors = new Color[] { Color.RED, Color.BLUE };
     public static Color nodeColorNoAnalysis = Color.BLACK;
-    public static Color nodeColorBitshare = Color.RED;
-    public static Color nodeColorLocalSearch = Color.GREEN;
-    public static Color nodeColorBitflip = Color.BLUE;
+    public static Color nodeColorBitshare = new Color(255,125,125);
+    public static Color nodeColorLocalSearch = new Color(125,255,125);
+    public static Color nodeColorBitflip = new Color(125,125,255);
     public static Color nodeColorSensitivity = Color.GRAY;
     public static Color nodeColorBitshareLocalSearch = Color.MAGENTA;
     public static Color nodeNoSensitiveBitsColor = Color.ORANGE;
@@ -380,17 +380,19 @@ public class ExecutionTreeViewer extends JPanel {
         }
         else {
             Color nodeColor = null;
-            if (!node.sensitivityApplied(executionTree.getAnalysisIndex())) {
-                nodeColor = nodeColorNoAnalysis;
-            } else if (!node.localSearchApplied(executionTree.getAnalysisIndex()) && !node.bitshareApplied(executionTree.getAnalysisIndex())) {
-                nodeColor = numSensitiveBits > 0 ? nodeColorSensitivity : nodeNoSensitiveBitsColor;
-            } else {
-                if (node.localSearchApplied(executionTree.getAnalysisIndex()) && node.bitshareApplied(executionTree.getAnalysisIndex()))
-                    nodeColor = nodeColorBitshareLocalSearch;
-                else if (node.localSearchApplied(executionTree.getAnalysisIndex()))
-                    nodeColor = nodeColorLocalSearch;
-                else if (node.bitshareApplied(executionTree.getAnalysisIndex()))
-                    nodeColor = nodeColorBitshare;
+            if (node.sensitivityApplied(executionTree.getAnalysisIndex())) {
+                if (numSensitiveBits == 0)
+                    nodeColor = nodeNoSensitiveBitsColor;
+                else if (!node.localSearchApplied(executionTree.getAnalysisIndex()) && !node.bitshareApplied(executionTree.getAnalysisIndex())) {
+                    nodeColor = nodeColorSensitivity;
+                } else {
+                    if (node.localSearchApplied(executionTree.getAnalysisIndex()) && node.bitshareApplied(executionTree.getAnalysisIndex()))
+                        nodeColor = nodeColorBitshareLocalSearch;
+                    else if (node.localSearchApplied(executionTree.getAnalysisIndex()))
+                        nodeColor = nodeColorLocalSearch;
+                    else if (node.bitshareApplied(executionTree.getAnalysisIndex()))
+                        nodeColor = nodeColorBitshare;
+                }
             }
             if (node.bitflipApplied(executionTree.getAnalysisIndex())) {
                 nodeColor = nodeColor == null ? nodeColorBitflip :
