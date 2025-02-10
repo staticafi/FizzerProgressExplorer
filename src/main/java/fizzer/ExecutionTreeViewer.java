@@ -131,11 +131,10 @@ public class ExecutionTreeViewer extends JPanel {
 
     public void onLoad() {
         int maxDiscoveryIndex = 0;
-        for (int i = 0; i < executionTree.getAnalyses().length; ++i)
-            if (getAnalysis(i).getNumTraces()> 0) {
-                maxDiscoveryIndex += getAnalysis(i).getNumTraces();
-                getAnalysis(i).getViewProps().maxDiscoveryIndex = maxDiscoveryIndex - 1;
-            }
+        for (int i = 0; i < executionTree.getAnalyses().length; ++i) {
+            maxDiscoveryIndex += getAnalysis(i).getNumTraces();
+            getAnalysis(i).getViewProps().maxDiscoveryIndex = maxDiscoveryIndex - 1;
+        }
 
         if (executionTree.getRootNode() != null) {
             computeNodeLocations(executionTree.getRootNode(), borderSize + nodeWidth / 2, 0);
