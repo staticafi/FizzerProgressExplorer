@@ -49,7 +49,7 @@ public class ExecutionTree {
                     .filter(file -> file.isFile() && file.getName().endsWith(".json"))
                     .map(File::getName)
                     .collect(Collectors.toSet()))
-                if (!fileName.equals("info.json") && !fileName.equals("post.json"))
+                if (!fileName.equals("info.json") && !fileName.equals("strategy.json"))
                     tracesMap.put(
                         Integer.parseInt(fileName.substring(0, fileName.indexOf(".json"))),
                         analysisDir.getPath() + '/' + fileName

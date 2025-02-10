@@ -40,7 +40,7 @@ public class PostAnalysis {
         strategy = Strategy.NONE;
         closedNodeGuids = new HashSet<>();
 
-        File infoFile = new File(analysisDir, "post.json");
+        File infoFile = new File(analysisDir, "strategy.json");
         if (!infoFile.isFile())
             return;
 
