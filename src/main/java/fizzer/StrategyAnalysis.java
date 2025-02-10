@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import org.json.*;
 
-public class PostAnalysis {
+public class StrategyAnalysis {
 
     public static enum Strategy {
         NONE,
@@ -36,7 +36,7 @@ public class PostAnalysis {
     private Strategy strategy;
     private HashSet<Long> closedNodeGuids;
 
-    public PostAnalysis(File analysisDir) throws Exception {
+    public StrategyAnalysis(File analysisDir) throws Exception {
         strategy = Strategy.NONE;
         closedNodeGuids = new HashSet<>();
 
@@ -44,13 +44,13 @@ public class PostAnalysis {
         if (!infoFile.isFile())
             return;
 
-        JSONObject postJson = new JSONObject(
+        JSONObject strategyJson = new JSONObject(
             Files.lines(Paths.get(infoFile.getPath())).collect(Collectors.joining("\n"))
             );
 
-        strategy = Strategy.parse(postJson.getString("strategy"));
+        strategy = Strategy.parse(strategyJson.getString("strategy"));
 
-        JSONArray closedNodeGuidsArray = postJson.getJSONArray("closed_node_guids");
+        JSONArray closedNodeGuidsArray = strategyJson.getJSONArray("closed_node_guids");
         for (int j = 0; j != closedNodeGuidsArray.length(); ++j)
             closedNodeGuids.add(closedNodeGuidsArray.getLong(j));
     }

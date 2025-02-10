@@ -324,18 +324,18 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JOptionPane.showMessageDialog(null, information.toString(), "Node Information", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void updatePostAnalysisInfo(int analysisIndex) {
-        PostAnalysis postAnalysis = executionTree.getPostAnalyses()[analysisIndex];
+    private void updateStrategyAnalysisInfo(int analysisIndex) {
+        StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalyses()[analysisIndex];
         Analysis analysis = executionTree.getAnalyses()[analysisIndex];
         analysesInfo.setText(""); 
-        analysesInfo.append("Post Analysis No. " + analysisIndex + "\n");
+        analysesInfo.append("Analysis index: " + (analysisIndex + 1) + "\n");
+        analysesInfo.append("Strategy: " + strategyAnalysis.getStrategy() + "\n");
         analysesInfo.append("Type: " + analysis.getType() + "\n");
         analysesInfo.append("Start Attribute: " + analysis.getStartAttribute() + "\n");
         analysesInfo.append("Stop Attribute: " + analysis.getStopAttribute() + "\n");
-        analysesInfo.append("Coverage Failure Resets: " + analysis.getNumCoverageFailureResets() + "\n");
         analysesInfo.append("Number of Traces: " + analysis.getNumTraces() + "\n");
-        analysesInfo.append("Closed Node Guids: " + postAnalysis.getClosedNodeGuids() + "\n");
-        analysesInfo.append("Strategy: " + postAnalysis.getStrategy() + "\n");
+        analysesInfo.append("Coverage Failure Resets: " + analysis.getNumCoverageFailureResets() + "\n");
+        analysesInfo.append("Closed Node Guids: " + strategyAnalysis.getClosedNodeGuids() + "\n");
     }
 
     public void resizeColumnWidth(JTable table) {
@@ -372,7 +372,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.onAnalysisChanged();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
-        updatePostAnalysisInfo(executionTree.getAnalysisIndex());
+        updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
     }
 
     public void activeAnalysisCard(int analysisIndex) {
@@ -437,13 +437,13 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         }
 
         for (int i = 0; i < executionTree.getAnalyses().length; ++i) {
-            PostAnalysis postAnalysis = executionTree.getPostAnalyses()[i];
+            StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalyses()[i];
             Analysis analysis = executionTree.getAnalyses()[i];
             ((DefaultTableModel)analysesTable.getModel()).addRow(new Object[]{
                 analysis.getIndex() + 1,
                 analysis.getType(),
                 analysis.getNumTraces(),
-                postAnalysis.getStrategy()
+                strategyAnalysis.getStrategy()
             });
         }
         resizeColumnWidth(analysesTable);
@@ -466,7 +466,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.onLoad();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
-        updatePostAnalysisInfo(executionTree.getAnalysisIndex());
+        updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
 
         String rawName = Paths.get("").toAbsolutePath().relativize(Paths.get(dir)).toString();
         Frame.getFrames()[0].setTitle("Fizzer: ProgressExplorer [" + (rawName.isEmpty() ? "." : rawName) + "]");
@@ -478,7 +478,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     public void clear() {
         sourceMapping.clear();
         executionTree.clear();
-        ((DefaultListModel<PostAnalysis>)analysesTable.getModel()).clear();
+        ((DefaultListModel<StrategyAnalysis>)analysesTable.getModel()).clear();
         analysisNoneViewer.clear();
         analysisBitshareViewer.clear();
         analysisLocalSearchViewer.clear();

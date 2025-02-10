@@ -11,7 +11,7 @@ import org.json.*;
 public class ExecutionTree {
     private Node rootNode;
     private Analysis[] analyses;
-    private PostAnalysis[] postAnalyses;
+    private StrategyAnalysis[] strategyAnalyses;
     private int analysisIndex;
     private HashMap<LocationId,Integer>[] coverage;
     private HashMap<Integer,Integer>[] coveredIds;
@@ -38,7 +38,7 @@ public class ExecutionTree {
         coveredIds = (HashMap<Integer,Integer>[])new HashMap[] { new HashMap<Integer,Integer>(), new HashMap<Integer,Integer>() };
         fromGuidsToNodes = new HashMap<>();
         analyses = new Analysis[analysesMap.size()];
-        postAnalyses = new PostAnalysis[analysesMap.size()];
+        strategyAnalyses = new StrategyAnalysis[analysesMap.size()];
         analysisIndex = 0;
         int constructionIndex = 0;
         for (Map.Entry<Integer, Analysis.Type> analysisEntry : analysesMap.entrySet()) {
@@ -63,7 +63,7 @@ public class ExecutionTree {
                 analysisDir
                 );
 
-            postAnalyses[analysisIndex] = new PostAnalysis(analysisDir);
+            strategyAnalyses[analysisIndex] = new StrategyAnalysis(analysisDir);
 
             for (Map.Entry<Integer, String> traceEntry : tracesMap.entrySet()) {
                 JSONObject traceInfo = new JSONObject(
@@ -109,7 +109,7 @@ public class ExecutionTree {
                         break;
                 }
 
-            for (long guid : postAnalyses[analysisIndex].getClosedNodeGuids())
+            for (long guid : strategyAnalyses[analysisIndex].getClosedNodeGuids())
                 fromGuidsToNodes.get(guid).setClosedIndex(analysisIndex);
 
             ++analysisIndex;
@@ -225,8 +225,8 @@ public class ExecutionTree {
         return this.analyses;
     }
 
-    public PostAnalysis[] getPostAnalyses() {
-        return this.postAnalyses;
+    public StrategyAnalysis[] getStrategyAnalyses() {
+        return this.strategyAnalyses;
     }
 
     public int getAnalysisIndex() {
