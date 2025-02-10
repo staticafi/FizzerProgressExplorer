@@ -124,18 +124,15 @@ public class Analysis {
     }
 
     public abstract class Info {
-        private StartAttribute startAttribute;
         private StopAttribute stopAttribute;
         private int numCoverageFailureResets;
 
         public Info(StartAttribute  startAttribute_, StopAttribute  stopAttribute_) {
-            startAttribute = startAttribute_;
             stopAttribute = stopAttribute_;
             numCoverageFailureResets = 0;
         }
 
         public Info(JSONObject infoJson) throws Exception {
-            startAttribute = StartAttribute.parse(infoJson.getString("start_attribute"));
             stopAttribute = StopAttribute.parse(infoJson.getString("stop_attribute"));
             numCoverageFailureResets = infoJson.getInt("num_coverage_failure_resets");
         }
