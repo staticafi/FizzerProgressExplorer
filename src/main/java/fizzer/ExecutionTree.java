@@ -95,8 +95,8 @@ public class ExecutionTree {
                             analysisNode.setLocalSearchIndex(analysisIndex);
                         break;
                     case BITFLIP:
-                        if (!analysisNode.localSearchApplied(analysisIndex))
-                            analysisNode.setLocalSearchIndex(analysisIndex);
+                        if (!analysisNode.bitflipApplied(analysisIndex))
+                            analysisNode.setBitFlipIndex(analysisIndex);
                         break;
                     case TAINT_RES:
                         if (!analysisNode.sensitivityApplied(analysisIndex))
