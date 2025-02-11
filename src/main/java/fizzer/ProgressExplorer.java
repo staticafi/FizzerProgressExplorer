@@ -9,12 +9,10 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 
 import fizzer.SourceMapping.LineColumn;
-import fizzer.SourceViewerC.CoverageInfo;
 
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 public class ProgressExplorer implements MouseListener, ActionListener, ListSelectionListener, ChangeListener {
     private SourceMapping sourceMapping;
