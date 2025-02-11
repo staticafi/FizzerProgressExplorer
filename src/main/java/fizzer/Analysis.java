@@ -236,6 +236,7 @@ public class Analysis {
     private int numTraces;
     private Node node;
     private Info info;
+    private HashSet<LocationId> coveredLocationIds;
 
     private ViewProps viewProps;
 
@@ -245,6 +246,7 @@ public class Analysis {
         numTraces = numTraces_;
         node = null;
         info = new NoneInfo();
+        coveredLocationIds = new HashSet<>();
         viewProps = new ViewProps();
 
         File infoFile = new File(analysisDir, "info.json");
@@ -310,6 +312,10 @@ public class Analysis {
 
     public Node getNode() {
         return this.node;
+    }
+
+    public HashSet<LocationId> getCoveredLocationIds() {
+        return this.coveredLocationIds;
     }
 
     public Info getInfo() {

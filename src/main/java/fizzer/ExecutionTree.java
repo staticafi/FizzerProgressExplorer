@@ -178,7 +178,10 @@ public class ExecutionTree {
             node.updateBestValue(analysisIndex, value);
             node.incrementHitCount(analysisIndex);
 
-            coverage[direction].putIfAbsent(new LocationId(id, context), analysisIndex);
+            LocationId locationId = new LocationId(id, context);
+            if (coverage[direction].putIfAbsent(locationId, analysisIndex) == null)
+                if (isCovered(analysisIndex, locationId, direction == 0 ? true : false))
+                    analyses[analysisIndex].getCoveredLocationIds().add(locationId);
             coveredIds[direction].putIfAbsent(id, analysisIndex);
 
             int j = i + NUM_TRACE_RECORD_ITEMS;

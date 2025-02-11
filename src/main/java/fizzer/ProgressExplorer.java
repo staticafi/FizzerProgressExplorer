@@ -9,8 +9,12 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 
 import fizzer.SourceMapping.LineColumn;
+import fizzer.SourceViewerC.CoverageInfo;
 
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class ProgressExplorer implements MouseListener, ActionListener, ListSelectionListener, ChangeListener {
     private SourceMapping sourceMapping;
@@ -39,6 +43,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JMenuItem menuFileOpen;
     private JMenuItem menuFileExit;
 
+    private JMenuItem menuSummaryDlg;
     private JMenuItem menuViewAnalysisTab;
     private JMenuItem menuViewTreeTab;
     private JMenuItem menuViewCTab;
@@ -119,6 +124,12 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuFileExit = new JMenuItem("Exit");
         menuFileExit.setMnemonic(KeyEvent.VK_X);
         menuFileExit.addActionListener(this);
+
+
+        menuSummaryDlg = new JMenuItem("Summary dialog");
+        menuSummaryDlg.setMnemonic(KeyEvent.VK_0);
+        menuSummaryDlg.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, KeyEvent.ALT_DOWN_MASK));
+        menuSummaryDlg.addActionListener(this);
 
         menuViewAnalysisTab = new JMenuItem("Analysis tab");
         menuViewAnalysisTab.setMnemonic(KeyEvent.VK_1);
@@ -324,6 +335,130 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JOptionPane.showMessageDialog(null, information.toString(), "Node Information", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    private void showSummary() {
+        StringBuilder information = new StringBuilder();
+
+        SourceViewerC.CoverageInfo coverageInfo = sourceC.computeCoverageInfo(executionTree.getAnalyses().length - 1);
+        information.append(
+            "Coverage: " + String.format(Locale.US, "%.2f", 100 * coverageInfo.coverage) + '%' +
+            " (both: " + Integer.toString(coverageInfo.numBothCovered) +
+            ", left: " + Integer.toString(coverageInfo.numLeftCovered) +
+            ", right: " + Integer.toString(coverageInfo.numRightCovered) +
+            ", none: " + Integer.toString(coverageInfo.numNoneCovered) +
+            ", all: " + Integer.toString(coverageInfo.numAllLocations) + ')'
+            );
+        information.append(System.lineSeparator());
+
+        information.append("Analyses:\n");
+        final Analysis.Type[] types = {
+            Analysis.Type.NONE,
+            Analysis.Type.BITSHARE,
+            Analysis.Type.LOCAL_SEARCH,
+            Analysis.Type.BITFLIP,
+            Analysis.Type.TAINT_REQ,
+            Analysis.Type.TAINT_RES,
+        };
+        class AnalysisSummary {
+            int numCalls = 0;
+            int numTraces = 0;
+            int numCovered = 0;
+            float coveredPercentage = 0.0f;
+            float effectivity = 0.0f;
+        }
+        HashMap<Analysis.Type,AnalysisSummary> summaries = new HashMap<>();
+        for (Analysis.Type type : types)
+            summaries.put(type, new AnalysisSummary());
+        for (int i = 0; i < executionTree.getAnalyses().length; ++i) {
+            Analysis analysis = executionTree.getAnalyses()[i];
+            AnalysisSummary summary = summaries.get(analysis.getType());
+            ++summary.numCalls;
+            summary.numTraces += analysis.getNumTraces();
+            summary.numCovered += analysis.getCoveredLocationIds().size();
+        }
+        if (coverageInfo.numBothCovered > 0)
+            for (AnalysisSummary summary : summaries.values()) {
+                summary.coveredPercentage = (float)summary.numCovered / (float)coverageInfo.numBothCovered;
+                if (summary.numTraces > 0)
+                    summary.effectivity = (float)summary.numCovered / (float)summary.numTraces;
+            }
+        for (Analysis.Type type : types) {
+            AnalysisSummary summary = summaries.get(type);
+            information.append("    " + type.toString() + ": calls: " + Integer.toString(summary.numCalls));
+            if (type != Analysis.Type.TAINT_REQ && type != Analysis.Type.TAINT_RES) {
+                information.append(
+                    ", covered: " + Integer.toString(summary.numCovered) +
+                        " (" + String.format(Locale.US, "%.2f", 100 * summary.coveredPercentage) + '%' + ')' +
+                    ", traces: " + Integer.toString(summary.numTraces) +
+                    ", effectivity: " + String.format(Locale.US, "%.2f", summary.effectivity)
+                    );
+            }
+            information.append(System.lineSeparator());
+        }
+
+        information.append("Strategies:\n");
+        final StrategyAnalysis.Strategy[] strategies = {
+            StrategyAnalysis.Strategy.NONE,
+            StrategyAnalysis.Strategy.PRIMARY_LOOP_HEAD,
+            StrategyAnalysis.Strategy.PRIMARY_SENSITIVE,
+            StrategyAnalysis.Strategy.PRIMARY_UNTOUCHED,
+            StrategyAnalysis.Strategy.PRIMARY_IID_TWINS,
+            StrategyAnalysis.Strategy.MONTE_CARLO,
+            StrategyAnalysis.Strategy.MONTE_CARLO_BACKWARD
+        };
+        HashMap<StrategyAnalysis.Strategy,Integer> strategyCounters = new HashMap<>();
+        for (StrategyAnalysis.Strategy strategy : strategies)
+            strategyCounters.put(strategy, 0);
+        for (int i = 0; i < executionTree.getAnalyses().length; ++i) {
+            StrategyAnalysis analysis = executionTree.getStrategyAnalyses()[i];
+            strategyCounters.computeIfPresent(analysis.getStrategy(), (k,v)-> v+1);
+        }
+        for (StrategyAnalysis.Strategy strategy : strategies) {
+            information.append("    " + strategy.toString() + ": " + Integer.toString(strategyCounters.get(strategy)));
+            information.append(System.lineSeparator());
+        }
+
+        information.append("Nodes:\n");
+        class NodesInfoCollector {
+            int numIDs = 0;
+            int numIIDs = 0;
+            int numUnknown = 0;
+            int numEndsExceptional = 0;
+            int numEndsNormal = 0;
+
+            void updateInfoForSubtree(Node node) {
+                if (node == null)
+                    return;
+                if (node.sensitivityApplied(executionTree.getAnalyses().length)) {
+                    int numBits = node.getSensitiveBits(executionTree.getAnalyses().length).size();
+                    if (numBits == 0)
+                        ++numIIDs;
+                    else
+                        ++numIDs;
+                } else
+                    ++numUnknown;
+                for (int i = 0; i != 2; ++i)
+                    switch (node.getChildLabel(executionTree.getAnalyses().length, i)) {
+                        case END_EXCEPTIONAL: ++numEndsExceptional; break;
+                        case END_NORMAL: ++numEndsNormal; break;
+                        default: break;
+                    }
+                for (Node child : node.getChildren())
+                    updateInfoForSubtree(child);
+            }
+        }
+        NodesInfoCollector nodesInfoCollector = new NodesInfoCollector();
+        nodesInfoCollector.updateInfoForSubtree(executionTree.getRootNode());
+        information.append(
+            "    All: " + Integer.toString(nodesInfoCollector.numIDs + nodesInfoCollector.numIIDs + nodesInfoCollector.numUnknown) + "\n" +
+            "    ID: " + Integer.toString(nodesInfoCollector.numIDs) + "\n" +
+            "    IID: " + Integer.toString(nodesInfoCollector.numIIDs) + "\n" +
+            "    Others: " + Integer.toString(nodesInfoCollector.numUnknown) + "\n" +
+            "    Ends exceptional: " + Integer.toString(nodesInfoCollector.numEndsExceptional) + "\n" +
+            "    Ends normal: " + Integer.toString(nodesInfoCollector.numEndsNormal) + "\n"
+            );
+        JOptionPane.showMessageDialog(null, information.toString(), "Summary", JOptionPane.INFORMATION_MESSAGE);
+    }
+
     private void updateStrategyAnalysisInfo(int analysisIndex) {
         StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalyses()[analysisIndex];
         Analysis analysis = executionTree.getAnalyses()[analysisIndex];
@@ -334,6 +469,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysesInfo.append("Start Attribute: " + analysis.getStartAttribute() + "\n");
         analysesInfo.append("Stop Attribute: " + analysis.getStopAttribute() + "\n");
         analysesInfo.append("Number of Traces: " + analysis.getNumTraces() + "\n");
+        analysesInfo.append("Covered locations: " + analysis.getCoveredLocationIds().size() + "\n");
         analysesInfo.append("Coverage Failure Resets: " + analysis.getNumCoverageFailureResets() + "\n");
         analysesInfo.append("Closed Node Guids: " + strategyAnalysis.getClosedNodeGuids() + "\n");
     }
@@ -400,6 +536,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 load(fileChooser.getSelectedFile().getAbsolutePath());
         } else if (e.getSource() == menuFileExit) {
             System.exit(0);
+        } else if (e.getSource() == menuSummaryDlg) {
+            showSummary();
         } else if (e.getSource() == menuViewTreeId) {
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.ID);
         } else if (e.getSource() == menuViewTreeIdCtx) {
@@ -511,6 +649,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
                 JMenu menuView = new JMenu("View");
                 menuView.setMnemonic(KeyEvent.VK_W);
+                menuView.add(explorer.menuSummaryDlg);
+                menuView.addSeparator();
                 menuView.add(explorer.menuViewAnalysisTab);
                 menuView.add(explorer.menuViewTreeTab);
                 menuView.add(explorer.menuViewCTab);

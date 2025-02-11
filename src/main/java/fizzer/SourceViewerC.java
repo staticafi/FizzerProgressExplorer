@@ -104,32 +104,43 @@ public class SourceViewerC extends JPanel {
         add(statusPanel, BorderLayout.SOUTH);
     }
 
-    public void updateCoverageInfo() {
-        HashSet<Integer> leftCovered = new HashSet<>();
-        for (Map.Entry<Integer,Integer> entry : executionTree.getCoveredIds()[0].entrySet())
-            if (entry.getValue() <= executionTree.getAnalysisIndex())
-                leftCovered.add(entry.getKey());
-        int numLeftCovered = leftCovered.size();
+    public static class CoverageInfo {
+        int numLeftCovered = 0;
         int numRightCovered = 0;
         int numBothCovered = 0;
         int numNoneCovered = 0;
-        for (Map.Entry<Integer,Integer> entry : executionTree.getCoveredIds()[1].entrySet())
-            if (entry.getValue() <= executionTree.getAnalysisIndex()) {
-                ++numRightCovered;
-                if (leftCovered.contains(entry.getKey()))
-                    ++numBothCovered;
-            } else if (!leftCovered.contains(entry.getKey()))
-                ++numNoneCovered;
-        int numAllLocations = mapping.getCondMapCSize();
-        float coverage = numAllLocations == 0 ? 1.0f : (float)numBothCovered / (float)numAllLocations;
+        int numAllLocations = 0;
+        float coverage = 0.0f;
+    }
 
+    public CoverageInfo computeCoverageInfo(int analysisIndex) {
+        CoverageInfo result = new CoverageInfo();
+        HashSet<Integer> leftCovered = new HashSet<>();
+        for (Map.Entry<Integer,Integer> entry : executionTree.getCoveredIds()[0].entrySet())
+            if (entry.getValue() <= analysisIndex)
+                leftCovered.add(entry.getKey());
+        result.numLeftCovered = leftCovered.size();
+        for (Map.Entry<Integer,Integer> entry : executionTree.getCoveredIds()[1].entrySet())
+            if (entry.getValue() <= analysisIndex) {
+                ++result.numRightCovered;
+                if (leftCovered.contains(entry.getKey()))
+                    ++result.numBothCovered;
+            }
+        result.numAllLocations = mapping.getCondMapCSize();
+        result.numNoneCovered = result.numAllLocations - (result.numLeftCovered + result.numRightCovered - result.numBothCovered);
+        result.coverage = result.numAllLocations == 0 ? 1.0f : (float)result.numBothCovered / (float)result.numAllLocations;
+        return result;
+    }
+
+    public void updateCoverageInfo() {
+        CoverageInfo coverageInfo = computeCoverageInfo(executionTree.getAnalysisIndex());
         coverageInfoLabel.setText(
-            "Coverage: " + String.format(Locale.US, "%.2f", 100 * coverage) + '%' +
-            ", left: " + Integer.toString(numLeftCovered) +
-            ", right: " + Integer.toString(numRightCovered) +
-            ", both: " + Integer.toString(numBothCovered) +
-            ", none: " + Integer.toString(numNoneCovered) +
-            ", all: " + Integer.toString(numAllLocations)
+            "Coverage: " + String.format(Locale.US, "%.2f", 100 * coverageInfo.coverage) + '%' +
+            ", left: " + Integer.toString(coverageInfo.numLeftCovered) +
+            ", right: " + Integer.toString(coverageInfo.numRightCovered) +
+            ", both: " + Integer.toString(coverageInfo.numBothCovered) +
+            ", none: " + Integer.toString(coverageInfo.numNoneCovered) +
+            ", all: " + Integer.toString(coverageInfo.numAllLocations)
             );
     }
     
