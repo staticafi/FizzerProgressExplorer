@@ -452,9 +452,12 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             "    IID: " + Integer.toString(nodesInfoCollector.numIIDs) + "\n" +
             "    Others: " + Integer.toString(nodesInfoCollector.numUnknown) + "\n" +
             "    Ends exceptional: " + Integer.toString(nodesInfoCollector.numEndsExceptional) + "\n" +
-            "    Ends normal: " + Integer.toString(nodesInfoCollector.numEndsNormal) + "\n"
+            "    Ends normal: " + Integer.toString(nodesInfoCollector.numEndsNormal)
             );
-        JOptionPane.showMessageDialog(null, information.toString(), "Summary", JOptionPane.INFORMATION_MESSAGE);
+
+        JTextArea ta = new JTextArea(information.toString());
+        ta.setEditable(false);
+        JOptionPane.showMessageDialog(null, new JScrollPane(ta), "Summary", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void updateStrategyAnalysisInfo(int analysisIndex) {
