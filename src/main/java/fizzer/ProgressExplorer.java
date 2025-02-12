@@ -189,7 +189,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         listScrollPane.getVerticalScrollBar().setUnitIncrement(listScrollSpeed);
 
         analysesSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, listScrollPane, analysesInfo);
-        analysesSplitPane.setResizeWeight(1.0);
+        analysesSplitPane.setResizeWeight(0.75);
 
         treeScrollPane = new JScrollPane(executionTreeViewer);
         treeScrollPane.getHorizontalScrollBar().setUnitIncrement(treeScrollSpeed);
@@ -558,17 +558,20 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     }
 
     public void load(String dir) {
-        rootPanel.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer: ProgressExplorer [Loading...]");
+        SwingUtilities.getWindowAncestor(rootPanel).setEnabled(false);
 
         openFolderStartDir = Paths.get(dir).normalize().getParent().toString();
 
         try {
+            clear();
             sourceMapping.load(dir);
             executionTree.load(dir);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(rootPanel, "Load has FAILED: " + e.toString());
             clear();
-            rootPanel.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer: ProgressExplorer [Load has FAILED]");
+            SwingUtilities.getWindowAncestor(rootPanel).setEnabled(true);
             return;
         }
 
@@ -605,16 +608,16 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
 
         String rawName = Paths.get("").toAbsolutePath().relativize(Paths.get(dir)).toString();
-        Frame.getFrames()[0].setTitle("Fizzer: ProgressExplorer [" + (rawName.isEmpty() ? "." : rawName) + "]");
-
-        rootPanel.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer: ProgressExplorer [" + (rawName.isEmpty() ? "." : rawName) + "]");
+        SwingUtilities.getWindowAncestor(rootPanel).setEnabled(true);
     }
 
-    @SuppressWarnings("unchecked")
     public void clear() {
         sourceMapping.clear();
         executionTree.clear();
-        ((DefaultListModel<StrategyAnalysis>)analysesTable.getModel()).clear();
+        DefaultTableModel dm = (DefaultTableModel)analysesTable.getModel();
+        for (int i = dm.getRowCount() - 1; i >= 0; i--)
+            dm.removeRow(i);
         analysisNoneViewer.clear();
         analysisBitshareViewer.clear();
         analysisLocalSearchViewer.clear();
@@ -628,59 +631,58 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
     public static void main( String[] args ) {
         // try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                JFrame frame = new JFrame("Fizzer: ProgressExplorer");
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.setPreferredSize(new Dimension(1024, 768));
 
-                ProgressExplorer explorer = new ProgressExplorer();
-                if (args.length == 1)
-                    explorer.load(Paths.get(args[0]).toAbsolutePath().toString());
+        JFrame frame = new JFrame("Fizzer: ProgressExplorer");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setPreferredSize(new Dimension(1024, 768));
 
-                explorer.activeAnalysisCard();
+        ProgressExplorer explorer = new ProgressExplorer();
 
-                JMenu menuFile = new JMenu("File");
-                menuFile.setMnemonic(KeyEvent.VK_F);
-                menuFile.add(explorer.menuFileOpen);
-                menuFile.add(explorer.menuFileExit);
+        explorer.activeAnalysisCard();
 
-                JMenu menuView = new JMenu("View");
-                menuView.setMnemonic(KeyEvent.VK_W);
-                menuView.add(explorer.menuSummaryDlg);
-                menuView.addSeparator();
-                menuView.add(explorer.menuViewAnalysisTab);
-                menuView.add(explorer.menuViewTreeTab);
-                menuView.add(explorer.menuViewCTab);
-                menuView.add(explorer.menuViewLLTab);
-                menuView.addSeparator();
-                menuView.add(explorer.menuViewTreeId);
-                menuView.add(explorer.menuViewTreeIdCtx);
-                menuView.add(explorer.menuViewTreeC);
-                menuView.add(explorer.menuViewTreeLL);
-                menuView.add(explorer.menuViewSensitiveBits);
-                menuView.add(explorer.menuViewInputBytes);
-                menuView.add(explorer.menuViewBestValue);
-                menuView.add(explorer.menuViewTraceIndex);
-                menuView.add(explorer.menuViewNodeGuid);
+        JMenu menuFile = new JMenu("File");
+        menuFile.setMnemonic(KeyEvent.VK_F);
+        menuFile.add(explorer.menuFileOpen);
+        menuFile.add(explorer.menuFileExit);
 
-                JMenuBar menuBar = new JMenuBar();
-                menuBar.add(menuFile);
-                menuBar.add(menuView);
-                frame.setJMenuBar(menuBar);
+        JMenu menuView = new JMenu("View");
+        menuView.setMnemonic(KeyEvent.VK_W);
+        menuView.add(explorer.menuSummaryDlg);
+        menuView.addSeparator();
+        menuView.add(explorer.menuViewAnalysisTab);
+        menuView.add(explorer.menuViewTreeTab);
+        menuView.add(explorer.menuViewCTab);
+        menuView.add(explorer.menuViewLLTab);
+        menuView.addSeparator();
+        menuView.add(explorer.menuViewTreeId);
+        menuView.add(explorer.menuViewTreeIdCtx);
+        menuView.add(explorer.menuViewTreeC);
+        menuView.add(explorer.menuViewTreeLL);
+        menuView.add(explorer.menuViewSensitiveBits);
+        menuView.add(explorer.menuViewInputBytes);
+        menuView.add(explorer.menuViewBestValue);
+        menuView.add(explorer.menuViewTraceIndex);
+        menuView.add(explorer.menuViewNodeGuid);
 
-                
-                frame.setContentPane(explorer.rootPanel);
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(menuFile);
+        menuBar.add(menuView);
+        frame.setJMenuBar(menuBar);
 
-                try {
-                    URL url = getClass().getResource("/icon.png");
-                    frame.setIconImage(Toolkit.getDefaultToolkit().getImage(url)); 
-                } catch (Exception e) {} 
+        
+        frame.setContentPane(explorer.rootPanel);
 
-                frame.pack();
-                frame.setVisible(true);
-                frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
-            }
-        });
+        try {
+            URL url = ProgressExplorer.class.getResource("/icon.png");
+            frame.setIconImage(Toolkit.getDefaultToolkit().getImage(url)); 
+        } catch (Exception e) {} 
+
+        frame.pack();
+        frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+        frame.setVisible(true);
+
+        try { Thread.sleep(250); } catch (InterruptedException e) {}
+        if (args.length == 1)
+            explorer.load(Paths.get(args[0]).toAbsolutePath().toString());
     }
 }
