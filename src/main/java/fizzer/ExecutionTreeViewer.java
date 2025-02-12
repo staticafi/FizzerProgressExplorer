@@ -26,19 +26,19 @@ public class ExecutionTreeViewer extends JPanel {
     private Rectangle viewRect;
     private List<TrNode> visibleNodes;
 
-    public static int nodeWidth = 160;
-    public static int nodeHeight = 20;
-    public static int separatorHorizontal = 30;
-    public static int separatorVertical = 160;
+    public static int nodeWidth = 80;
+    public static int nodeHeight = 10;
+    public static int separatorHorizontal = 15;
+    public static int separatorVertical = 80;
     public static int hitCountHeight = nodeHeight / 2;
     public static int coverageWidth = nodeWidth / 2;
     public static int coverageHeight = nodeHeight / 2;
     public static int nodeMarkWidth = separatorHorizontal / 2;
     public static int terminalSize = nodeHeight + hitCountHeight;
     public static int closedSize = 2 * terminalSize;
-    public static int textShift = 4;
-    public static float textZoomLimit = 0.4f;
-    public static int borderSize = 50;
+    public static int textShift = 2;
+    public static float textZoomLimit = 0.5f;
+    public static int borderSize = 25;
     public static Color[] edgeColors = new Color[] { Color.RED, Color.BLUE };
     public static Color nodeColorNoAnalysis = Color.BLACK;
     public static Color nodeColorBitshare = new Color(255,125,125);
@@ -55,7 +55,7 @@ public class ExecutionTreeViewer extends JPanel {
     public static Font font = makeFont(1.0f);
 
     private static Font makeFont(float zoom) {
-        return font = new Font("Monospaced", Font.BOLD, Math.round((1.0f * nodeHeight) * zoom));
+        return font = new Font("Monospaced", Font.PLAIN, Math.round((1.0f * nodeHeight) * zoom));
     }
 
     // Node with Transformed Coordinates
