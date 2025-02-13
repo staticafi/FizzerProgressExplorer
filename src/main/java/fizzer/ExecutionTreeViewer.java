@@ -95,12 +95,16 @@ public class ExecutionTreeViewer extends JPanel {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                origin = new Point(e.getPoint());
+                if (e.getButton() == MouseEvent.BUTTON1)
+                    origin = new Point(e.getPoint());
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                origin = null;
+                if (e.getButton() == MouseEvent.BUTTON1)
+                    origin = null;
+                else if (e.getButton() == MouseEvent.BUTTON2)
+                    makeAnalysisNodeVisible();
             }
 
             @Override
@@ -254,6 +258,16 @@ public class ExecutionTreeViewer extends JPanel {
 
     public List<TrNode> getVisibleNodes() {
         return Collections.unmodifiableList(visibleNodes);
+    }
+
+    public void makeAnalysisNodeVisible() {
+        if (getAnalysis().getNode() == null)
+            return;
+        Node.ViewProps props = getAnalysis().getNode().getViewProps(); 
+        Rectangle r = new Rectangle(getVisibleRect());
+        r.x = Math.round(zoom * props.x) - r.width / 2;
+        r.y = Math.round(zoom * props.y) - r.height / 2;
+        scrollRectToVisible(r);
     }
 
     protected void paintComponent(Graphics g) {
