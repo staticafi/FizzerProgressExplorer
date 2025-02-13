@@ -396,24 +396,25 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         information.append("Strategies:\n");
         final StrategyAnalysis.Strategy[] strategies = {
             StrategyAnalysis.Strategy.NONE,
-            StrategyAnalysis.Strategy.PRIMARY_LOOP_HEAD,
-            StrategyAnalysis.Strategy.PRIMARY_SENSITIVE,
-            StrategyAnalysis.Strategy.PRIMARY_UNTOUCHED,
-            StrategyAnalysis.Strategy.PRIMARY_IID_TWINS,
+            StrategyAnalysis.Strategy.LOOP_HEAD_SENSITIVE,
+            StrategyAnalysis.Strategy.LOOP_HEAD_OTHERS,
+            StrategyAnalysis.Strategy.SENSITIVE,
+            StrategyAnalysis.Strategy.UNTOUCHED,
+            StrategyAnalysis.Strategy.IID_TWINS_SENSITIVE,
+            StrategyAnalysis.Strategy.IID_TWINS_OTHERS,
             StrategyAnalysis.Strategy.MONTE_CARLO,
             StrategyAnalysis.Strategy.MONTE_CARLO_BACKWARD
         };
         HashMap<StrategyAnalysis.Strategy,Integer> strategyCounters = new HashMap<>();
         for (StrategyAnalysis.Strategy strategy : strategies)
             strategyCounters.put(strategy, 0);
-        for (int i = 0; i < executionTree.getAnalyses().length; ++i) {
-            StrategyAnalysis analysis = executionTree.getStrategyAnalyses()[i];
-            strategyCounters.computeIfPresent(analysis.getStrategy(), (k,v)-> v+1);
-        }
-        for (StrategyAnalysis.Strategy strategy : strategies) {
-            information.append("    " + strategy.toString() + ": " + Integer.toString(strategyCounters.get(strategy)));
-            information.append(System.lineSeparator());
-        }
+        for (int i = 0; i < executionTree.getAnalyses().length; ++i)
+            strategyCounters.computeIfPresent(executionTree.getStrategyAnalyses()[i].getStrategy(), (k,v)-> v+1);
+        for (StrategyAnalysis.Strategy strategy : strategies)
+            if (strategy != StrategyAnalysis.Strategy.NONE) {
+                information.append("    " + strategy.toString() + ": " + Integer.toString(strategyCounters.get(strategy)));
+                information.append(System.lineSeparator());
+            }
 
         information.append("Nodes:\n");
         class NodesInfoCollector {
@@ -687,5 +688,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         try { Thread.sleep(250); } catch (InterruptedException e) {}
         if (args.length == 1)
             explorer.load(Paths.get(args[0]).toAbsolutePath().toString());
+        while (true)
+            try { Thread.sleep(250); } catch (InterruptedException e) {}
     }
 }

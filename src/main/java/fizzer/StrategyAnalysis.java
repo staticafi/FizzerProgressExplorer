@@ -12,20 +12,24 @@ public class StrategyAnalysis {
 
     public static enum Strategy {
         NONE,
-        PRIMARY_LOOP_HEAD,
-        PRIMARY_SENSITIVE,
-        PRIMARY_UNTOUCHED,
-        PRIMARY_IID_TWINS,
+        LOOP_HEAD_SENSITIVE,
+        LOOP_HEAD_OTHERS,
+        SENSITIVE,
+        UNTOUCHED,
+        IID_TWINS_SENSITIVE,
+        IID_TWINS_OTHERS,
         MONTE_CARLO,
         MONTE_CARLO_BACKWARD;
 
         public static Strategy parse(String strategyName) throws Exception {
             switch (strategyName) {
                 case "NONE": return NONE;
-                case "PRIMARY_LOOP_HEAD": return PRIMARY_LOOP_HEAD;
-                case "PRIMARY_SENSITIVE": return PRIMARY_SENSITIVE;
-                case "PRIMARY_UNTOUCHED": return PRIMARY_UNTOUCHED;
-                case "PRIMARY_IID_TWINS": return PRIMARY_IID_TWINS;
+                case "LOOP_HEAD_SENSITIVE": return LOOP_HEAD_SENSITIVE;
+                case "LOOP_HEAD_OTHERS": return LOOP_HEAD_OTHERS;
+                case "SENSITIVE": return SENSITIVE;
+                case "UNTOUCHED": return UNTOUCHED;
+                case "IID_TWINS_SENSITIVE": return IID_TWINS_SENSITIVE;
+                case "IID_TWINS_OTHERS": return IID_TWINS_OTHERS;
                 case "MONTE_CARLO": return MONTE_CARLO;
                 case "MONTE_CARLO_BACKWARD": return MONTE_CARLO_BACKWARD;
                 default: throw new Exception("Unknown strategy name: " + strategyName);
