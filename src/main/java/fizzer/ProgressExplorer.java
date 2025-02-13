@@ -672,7 +672,6 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuBar.add(menuFile);
         menuBar.add(menuView);
         frame.setJMenuBar(menuBar);
-
         
         frame.setContentPane(explorer.rootPanel);
 
@@ -681,14 +680,13 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             frame.setIconImage(Toolkit.getDefaultToolkit().getImage(url)); 
         } catch (Exception e) {} 
 
-        frame.pack();
         frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+        frame.pack();
         frame.setVisible(true);
 
         try { Thread.sleep(250); } catch (InterruptedException e) {}
         if (args.length == 1)
             explorer.load(Paths.get(args[0]).toAbsolutePath().toString());
-        while (true)
-            try { Thread.sleep(250); } catch (InterruptedException e) {}
+        try { Thread.sleep(250); } catch (InterruptedException e) {}
     }
 }
