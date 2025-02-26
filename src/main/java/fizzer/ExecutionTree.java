@@ -132,17 +132,15 @@ public class ExecutionTree {
         if (trace.length() == 0)
             return analysisNodeValue;
 
-        final int NUM_TRACE_RECORD_ITEMS = 6;
+        final int NUM_TRACE_RECORD_ITEMS = 5;
         final int TRACE_SHIFT_ID = 0;
-        final int TRACE_SHIFT_CONTEXT = 1;
-        final int TRACE_SHIFT_DIRECTION = 2;
-        final int TRACE_SHIFT_INPUT_BYTES = 3;
-        final int TRACE_SHIFT_VALUE = 4;
-        final int TRACE_NODE_GUID = 5;
+        final int TRACE_SHIFT_DIRECTION = 1;
+        final int TRACE_SHIFT_INPUT_BYTES = 2;
+        final int TRACE_SHIFT_VALUE = 3;
+        final int TRACE_NODE_GUID = 4;
 
         if (rootNode == null) {
             int id = trace.getInt(TRACE_SHIFT_ID);
-            int context = trace.getInt(TRACE_SHIFT_CONTEXT);
             int numInputBytes = trace.getInt(TRACE_SHIFT_INPUT_BYTES);
             double value = trace.getDouble(TRACE_SHIFT_VALUE);
             long nodeGuid = trace.getLong(TRACE_NODE_GUID);
@@ -150,7 +148,6 @@ public class ExecutionTree {
                 nodeGuid,
                 null,
                 id,
-                context,
                 value,
                 0,
                 numInputBytes,
@@ -164,12 +161,11 @@ public class ExecutionTree {
         int traceIndex = 0;
         for (int i = 0; true; i += NUM_TRACE_RECORD_ITEMS, ++traceIndex) {
             int id = trace.getInt(i + TRACE_SHIFT_ID);
-            int context = trace.getInt(i + TRACE_SHIFT_CONTEXT);
             int direction = trace.getInt(i + TRACE_SHIFT_DIRECTION) == 0 ? 0 : 1;
             double value = trace.getDouble(i + TRACE_SHIFT_VALUE);
             long nodeGuid = trace.getLong(i + TRACE_NODE_GUID);
 
-            if (!node.getLocationId().equals(id, context) || node.guid != nodeGuid)
+            if (!node.getLocationId().equals(id) || node.guid != nodeGuid)
                 throw new Exception("Inconsistency in trace: " + path);
 
             if (node == analyses[analysisIndex].getNode())
@@ -178,7 +174,7 @@ public class ExecutionTree {
             node.updateBestValue(analysisIndex, value);
             node.incrementHitCount(analysisIndex);
 
-            LocationId locationId = new LocationId(id, context);
+            LocationId locationId = new LocationId(id);
             if (coverage[direction].putIfAbsent(locationId, analysisIndex) == null)
                 if (isCovered(analysisIndex, locationId, direction == 0 ? true : false))
                     analyses[analysisIndex].getCoveredLocationIds().add(locationId);
@@ -197,7 +193,6 @@ public class ExecutionTree {
             Node[] children = node.getChildren();
             if (children[direction] == null) {
                 int sId = trace.getInt(j + TRACE_SHIFT_ID);
-                int sContext = trace.getInt(j + TRACE_SHIFT_CONTEXT);
                 int sNumInputBytes = trace.getInt(j + TRACE_SHIFT_INPUT_BYTES);
                 double sValue = trace.getDouble(j + TRACE_SHIFT_VALUE);
                 long sNodeGuid = trace.getLong(j + TRACE_NODE_GUID);
@@ -205,7 +200,6 @@ public class ExecutionTree {
                     sNodeGuid,
                     node,
                     sId,
-                    sContext,
                     sValue,
                     traceIndex + 1,
                     sNumInputBytes,

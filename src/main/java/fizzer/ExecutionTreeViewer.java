@@ -17,7 +17,7 @@ import javax.swing.SwingUtilities;
 
 public class ExecutionTreeViewer extends JPanel {
 
-    public static enum LocationViewType { ID, ID_CTX, C, LL, SENSITIVE_BITS, INPUT_BYTES, VALUE, TRACE_INDEX, NODE_GUID }
+    public static enum LocationViewType { ID, C, LL, SENSITIVE_BITS, INPUT_BYTES, VALUE, TRACE_INDEX, NODE_GUID }
 
     private ExecutionTree executionTree;
     private SourceMapping mapping;
@@ -472,9 +472,6 @@ public class ExecutionTreeViewer extends JPanel {
             switch (locationViewType) {
                 case ID:
                     text = 'i' + Integer.toUnsignedString(node.getLocationId().id);
-                    break;
-                case ID_CTX:
-                    text = 'x' + Integer.toUnsignedString(node.getLocationId().id) + ':' + Integer.toUnsignedString(node.getLocationId().context);
                     break;
                 case C: {
                     SourceMapping.LineColumn lineColumn = mapping.getCondMapC(node.getLocationId().id);
