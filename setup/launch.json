@@ -13,7 +13,7 @@
             "stopOnEntry": false,
             "vmArgs": "-Xss100m -Xms512m -Xmx10000m",
             "cwd": "${workspaceFolder}",
-            "args": "../sbt-fizzer-private/dist/output/progress_recording"
+            "args": "../fizzer/dist/output/progress_recording"
         }
     ]
 }
