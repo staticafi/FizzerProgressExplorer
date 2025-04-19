@@ -27,10 +27,10 @@ public class ExecutionTree {
                 .collect(Collectors.toSet())) {
             int idx = dirName.indexOf('_');
             if (idx < 0)
-                throw new Exception("Invalid format of the analysis directory: " + dirName);
+                throw new RuntimeException("Invalid format of the analysis directory: " + dirName);
             int ordinal = Integer.parseInt(dirName.substring(0, idx));
             if (ordinal < 0)
-                throw new Exception("Invalid ordinal of the analysis: " + dirName);
+                throw new RuntimeException("Invalid ordinal of the analysis: " + dirName);
             String name = dirName.substring(idx + 1);
             analysesMap.put(ordinal, Analysis.Type.parse(name));
         }
@@ -69,16 +69,17 @@ public class ExecutionTree {
                 JSONObject traceInfo = new JSONObject(
                     Files.lines(Paths.get(traceEntry.getValue())).collect(Collectors.joining("\n"))
                     );
-
-                double analysisNodeValue = executeTrace(
-                    traceInfo.getJSONArray("trace_records"),
+                JSONObject executionResults = traceInfo.getJSONObject("execution_results");
+    
+                executeTrace(
+                    executionResults.getJSONArray("trace"),
                     analysisIndex,
                     constructionIndex,
-                    traceInfo.getString("trace_termination"),
+                    executionResults.getString("termination"),
                     traceEntry.getValue()
                     );
 
-                analyses[analysisIndex].readTraceInfo(traceInfo, analysisNodeValue);
+                analyses[analysisIndex].readTraceInfo(executionResults);
 
                 ++constructionIndex;
             }
@@ -116,21 +117,19 @@ public class ExecutionTree {
         }
         analysisIndex = analyses.length - 1;
         if (analysisIndex < 0)
-            throw new Exception("ERROR: no analysis performed on the benchmark => there is nothing to show.");
+            throw new RuntimeException("ERROR: no analysis performed on the benchmark => there is nothing to show.");
     }
 
-    public double executeTrace(
+    public void executeTrace(
             JSONArray trace,
             int analysisIndex,
             int constructionIndex,
             String termination,
             String path
-            ) throws Exception {
-
-        double analysisNodeValue = Double.MAX_VALUE;
+            ) {
 
         if (trace.length() == 0)
-            return analysisNodeValue;
+            return;
 
         final int NUM_TRACE_RECORD_ITEMS = 5;
         final int TRACE_SHIFT_ID = 0;
@@ -166,10 +165,7 @@ public class ExecutionTree {
             long nodeGuid = trace.getLong(i + TRACE_NODE_GUID);
 
             if (!node.getLocationId().equals(id) || node.guid != nodeGuid)
-                throw new Exception("Inconsistency in trace: " + path);
-
-            if (node == analyses[analysisIndex].getNode())
-                analysisNodeValue = value; 
+                throw new RuntimeException("Inconsistency in trace: " + path);
 
             node.updateBestValue(analysisIndex, value);
             node.incrementHitCount(analysisIndex);
@@ -186,7 +182,7 @@ public class ExecutionTree {
                     analysisIndex, direction,
                     termination.equals("NORMAL") ? Node.ChildLabel.END_NORMAL : Node.ChildLabel.END_EXCEPTIONAL
                     );
-                return analysisNodeValue;
+                return;
             }
 
             node.setChildLabel(analysisIndex, direction, Node.ChildLabel.VISITED);

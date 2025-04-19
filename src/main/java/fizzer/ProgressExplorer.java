@@ -24,7 +24,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JTextArea analysesInfo;
     private JSplitPane analysesSplitPane;
 
-    private AnalysisPlainInputsViewer analysisNoneViewer;
+    private AnalysisPlainInputsViewer analysisStartupViewer;
     private AnalysisPlainInputsViewer analysisBitshareViewer;
     private AnalysisPlainInputsViewer analysisLocalSearchViewer;
     private AnalysisPlainInputsViewer analysisBitflipViewer;
@@ -82,14 +82,14 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysesInfo = new JTextArea();
         analysesInfo.setEditable(false);
 
-        analysisNoneViewer = new AnalysisPlainInputsViewer(Analysis.Type.NONE);
+        analysisStartupViewer = new AnalysisPlainInputsViewer(Analysis.Type.STARTUP);
         analysisBitshareViewer = new AnalysisPlainInputsViewer(Analysis.Type.BITSHARE);
         analysisLocalSearchViewer = new AnalysisPlainInputsViewer(Analysis.Type.LOCAL_SEARCH);
         analysisBitflipViewer = new AnalysisPlainInputsViewer(Analysis.Type.BITFLIP);
         analysisTaintRequestViewer = new AnalysisPlainInputsViewer(Analysis.Type.TAINT_REQ);
         analysisTaintResponseViewer = new AnalysisPlainInputsViewer(Analysis.Type.TAINT_RES);
         analysisPanel = new JPanel(new CardLayout());
-        analysisPanel.add(analysisNoneViewer, Analysis.Type.NONE.toString());
+        analysisPanel.add(analysisStartupViewer, Analysis.Type.STARTUP.toString());
         analysisPanel.add(analysisBitshareViewer, Analysis.Type.BITSHARE.toString());
         analysisPanel.add(analysisLocalSearchViewer, Analysis.Type.LOCAL_SEARCH.toString());
         analysisPanel.add(analysisBitflipViewer, Analysis.Type.BITFLIP.toString());
@@ -342,7 +342,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
         information.append("Analyses:\n");
         final Analysis.Type[] types = {
-            Analysis.Type.NONE,
+            Analysis.Type.STARTUP,
             Analysis.Type.BITSHARE,
             Analysis.Type.LOCAL_SEARCH,
             Analysis.Type.BITFLIP,
@@ -494,7 +494,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             return;
         executionTree.setAnalysisIndex(analysesTable.getSelectedRow());
         activeAnalysisCard();
-        analysisNoneViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisStartupViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisBitshareViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisLocalSearchViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisBitflipViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
@@ -591,7 +591,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JScrollBar verticalBar = listScrollPane.getVerticalScrollBar();
         verticalBar.setValue(verticalBar.getMaximum());
 
-        analysisNoneViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        analysisStartupViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisBitshareViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisLocalSearchViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisBitflipViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
@@ -613,7 +613,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         DefaultTableModel dm = (DefaultTableModel)analysesTable.getModel();
         for (int i = dm.getRowCount() - 1; i >= 0; i--)
             dm.removeRow(i);
-        analysisNoneViewer.clear();
+        analysisStartupViewer.clear();
         analysisBitshareViewer.clear();
         analysisLocalSearchViewer.clear();
         analysisBitflipViewer.clear();

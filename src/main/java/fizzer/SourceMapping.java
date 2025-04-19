@@ -44,12 +44,12 @@ public class SourceMapping {
 
         File sourceCFile = new File(dir + "/source.c");
         if (!sourceCFile.isFile())
-            throw new Exception("Cannot access file: " + sourceCFile.getAbsolutePath());
+            throw new RuntimeException("Cannot access file: " + sourceCFile.getAbsolutePath());
         sourceC = Files.lines(Paths.get(sourceCFile.getPath())).collect(Collectors.toList());
 
         File sourceLLFile = new File(dir + "/source.ll");
         if (!sourceLLFile.isFile())
-            throw new Exception("Cannot access file: " + sourceLLFile.getAbsolutePath());
+            throw new RuntimeException("Cannot access file: " + sourceLLFile.getAbsolutePath());
         sourceLL = Files.lines(Paths.get(sourceLLFile.getPath())).collect(Collectors.toList());
         boolean isInFunction = false;
         for (int i = 0; i != sourceLL.size(); ++i) {
@@ -69,7 +69,7 @@ public class SourceMapping {
 
         File condMapFile = new File(dir + "/cond_map.json");
         if (!condMapFile.isFile())
-            throw new Exception("Cannot access file: " + condMapFile.getAbsolutePath());
+            throw new RuntimeException("Cannot access file: " + condMapFile.getAbsolutePath());
         JSONObject condMapObj = new JSONObject(
             Files.lines(Paths.get(condMapFile.getPath())).collect(Collectors.joining("\n"))
             );

@@ -21,7 +21,7 @@ public class StrategyAnalysis {
         MONTE_CARLO,
         MONTE_CARLO_BACKWARD;
 
-        public static Strategy parse(String strategyName) throws Exception {
+        public static Strategy parse(String strategyName) {
             switch (strategyName) {
                 case "NONE": return NONE;
                 case "LOOP_HEAD_SENSITIVE": return LOOP_HEAD_SENSITIVE;
@@ -32,7 +32,7 @@ public class StrategyAnalysis {
                 case "IID_TWINS_OTHERS": return IID_TWINS_OTHERS;
                 case "MONTE_CARLO": return MONTE_CARLO;
                 case "MONTE_CARLO_BACKWARD": return MONTE_CARLO_BACKWARD;
-                default: throw new Exception("Unknown strategy name: " + strategyName);
+                default: throw new RuntimeException("Unknown strategy name: " + strategyName);
             }
         }
     }
