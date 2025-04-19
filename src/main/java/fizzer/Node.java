@@ -63,7 +63,6 @@ public class Node {
             long guid_,
             Node parent_,
             int id_,
-            int context_,
             double bestValue_,
             int traceIndex_,
             int numInputBytes_,
@@ -78,7 +77,7 @@ public class Node {
         childLabels[0].put(analysisIndex_, ChildLabel.NOT_VISITED);
         childLabels[1].put(analysisIndex_, ChildLabel.NOT_VISITED);
 
-        locationId = new LocationId(id_, context_);
+        locationId = new LocationId(id_);
   
         bestValue = new TreeMap<Integer, Double>();
         bestValue.put(analysisIndex_, bestValue_);

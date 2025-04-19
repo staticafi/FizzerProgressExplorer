@@ -47,7 +47,6 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JMenuItem menuViewCTab;
     private JMenuItem menuViewLLTab;
     private JMenuItem menuViewTreeId;
-    private JMenuItem menuViewTreeIdCtx;
     private JMenuItem menuViewTreeC;
     private JMenuItem menuViewTreeLL;
     private JMenuItem menuViewSensitiveBits;
@@ -146,10 +145,6 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuViewTreeId.setMnemonic(KeyEvent.VK_I);
         menuViewTreeId.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.ALT_DOWN_MASK));
         menuViewTreeId.addActionListener(this);
-        menuViewTreeIdCtx = new JMenuItem("Tree node id:context");
-        menuViewTreeIdCtx.setMnemonic(KeyEvent.VK_X);
-        menuViewTreeIdCtx.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.ALT_DOWN_MASK));
-        menuViewTreeIdCtx.addActionListener(this);
         menuViewTreeC = new JMenuItem("Tree node C line:column");
         menuViewTreeC.setMnemonic(KeyEvent.VK_C);
         menuViewTreeC.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.ALT_DOWN_MASK));
@@ -308,8 +303,6 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         information.append("GUID: " + Long.toUnsignedString(node.guid));
         information.append(System.lineSeparator());
         information.append("Location ID: " + Integer.toUnsignedString(node.getLocationId().id));
-        information.append(System.lineSeparator());
-        information.append("Context: " + Integer.toUnsignedString(node.getLocationId().context));
         information.append(System.lineSeparator());
         information.append(String.format("C line and column: %d, %d", lineColumn.line , lineColumn.column));
         information.append(System.lineSeparator());
@@ -542,8 +535,6 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             showSummary();
         } else if (e.getSource() == menuViewTreeId) {
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.ID);
-        } else if (e.getSource() == menuViewTreeIdCtx) {
-            executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.ID_CTX);
         } else if (e.getSource() == menuViewTreeC) {
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.C);
         } else if (e.getSource() == menuViewTreeLL) {
@@ -659,7 +650,6 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuView.add(explorer.menuViewLLTab);
         menuView.addSeparator();
         menuView.add(explorer.menuViewTreeId);
-        menuView.add(explorer.menuViewTreeIdCtx);
         menuView.add(explorer.menuViewTreeC);
         menuView.add(explorer.menuViewTreeLL);
         menuView.add(explorer.menuViewSensitiveBits);

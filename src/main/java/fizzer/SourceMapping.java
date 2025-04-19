@@ -23,12 +23,10 @@ public class SourceMapping {
 
     private List<String> sourceC; 
     private HashMap<Integer, LineColumn> condMapC;
-    private HashMap<Integer, LineColumn> brMapC;
     private HashMap<Integer, TreeMap<Integer, Integer>> invCondMapC;
 
     private List<String> sourceLL; 
     private HashMap<Integer, Integer> condMapLL;
-    private HashMap<Integer, Integer> brMapLL;
     private HashMap<Integer, Integer> basicBlockLinesLL;
     private HashMap<Integer, Integer> invCondMapLL;
 
@@ -37,12 +35,10 @@ public class SourceMapping {
 
         sourceC = null;
         condMapC = new HashMap<>();
-        brMapC = new HashMap<>();
         invCondMapC = new HashMap<>();
 
         sourceLL = null;
         condMapLL = new HashMap<>();
-        brMapLL = new HashMap<>();
         basicBlockLinesLL = new HashMap<>();
         invCondMapLL = new HashMap<>();
 
@@ -92,19 +88,6 @@ public class SourceMapping {
 
             invCondMapLL.put(condMapLL.get(id), id);
         }
-
-        File brMapFile = new File(dir + "/br_map.json");
-        if (!brMapFile.isFile())
-            throw new Exception("Cannot access file: " + brMapFile.getAbsolutePath());
-        JSONObject brMapObj = new JSONObject(
-            Files.lines(Paths.get(brMapFile.getPath())).collect(Collectors.joining("\n"))
-            );
-        for (String keyName : brMapObj.keySet()) {
-            JSONArray valueArray = brMapObj.getJSONArray(keyName);
-            int id = Integer.parseInt(keyName);
-            brMapC.put(id, new LineColumn(valueArray.getInt(0), valueArray.getInt(1)));
-            brMapLL.put(id, basicBlockLinesLL.get(valueArray.getInt(2)) + valueArray.getInt(3));
-        }
     }
     
     public LineColumn getCLineAndColumnWithId(Integer id) {
@@ -150,12 +133,10 @@ public class SourceMapping {
     public void clear() {
         sourceC = null;
         condMapC = null;
-        brMapC = null;
         invCondMapC = null;
 
         sourceLL = null;
         condMapLL = null;
-        brMapLL = null;
         basicBlockLinesLL = null;
         invCondMapLL = null;
     }
