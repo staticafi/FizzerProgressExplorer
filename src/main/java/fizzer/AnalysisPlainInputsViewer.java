@@ -73,10 +73,10 @@ public class AnalysisPlainInputsViewer extends JPanel {
     }
 
     public void onAnalysisChanged(Analysis analysis_) {
-        if (analysis == null || analysis_.getType() != analysis.getType()) {
-            clear();
+        if (analysis_ != analysis) {
             analysis = analysis_;
-            inputsViewer.load();
+            if (analysis != null)
+                inputsViewer.load();
         }
     }
 
