@@ -78,6 +78,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         analysesTable.getSelectionModel().addListSelectionListener(this);
         analysesTable.setDefaultEditor(Object.class, null);
+        analysesTable.setDefaultRenderer(Object.class, new AnalyzesTableRenderer(executionTree));
 
         analysesInfo = new JTextArea();
         analysesInfo.setEditable(false);
