@@ -117,21 +117,21 @@ public class Analysis {
         public String getAbbreviation() {
             switch (this)
             {
-                case BOOLEAN: return "BO";
-                case UINT8: return "U1";
-                case SINT8: return "S1";
-                case UINT16: return "U2";
-                case SINT16: return "S2";
-                case UINT32: return "U4";
-                case SINT32: return "S4";
-                case UINT64: return "U8";
-                case SINT64: return "S8";
-                case FLOAT32: return "F4";
-                case FLOAT64: return "F8";
-                case UNTYPED8: return "X1";
-                case UNTYPED16: return "X2";
-                case UNTYPED32: return "X4";
-                case UNTYPED64: return "X8";
+                case BOOLEAN: return "bO";
+                case UINT8: return "u1";
+                case SINT8: return "s1";
+                case UINT16: return "u2";
+                case SINT16: return "s2";
+                case UINT32: return "u4";
+                case SINT32: return "s4";
+                case UINT64: return "u8";
+                case SINT64: return "s8";
+                case FLOAT32: return "f4";
+                case FLOAT64: return "f8";
+                case UNTYPED8: return "x1";
+                case UNTYPED16: return "x2";
+                case UNTYPED32: return "x4";
+                case UNTYPED64: return "x8";
                 default: throw new RuntimeException("DataType.getAbbreviation(): Unknown type of 'this'.");
             }
         }

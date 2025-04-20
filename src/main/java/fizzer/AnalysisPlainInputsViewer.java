@@ -33,9 +33,8 @@ public class AnalysisPlainInputsViewer extends JPanel {
                 for (int j = 0; j != inputData.getNumTypes(); ++j) {
                     DataType dataType = inputData.getTypes().get(j);
                     Number value = inputData.getValues().get(j);
-                    stringBuilder.append(dataType.getAbbreviation());
-                    stringBuilder.append(':');
                     stringBuilder.append(dataType.toStringNumber(value));
+                    stringBuilder.append(dataType.getAbbreviation());
                     stringBuilder.append(' ');
                 }
 
