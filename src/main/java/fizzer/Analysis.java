@@ -234,8 +234,9 @@ public class Analysis {
                         throw new RuntimeException("In trace JSON: execution_results/bytes: too few bytes w.r.t. types.");
                     StringBuilder stringBuilder = new StringBuilder();
                     for (int u = i; u < k; u += 2) {
-                        stringBuilder.append(bytesString.charAt(k - u - 2));
-                        stringBuilder.append(bytesString.charAt(k - u - 1));
+                        int idx = k - (u - i) - 2;
+                        stringBuilder.append(bytesString.charAt(idx));
+                        stringBuilder.append(bytesString.charAt(idx + 1));
                     }
                     values.add(dataType.parseNumber(stringBuilder.toString()));
                     i = k;
