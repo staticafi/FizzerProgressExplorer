@@ -31,7 +31,7 @@ public class ExecutionTreeViewer extends JPanel {
     private static final int terminalSize = nodeHeight + hitCountHeight;
     private static final int closedSize = 2 * terminalSize;
     private static final int textShift = 2;
-    private static final float textZoomLimit = 0.4f;
+    private static final float textZoomLimit = 0.5f;
     private static final int borderSize = 25;
     private static final Color[] edgeColors = new Color[] { Color.RED, Color.BLUE };
     private static final Color nodeColorNoAnalysis = Color.BLACK;
