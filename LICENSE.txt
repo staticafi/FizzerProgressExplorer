@@ -1,5 +1,5 @@
-age is available under the zlib license: 
-========================================
+Fizzer's ProgressExplorer is available under the zlib license: 
+==============================================================
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
