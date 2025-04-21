@@ -331,31 +331,26 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private void showWindowWithNodeInformation(Node node) {
         LineColumn lineColumn = sourceMapping.getCLineAndColumnWithId((Integer)node.getLocationId().id);
         Integer llLine = sourceMapping.getLlvmLineWithId(node.getLocationId().id);
-        StringBuilder information = new StringBuilder();
-        information.append("GUID: " + Long.toUnsignedString(node.guid));
-        information.append(System.lineSeparator());
-        information.append("Location ID: " + Integer.toUnsignedString(node.getLocationId().id));
-        information.append(System.lineSeparator());
-        information.append(String.format("C line and column: %d, %d", lineColumn.line , lineColumn.column));
-        information.append(System.lineSeparator());
-        information.append(String.format("LL line: %d", llLine));
-        information.append(System.lineSeparator());
-        information.append("Trace Index: " + Integer.toUnsignedString(node.getTraceIndex()));
-        information.append(System.lineSeparator());
-        information.append("Best Value: " + Double.toString(node.getBestValue(executionTree.getAnalysisIndex())));
-        information.append(System.lineSeparator());
-        information.append("Input bytes: " + Integer.toUnsignedString(node.getNumInputBytes()));
-        information.append(System.lineSeparator());
-        information.append("Sensitive Bits: " + Integer.toUnsignedString(node.getSensitiveBits(executionTree.getAnalysisIndex()).size()));
-        information.append(System.lineSeparator());
-        information.append("Sensitivity applied: " + Boolean.toString(node.sensitivityApplied(executionTree.getAnalysisIndex())));
-        information.append(System.lineSeparator());
-        information.append("Bitshare applied: " + Boolean.toString(node.bitshareApplied(executionTree.getAnalysisIndex())));
-        information.append(System.lineSeparator());
-        information.append("Local search applied: " + Boolean.toString(node.localSearchApplied(executionTree.getAnalysisIndex())));
-        information.append(System.lineSeparator());
-        information.append("Bitflip applied: " + Boolean.toString(node.bitflipApplied(executionTree.getAnalysisIndex())));
-        JOptionPane.showMessageDialog(null, information.toString(), "Node Information", JOptionPane.INFORMATION_MESSAGE);
+        JTextArea textArea = new JTextArea();
+        textArea.setEditable(false);
+        textArea.append("GUID: " + Long.toUnsignedString(node.guid) + "\n");
+        textArea.append("Location ID: " + Integer.toUnsignedString(node.getLocationId().id) + "\n");
+        textArea.append("C line and column: " + lineColumn.line + ", " + lineColumn.column + "\n");
+        textArea.append("LL line: " + llLine + "\n");
+        textArea.append("Trace index: " + Integer.toUnsignedString(node.getTraceIndex()) + "\n");
+        textArea.append("Best value: " + Double.toString(node.getBestValue(executionTree.getAnalysisIndex())) + "\n");
+        textArea.append("Input bytes: " + Integer.toUnsignedString(node.getNumInputBytes()) + "\n");
+        textArea.append("Sensitive Bits count: " + Integer.toUnsignedString(node.getSensitiveBits(executionTree.getAnalysisIndex()).size()) + "\n");
+        textArea.append("Sensitive Bits: " + node.getSensitiveBits(executionTree.getAnalysisIndex()) + "\n");
+        textArea.append("Sensitivity applied: " + Boolean.toString(node.sensitivityApplied(executionTree.getAnalysisIndex())) + "\n");
+        textArea.append("Bitshare applied: " + Boolean.toString(node.bitshareApplied(executionTree.getAnalysisIndex())) + "\n");
+        textArea.append("Local search applied: " + Boolean.toString(node.localSearchApplied(executionTree.getAnalysisIndex())) + "\n");
+        textArea.append("Bitflip applied: " + Boolean.toString(node.bitflipApplied(executionTree.getAnalysisIndex())));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+        scrollPane.setPreferredSize(new Dimension(250,250));
+        JOptionPane.showMessageDialog(rootPanel, scrollPane, "Node Information", JOptionPane.PLAIN_MESSAGE);
     }
 
     private void showSummary() {
@@ -480,10 +475,12 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             "    Ends exceptional: " + Integer.toString(nodesInfoCollector.numEndsExceptional) + "\n" +
             "    Ends normal: " + Integer.toString(nodesInfoCollector.numEndsNormal)
             );
-
         JTextArea ta = new JTextArea(information.toString());
         ta.setEditable(false);
-        JOptionPane.showMessageDialog(null, new JScrollPane(ta), "Summary", JOptionPane.INFORMATION_MESSAGE);
+        JScrollPane scrollPane = new JScrollPane(ta);
+        scrollPane.setPreferredSize(new Dimension(450,420));
+        JOptionPane.showMessageDialog(null, scrollPane, "Summary", JOptionPane.PLAIN_MESSAGE);
+
     }
 
     private void updateStrategyAnalysisInfo(int analysisIndex) {
@@ -534,14 +531,22 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     }
 
     public static final class Resource {
-        public static void show(String resource, String title, int icon, JPanel parent) {
+        public static void show(String resource, String title, int icon, int width, int height) {
             String text = null;
             try (Scanner scanner = new Scanner(ProgressExplorer.class.getResourceAsStream(resource), "UTF-8")) {
                 text = scanner.useDelimiter("\\A").next();
-            }            
-            JLabel label = new JLabel(text);
-            label.setFont(new Font("Monospaced", Font.PLAIN, ProgressExplorer.textFontSize));
-            JOptionPane.showMessageDialog(parent, label, title, icon);            
+            }
+            JTextPane textPane = new JTextPane(); 
+            textPane.setContentType("text/html");
+            textPane.setFont(new Font("Monospaced", Font.PLAIN, ProgressExplorer.textFontSize));
+            textPane.setText(text);
+            JScrollPane scrollPane = new JScrollPane(textPane);
+            if (width > 0 && height > 0)
+                scrollPane.setPreferredSize(new Dimension(width, height));
+            JOptionPane.showMessageDialog(null, scrollPane, title, icon);            
+        }
+        public static void show(String resource, String title) {
+            show(resource, title, JOptionPane.INFORMATION_MESSAGE, -1, -1);
         }
     }
 
@@ -574,11 +579,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         } else if (e.getSource() == menuViewNodeGuid) {
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.NODE_GUID);
         } else if (e.getSource() == menuHelpDocumentation) {
-            Resource.show("/documentation.html", "Documentation", JOptionPane.PLAIN_MESSAGE, rootPanel);
+            Resource.show("/documentation.html", "Documentation", JOptionPane.PLAIN_MESSAGE, 800, 600);
         } else if (e.getSource() == menuHelpLicense) {
-            Resource.show("/license.html", "License", JOptionPane.INFORMATION_MESSAGE, rootPanel);
+            Resource.show("/license.html", "License");
         } else if (e.getSource() == menuHelpAbout) {
-            Resource.show("/about.html", "About", JOptionPane.INFORMATION_MESSAGE, rootPanel);
+            Resource.show("/about.html", "About");
         }
     }
 
