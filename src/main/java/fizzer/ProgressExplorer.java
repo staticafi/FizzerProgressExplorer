@@ -3,16 +3,12 @@ package fizzer;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
-
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
-
-import fizzer.SourceMapping.LineColumn;
-
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.*;
+import fizzer.SourceMapping.LineColumn;
 
 public class ProgressExplorer implements MouseListener, ActionListener, ListSelectionListener, ChangeListener {
     private SourceMapping sourceMapping;
@@ -55,6 +51,10 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JMenuItem menuViewBestValue;
     private JMenuItem menuViewTraceIndex;
     private JMenuItem menuViewNodeGuid;
+
+    private JMenuItem menuHelpDocumentation;
+    private JMenuItem menuHelpLicense;
+    private JMenuItem menuHelpAbout;
 
     private String openFolderStartDir;
 
@@ -193,7 +193,16 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuViewNodeGuid.setMnemonic(KeyEvent.VK_G);
         menuViewNodeGuid.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, KeyEvent.ALT_DOWN_MASK));
         menuViewNodeGuid.addActionListener(this);
-    
+
+        
+        menuHelpDocumentation = new JMenuItem("Documentation");
+        menuHelpDocumentation.addActionListener(this);
+        menuHelpLicense = new JMenuItem("License");
+        menuHelpLicense.addActionListener(this);
+        menuHelpAbout = new JMenuItem("About");
+        menuHelpAbout.addActionListener(this);
+
+
         rootPanel = new JPanel(new BorderLayout());
 
         openFolderStartDir = Paths.get("").toAbsolutePath().toString();
@@ -524,6 +533,18 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.onZoomChanged((int)zoomSlider.getValue());
     }
 
+    public static final class Resource {
+        public static void show(String resource, String title, int icon, JPanel parent) {
+            String text = null;
+            try (Scanner scanner = new Scanner(ProgressExplorer.class.getResourceAsStream(resource), "UTF-8")) {
+                text = scanner.useDelimiter("\\A").next();
+            }            
+            JLabel label = new JLabel(text);
+            label.setFont(new Font("Monospaced", Font.PLAIN, ProgressExplorer.textFontSize));
+            JOptionPane.showMessageDialog(parent, label, title, icon);            
+        }
+    }
+
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == menuFileOpen) {
             JFileChooser fileChooser = new JFileChooser(openFolderStartDir);
@@ -552,11 +573,17 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.TRACE_INDEX);
         } else if (e.getSource() == menuViewNodeGuid) {
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.NODE_GUID);
+        } else if (e.getSource() == menuHelpDocumentation) {
+            Resource.show("/documentation.html", "Documentation", JOptionPane.PLAIN_MESSAGE, rootPanel);
+        } else if (e.getSource() == menuHelpLicense) {
+            Resource.show("/license.html", "License", JOptionPane.INFORMATION_MESSAGE, rootPanel);
+        } else if (e.getSource() == menuHelpAbout) {
+            Resource.show("/about.html", "About", JOptionPane.INFORMATION_MESSAGE, rootPanel);
         }
     }
 
     public void load(String dir) {
-        ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer: ProgressExplorer [Loading...]");
+        ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer's ProgressExplorer [Loading...]");
         SwingUtilities.getWindowAncestor(rootPanel).setEnabled(false);
 
         openFolderStartDir = Paths.get(dir).normalize().getParent().toString();
@@ -568,7 +595,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         } catch (Exception e) {
             JOptionPane.showMessageDialog(rootPanel, "Load has FAILED: " + e.toString());
             clear();
-            ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer: ProgressExplorer [Load has FAILED]");
+            ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer's ProgressExplorer [Load has FAILED]");
             SwingUtilities.getWindowAncestor(rootPanel).setEnabled(true);
             return;
         }
@@ -607,7 +634,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
 
         String rawName = Paths.get("").toAbsolutePath().relativize(Paths.get(dir)).toString();
-        ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer: ProgressExplorer [" + (rawName.isEmpty() ? "." : rawName) + "]");
+        ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer's ProgressExplorer [" + (rawName.isEmpty() ? "." : rawName) + "]");
         SwingUtilities.getWindowAncestor(rootPanel).setEnabled(true);
     }
 
@@ -631,7 +658,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     public static void main( String[] args ) {
         // try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
 
-        JFrame frame = new JFrame("Fizzer: ProgressExplorer");
+        JFrame frame = new JFrame("Fizzer's ProgressExplorer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(1024, 768));
 
@@ -664,9 +691,16 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuView.add(explorer.menuViewTraceIndex);
         menuView.add(explorer.menuViewNodeGuid);
 
+        JMenu menuHelp = new JMenu("Help");
+        menuHelp.setMnemonic(KeyEvent.VK_H);
+        menuHelp.add(explorer.menuHelpDocumentation);
+        menuHelp.add(explorer.menuHelpLicense);
+        menuHelp.add(explorer.menuHelpAbout);
+
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(menuFile);
         menuBar.add(menuView);
+        menuBar.add(menuHelp);
         frame.setJMenuBar(menuBar);
         
         frame.setContentPane(explorer.rootPanel);
