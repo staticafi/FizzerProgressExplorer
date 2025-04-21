@@ -2,6 +2,8 @@ package fizzer;
 
 import java.util.*;
 import javax.swing.*;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+
 import java.awt.BorderLayout;
 
 public class SourceViewerLL extends JPanel {
@@ -9,6 +11,7 @@ public class SourceViewerLL extends JPanel {
 
         public SourceViewer() {
             super();
+            setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_ASSEMBLER_X86);
         }
 
         @Override

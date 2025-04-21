@@ -4,10 +4,10 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Shape;
-import javax.swing.*;
 import javax.swing.text.*;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 
-public class TextViewerBase extends JTextArea {
+public class TextViewerBase extends RSyntaxTextArea {
 
     public static final Color LIGHT_RED = new Color(255, 128, 128);
     public static final Color LIGHT_GREEN = new Color(128, 255, 128);

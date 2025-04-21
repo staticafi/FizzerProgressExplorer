@@ -1,13 +1,12 @@
 package fizzer;
 
-import java.util.*;
-
-import javax.swing.*;
-import javax.swing.text.BadLocationException;
-
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import java.util.*;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
 public class SourceViewerC extends JPanel {
 
@@ -15,6 +14,7 @@ public class SourceViewerC extends JPanel {
 
         public SourceViewer() {
             super();
+            setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
             addMouseMotionListener(new MouseMotionListener() {
                 private int lastIdx = -1;
                 @Override
