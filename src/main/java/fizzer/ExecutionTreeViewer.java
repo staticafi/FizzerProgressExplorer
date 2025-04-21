@@ -19,42 +19,42 @@ public class ExecutionTreeViewer extends JPanel {
 
     public static enum LocationViewType { ID, C, LL, SENSITIVE_BITS, INPUT_BYTES, VALUE, TRACE_INDEX, NODE_GUID }
 
+    public static final int nodeWidth = 80;
+    public static final int nodeHeight = 20;
+
+    private static final int separatorHorizontal = 15;
+    private static final int separatorVertical = 80;
+    private static final int hitCountHeight = nodeHeight / 2;
+    private static final int coverageWidth = nodeWidth / 2;
+    private static final int coverageHeight = nodeHeight / 2;
+    private static final int nodeMarkWidth = separatorHorizontal / 2;
+    private static final int terminalSize = nodeHeight + hitCountHeight;
+    private static final int closedSize = 2 * terminalSize;
+    private static final int textShift = 2;
+    private static final float textZoomLimit = 0.4f;
+    private static final int borderSize = 25;
+    private static final Color[] edgeColors = new Color[] { Color.RED, Color.BLUE };
+    private static final Color nodeColorNoAnalysis = Color.BLACK;
+    private static final Color nodeColorBitshare = new Color(255,125,125);
+    private static final Color nodeColorLocalSearch = new Color(125,255,125);
+    private static final Color nodeColorBitflip = new Color(125,125,255);
+    private static final Color nodeColorSensitivity = Color.GRAY;
+    private static final Color nodeColorBitshareLocalSearch = Color.MAGENTA;
+    private static final Color nodeNoSensitiveBitsColor = Color.ORANGE;
+    private static final Color nodeMarkColor = Color.BLACK;
+    private static final Color hitCountColor = Color.BLACK;
+    private static final Color coveredColor = Color.BLACK;
+    private static final Color fontColor = Color.BLACK;
+
     private ExecutionTree executionTree;
     private SourceMapping mapping;
     private float zoom;
     private LocationViewType locationViewType;
     private Rectangle viewRect;
     private List<TrNode> visibleNodes;
-
-    public static int nodeWidth = 80;
-    public static int nodeHeight = 10;
-    public static int separatorHorizontal = 15;
-    public static int separatorVertical = 80;
-    public static int hitCountHeight = nodeHeight / 2;
-    public static int coverageWidth = nodeWidth / 2;
-    public static int coverageHeight = nodeHeight / 2;
-    public static int nodeMarkWidth = separatorHorizontal / 2;
-    public static int terminalSize = nodeHeight + hitCountHeight;
-    public static int closedSize = 2 * terminalSize;
-    public static int textShift = 2;
-    public static float textZoomLimit = 0.5f;
-    public static int borderSize = 25;
-    public static Color[] edgeColors = new Color[] { Color.RED, Color.BLUE };
-    public static Color nodeColorNoAnalysis = Color.BLACK;
-    public static Color nodeColorBitshare = new Color(255,125,125);
-    public static Color nodeColorLocalSearch = new Color(125,255,125);
-    public static Color nodeColorBitflip = new Color(125,125,255);
-    public static Color nodeColorSensitivity = Color.GRAY;
-    public static Color nodeColorBitshareLocalSearch = Color.MAGENTA;
-    public static Color nodeNoSensitiveBitsColor = Color.ORANGE;
-    public static Color nodeMarkColor = Color.BLACK;
-    public static Color hitCountColor = Color.BLACK;
-    public static Color coveredColor = Color.BLACK;
-    public static Color closedColor = Color.BLACK;
-    public static Color fontColor = Color.BLACK;
-    public static Font font = makeFont(1.0f);
-
-    private static Font makeFont(float zoom) {
+    private Font font = makeFont(1.0f);
+    
+    private Font makeFont(float zoom) {
         return font = new Font("Monospaced", Font.PLAIN, Math.round((1.0f * nodeHeight) * zoom));
     }
 
