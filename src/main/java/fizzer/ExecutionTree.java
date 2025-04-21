@@ -79,7 +79,7 @@ public class ExecutionTree {
                     traceEntry.getValue()
                     );
 
-                analyses[analysisIndex].readTraceInfo(executionResults);
+                analyses[analysisIndex].readTraceInfo(traceInfo);
 
                 ++constructionIndex;
             }

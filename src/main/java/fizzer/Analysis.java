@@ -212,8 +212,14 @@ public class Analysis {
             private Vector<DataType> types;
             private Vector<Byte> metadata;
             private int numBytes;
+            private int traceLength;
+            private int traceEndNodeGuid;
+            private int traceNumCovered;
+            private String progressMessage;
 
-            public InputData(JSONObject executionResults) {
+            public InputData(JSONObject traceInfo) {
+                JSONObject executionResults = traceInfo.getJSONObject("execution_results");
+
                 String bytesString = executionResults.getString("bytes");
                 if (bytesString.length() % 2 != 0)
                     throw new RuntimeException("In trace JSON: execution_results/bytes: odd number of characters in the string.");
@@ -250,6 +256,15 @@ public class Analysis {
                 metadata = new Vector<>();
                 for (int j = 0; j < metadataString.length(); j += 2)
                     metadata.add((byte)Integer.parseInt(metadataString.substring(j, j+2), 16));
+
+                JSONArray traceJSON = executionResults.getJSONArray("trace");
+                if (traceJSON.length() % 5 != 0)
+                    throw new RuntimeException("In trace JSON: execution_results/trace: unexpected array size.");
+                traceLength = traceJSON.length() / 5;
+                traceEndNodeGuid = traceJSON.isEmpty() ? 0 : traceJSON.getInt(traceJSON.length() - 1);
+                traceNumCovered = traceInfo.getJSONArray("covered_locations").length();
+
+                progressMessage = traceInfo.has("progress_message") ? traceInfo.getString("progress_message") : "";
             }
 
             public int getNumBytes() {
@@ -274,6 +289,22 @@ public class Analysis {
 
             public Vector<Byte> getMetadata() {
                 return metadata;
+            }
+
+            public int getTraceLength() {
+                return traceLength;
+            }
+
+            public int getTraceEndNodeGuid() {
+                return traceEndNodeGuid;
+            }
+
+            public int getTraceNumCovered() {
+                return traceNumCovered;
+            }
+
+            public String getProgressMessage() {
+                return progressMessage;
             }
         }
 

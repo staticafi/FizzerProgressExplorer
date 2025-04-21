@@ -47,6 +47,16 @@ public class AnalysisPlainInputsViewer extends JPanel {
                 }
 
                 stringBuilder.append('\n');
+                stringBuilder.append(" ".repeat(lineColumnSize + 2));
+                stringBuilder.append("Trace{ len: "); stringBuilder.append(inputData.getTraceLength());
+                stringBuilder.append(", Guid: "); stringBuilder.append(inputData.getTraceEndNodeGuid());
+                stringBuilder.append(", Covered: "); stringBuilder.append(inputData.getTraceNumCovered());
+                if (inputData.getProgressMessage() != null && !inputData.getProgressMessage().isEmpty()) {
+                    stringBuilder.append(" }, Progress{ "); stringBuilder.append(inputData.getProgressMessage());
+                }
+                stringBuilder.append(" }\n");
+                if (i + 1 < inputs.size())
+                    stringBuilder.append('\n');
             }
 
             String wholeText = stringBuilder.toString();
