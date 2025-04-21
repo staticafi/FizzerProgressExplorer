@@ -42,6 +42,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JMenuItem menuFileExit;
 
     private JMenuItem menuSummaryDlg;
+    private JMenuItem menuViewAnalysisNode;
     private JMenuItem menuViewAnalysisTab;
     private JMenuItem menuViewTreeTab;
     private JMenuItem menuViewCTab;
@@ -128,6 +129,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuSummaryDlg.setMnemonic(KeyEvent.VK_0);
         menuSummaryDlg.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, KeyEvent.ALT_DOWN_MASK));
         menuSummaryDlg.addActionListener(this);
+
+        menuViewAnalysisNode = new JMenuItem("Analisis node");
+        menuViewAnalysisNode.setMnemonic(KeyEvent.VK_9);
+        menuViewAnalysisNode.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_9, KeyEvent.ALT_DOWN_MASK));
+        menuViewAnalysisNode.addActionListener(this);
 
         menuViewAnalysisTab = new JMenuItem("Analysis tab");
         menuViewAnalysisTab.setMnemonic(KeyEvent.VK_1);
@@ -534,6 +540,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             System.exit(0);
         } else if (e.getSource() == menuSummaryDlg) {
             showSummary();
+        } else if (e.getSource() == menuViewAnalysisNode) {
+            executionTreeViewer.makeAnalysisNodeVisible();
         } else if (e.getSource() == menuViewTreeId) {
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.ID);
         } else if (e.getSource() == menuViewTreeC) {
@@ -644,6 +652,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JMenu menuView = new JMenu("View");
         menuView.setMnemonic(KeyEvent.VK_W);
         menuView.add(explorer.menuSummaryDlg);
+        menuView.addSeparator();
+        menuView.add(explorer.menuViewAnalysisNode);
         menuView.addSeparator();
         menuView.add(explorer.menuViewAnalysisTab);
         menuView.add(explorer.menuViewTreeTab);
