@@ -19,8 +19,8 @@ public class ExecutionTreeViewer extends JPanel {
 
     public static enum LocationViewType { ID, C, LL, SENSITIVE_BITS, INPUT_BYTES, VALUE, TRACE_INDEX, NODE_GUID }
 
-    public static final int nodeWidth = 120;
-    public static final int nodeHeight = 18;
+    public static final int nodeWidth = 100;
+    public static final int nodeHeight = 14;
 
     private static final int separatorHorizontal = 15;
     private static final int separatorVertical = 80;
