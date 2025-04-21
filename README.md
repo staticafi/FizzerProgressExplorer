@@ -1,4 +1,4 @@
-# **Fizzer: ProgressExplorer**
+# **Fizzer's ProgressExplorer**
 
 The **ProgressExplorer** is a tool for exploring progress of the analyses
 implemented in **Fizzer** on a benchmark program.
