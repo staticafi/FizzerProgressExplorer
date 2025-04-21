@@ -59,12 +59,14 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private String openFolderStartDir;
 
     private JScrollPane listScrollPane;
+    private JScrollPane infoScrollPane;
     private JScrollPane treeScrollPane;
     private JSplitPane splitPane;
     private JTabbedPane tabbedPane;
     private JPanel treePanel;
 
     public static final int listScrollSpeed = 20;
+    public static final int infoScrollSpeed = 20;
     public static final int treeScrollSpeed = ExecutionTreeViewer.nodeHeight;
     public static final int textScrollSpeed = 20;
     public static final int zoomScrollMultiplier = 10;
@@ -190,8 +192,12 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         listScrollPane.getHorizontalScrollBar().setUnitIncrement(listScrollSpeed);
         listScrollPane.getVerticalScrollBar().setUnitIncrement(listScrollSpeed);
 
-        analysesSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, listScrollPane, analysesInfo);
-        analysesSplitPane.setResizeWeight(0.75);
+        infoScrollPane = new JScrollPane(analysesInfo);
+        infoScrollPane.getHorizontalScrollBar().setUnitIncrement(infoScrollSpeed);
+        infoScrollPane.getVerticalScrollBar().setUnitIncrement(infoScrollSpeed);
+
+        analysesSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, listScrollPane, infoScrollPane);
+        analysesSplitPane.setResizeWeight(0.84);
 
         treeScrollPane = new JScrollPane(executionTreeViewer);
         treeScrollPane.getHorizontalScrollBar().setUnitIncrement(treeScrollSpeed);
@@ -465,15 +471,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalyses()[analysisIndex];
         Analysis analysis = executionTree.getAnalyses()[analysisIndex];
         analysesInfo.setText(""); 
-        analysesInfo.append("Analysis index: " + (analysisIndex + 1) + "\n");
-        analysesInfo.append("Strategy: " + strategyAnalysis.getStrategy() + "\n");
-        analysesInfo.append("Type: " + analysis.getType() + "\n");
         analysesInfo.append("Start Attribute: " + analysis.getStartAttribute() + "\n");
         analysesInfo.append("Stop Attribute: " + analysis.getStopAttribute() + "\n");
-        analysesInfo.append("Number of Traces: " + analysis.getNumTraces() + "\n");
-        analysesInfo.append("Covered locations: " + analysis.getCoveredLocationIds().size() + "\n");
-        analysesInfo.append("Coverage Failure Resets: " + analysis.getNumCoverageFailureResets() + "\n");
-        analysesInfo.append("Closed Node Guids: " + strategyAnalysis.getClosedNodeGuids() + "\n");
+        analysesInfo.append("Covered: " + analysis.getCoveredLocationIds() + "\n");
+        analysesInfo.append("Closed Guids: " + strategyAnalysis.getClosedNodeGuids() + "\n");
+        analysesInfo.append("Coverage Failure Resets: " + analysis.getNumCoverageFailureResets());
     }
 
     public void resizeColumnWidth(JTable table) {
