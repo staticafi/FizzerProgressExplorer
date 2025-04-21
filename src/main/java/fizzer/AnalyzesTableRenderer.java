@@ -28,13 +28,20 @@ public class AnalyzesTableRenderer extends DefaultTableCellRenderer {
             else if (analysis.getType() == Analysis.Type.TAINT_RES)
                 foregroundColor = Color.GREEN;
             else {
-                if (analysis.getStartAttribute() == Analysis.StartAttribute.RESUMED)
-                    foregroundColor = Color.LIGHT_GRAY;
-                if (analysis.getStopAttribute() != Analysis.StopAttribute.INTERRUPTED && analysis.getNode() != null) {
-                    boolean covered = analysis.getNode().getChildLabel(row, 0) != Node.ChildLabel.NOT_VISITED &&
-                                      analysis.getNode().getChildLabel(row, 1) != Node.ChildLabel.NOT_VISITED;
-                    foregroundColor = covered ? Color.MAGENTA : analysis.getCoveredLocationIds().isEmpty() ? Color.RED : Color.ORANGE;
+                if (analysis.getNode() != null
+                        && analysis.getNode().getChildLabel(row, 0) != Node.ChildLabel.NOT_VISITED
+                        && analysis.getNode().getChildLabel(row, 1) != Node.ChildLabel.NOT_VISITED)
+                    foregroundColor = Color.MAGENTA;
+                else if (!analysis.getCoveredLocationIds().isEmpty()) {
+                    if (analysis.getNode() != null && analysis.getCoveredLocationIds().contains(analysis.getNode().getLocationId()))
+                        foregroundColor = Color.CYAN;
+                    else
+                        foregroundColor = Color.ORANGE;
                 }
+                else if (analysis.getStopAttribute() != Analysis.StopAttribute.INTERRUPTED)
+                    foregroundColor = Color.RED;
+                else if (analysis.getStartAttribute() == Analysis.StartAttribute.RESUMED)
+                    foregroundColor = Color.LIGHT_GRAY;
             }
         }
         component.setForeground(foregroundColor);
