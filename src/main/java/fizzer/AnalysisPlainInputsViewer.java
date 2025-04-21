@@ -25,7 +25,7 @@ public class AnalysisPlainInputsViewer extends JPanel {
 
             StringBuilder stringBuilder = new StringBuilder();
             for (int i = 0; i != inputs.size(); ++i) {
-                stringBuilder.append(String.format(lineColumnFormat, i+1));
+                stringBuilder.append(String.format(lineColumnFormat, i));
                 stringBuilder.append(": ");
 
                 InputData inputData = inputs.get(i);
