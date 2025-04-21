@@ -144,11 +144,11 @@ public class Analysis {
             {
                 case BOOLEAN: return Integer.parseUnsignedInt(hexBytes, 16) != 0 ? Integer.valueOf(1) : Integer.valueOf(0);
                 case UINT8: return Integer.parseUnsignedInt(hexBytes, 16);
-                case SINT8: return Integer.parseInt(hexBytes, 16);
+                case SINT8: return Integer.valueOf((byte)Integer.parseInt(hexBytes, 16));
                 case UINT16: return Integer.parseUnsignedInt(hexBytes, 16);
-                case SINT16: return Integer.parseInt(hexBytes, 16);
+                case SINT16: return Integer.valueOf((short)Integer.parseInt(hexBytes, 16));
                 case UINT32: return Integer.parseUnsignedInt(hexBytes, 16);
-                case SINT32: return Integer.parseUnsignedInt(hexBytes, 16);
+                case SINT32: return Integer.parseInt(hexBytes, 16);
                 case UINT64: return Long.parseUnsignedLong(hexBytes, 16);
                 case SINT64: return Long.parseLong(hexBytes, 16);
                 case FLOAT32: return Float.intBitsToFloat(Integer.parseUnsignedInt(hexBytes, 16));
