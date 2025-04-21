@@ -76,7 +76,17 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         sourceMapping = new SourceMapping();
         executionTree = new ExecutionTree();
 
-        analysesTable = new JTable(new DefaultTableModel(null, new Object[]{"Index", "Type", "Traces", "Strategy"}));
+        analysesTable = new JTable(new DefaultTableModel(null, new Object[]{"Index", "Type", "Start", "Stop", "Traces", "Strategy"}));
+        analysesTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        {
+            final TableColumnModel columnModel = analysesTable.getColumnModel();
+            columnModel.getColumn(0).setPreferredWidth(40);
+            columnModel.getColumn(1).setPreferredWidth(100);
+            columnModel.getColumn(2).setPreferredWidth(60);
+            columnModel.getColumn(3).setPreferredWidth(70);
+            columnModel.getColumn(4).setPreferredWidth(45);
+            columnModel.getColumn(5).setPreferredWidth(140);
+        }
         analysesTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         analysesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         analysesTable.getSelectionModel().addListSelectionListener(this);
@@ -197,7 +207,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         infoScrollPane.getVerticalScrollBar().setUnitIncrement(infoScrollSpeed);
 
         analysesSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, listScrollPane, infoScrollPane);
-        analysesSplitPane.setResizeWeight(0.84);
+        analysesSplitPane.setResizeWeight(0.9);
 
         treeScrollPane = new JScrollPane(executionTreeViewer);
         treeScrollPane.getHorizontalScrollBar().setUnitIncrement(treeScrollSpeed);
@@ -242,7 +252,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, analysesSplitPane, tabbedPane);
         splitPane.setOneTouchExpandable(true);
-        splitPane.setDividerLocation(450);
+        splitPane.setDividerLocation(480);
 
         rootPanel = new JPanel(new BorderLayout());
         rootPanel.add(splitPane, BorderLayout.CENTER);
@@ -471,27 +481,9 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalyses()[analysisIndex];
         Analysis analysis = executionTree.getAnalyses()[analysisIndex];
         analysesInfo.setText(""); 
-        analysesInfo.append("Start Attribute: " + analysis.getStartAttribute() + "\n");
-        analysesInfo.append("Stop Attribute: " + analysis.getStopAttribute() + "\n");
         analysesInfo.append("Covered: " + analysis.getCoveredLocationIds() + "\n");
         analysesInfo.append("Closed Guids: " + strategyAnalysis.getClosedNodeGuids() + "\n");
         analysesInfo.append("Coverage Failure Resets: " + analysis.getNumCoverageFailureResets());
-    }
-
-    public void resizeColumnWidth(JTable table) {
-        final TableColumnModel columnModel = table.getColumnModel();
-        for (int column = 0; column < table.getColumnCount(); column++) {
-            int width = 15; // Min width
-            for (int row = 0; row < table.getRowCount(); row++) {
-                TableCellRenderer renderer = table.getCellRenderer(row, column);
-                Component comp = table.prepareRenderer(renderer, row, column);
-                width = Math.max(comp.getPreferredSize().width +1 , width);
-            }
-            width = Math.max(width, table.getColumnModel().getColumn(column).getPreferredWidth());
-            // if(width > 300)
-            //     width=300;
-            columnModel.getColumn(column).setPreferredWidth(width);
-        }
     }
 
     public void valueChanged(ListSelectionEvent e) {
@@ -587,11 +579,12 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             ((DefaultTableModel)analysesTable.getModel()).addRow(new Object[]{
                 analysis.getIndex() + 1,
                 analysis.getType(),
+                analysis.getStartAttribute().toString().toLowerCase(),
+                analysis.getStopAttribute().toString().toLowerCase(),
                 analysis.getNumTraces(),
                 strategyAnalysis.getStrategy()
             });
         }
-        resizeColumnWidth(analysesTable);
         analysesTable.scrollRectToVisible(analysesTable.getCellRect(executionTree.getAnalysisIndex(), 0, true));
         analysesTable.setRowSelectionInterval(executionTree.getAnalysisIndex(), executionTree.getAnalysisIndex());
 
