@@ -47,6 +47,7 @@ public class TextViewerBase extends RSyntaxTextArea {
         clear();
         setFont(new Font("Monospaced", Font.PLAIN, ProgressExplorer.textFontSize));
         setEditable(false);
+        setFocusable(false);
     }
 
     public void clear() {

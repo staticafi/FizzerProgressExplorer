@@ -619,6 +619,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         }
         analysesTable.scrollRectToVisible(analysesTable.getCellRect(executionTree.getAnalysisIndex(), 0, true));
         analysesTable.setRowSelectionInterval(executionTree.getAnalysisIndex(), executionTree.getAnalysisIndex());
+        analysesTable.setColumnSelectionInterval(1, 1);
 
         sourceC.load();
         sourceLL.load();
