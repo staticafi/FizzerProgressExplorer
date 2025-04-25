@@ -389,7 +389,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         for (int i = 0; i < executionTree.getAnalyses().length; ++i) {
             Analysis analysis = executionTree.getAnalyses()[i];
             AnalysisSummary summary = summaries.get(analysis.getType());
-            ++summary.numCalls;
+            if (analysis.getStartAttribute() == Analysis.StartAttribute.REGULAR)
+                ++summary.numCalls;
             summary.numTraces += analysis.getNumTraces();
             summary.numCovered += analysis.getCoveredLocationIds().size();
         }
