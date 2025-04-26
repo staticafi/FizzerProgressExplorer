@@ -44,6 +44,15 @@ public class MonteCarloViewer extends JPanel {
                 redraw();
             }
         });
+        locations.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            @SuppressWarnings("rawtypes") 
+            public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                final Component self = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                self.setForeground(locationColors.get(locations.getModel().getElementAt(index)));
+                return self;
+            }
+        });
 
         paper = new JPanel() {
             @Override
