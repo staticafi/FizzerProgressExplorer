@@ -309,8 +309,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 if (node != null) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         if (e.isControlDown()) {
-                            monteCarloViewer.onTargetChanged(node.getLocationId());
-                            tabbedPane.setSelectedIndex(4);
+                            if (monteCarloViewer.onTargetChanged(node))
+                                tabbedPane.setSelectedIndex(4);
                         } else
                             navigateFromTree(node);
                     }

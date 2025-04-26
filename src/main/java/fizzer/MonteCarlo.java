@@ -5,20 +5,20 @@ import java.util.*;
 public class MonteCarlo {
 
     private final ExecutionTree tree;
-    private LocationId targetId;
+    private int targetSid;
     private final Vector<Vector<Node>> traces;
     private final HashMap<Integer, Vector<Vector<Float>>> samples;
 
     public MonteCarlo(final ExecutionTree tree) {
         this.tree = tree;
-        targetId = null;
+        targetSid = 0;
         traces = new Vector<>();
         samples = new HashMap<>();
     }
 
     public ExecutionTree getTree() { return tree; }
-    public LocationId getTargetId() { return targetId; }
-    public boolean isEmpty() { return targetId == null; }
+    public int getTargetSIid() { return targetSid; }
+    public boolean isEmpty() { return targetSid == 0; }
     public Vector<Vector<Node>> getTraces() { return traces; }
     public Node getTraceTargetNode(Vector<Node> trace) { return trace.get(trace.size() - 1); }
     public Node getTraceTargetNode(int traceIndex) { return getTraceTargetNode(traces.get(traceIndex)); }
@@ -31,13 +31,19 @@ public class MonteCarlo {
     public Set<Integer> getSignedLocations() { return samples.keySet(); }
 
     public void clear() {
-        targetId = null;
+        targetSid = 0;
         traces.clear();
         samples.clear();
     }
 
-    public void compute(final LocationId targetId) {
-        this.targetId = targetId;
+    public boolean compute(final Node node) {
+        if (!isNodeValid(node))
+            return false;
+        final boolean leftNotVisited = node.getChildLabel(tree.getAnalysisIndex(), 0) == Node.ChildLabel.NOT_VISITED;
+        final boolean rightNotVisited = node.getChildLabel(tree.getAnalysisIndex(), 1) == Node.ChildLabel.NOT_VISITED;
+        if (leftNotVisited == rightNotVisited)
+            return false;
+        targetSid = (leftNotVisited ? -1 : 1) * node.getLocationId().id;
         collectTraces(tree.getRootNode());
         traces.sort(new Comparator<Vector<Node>>() {
             @Override
@@ -58,6 +64,7 @@ public class MonteCarlo {
             for (Vector<Node> trace : traces)
                 entry.getValue().add(computeSample(entry.getKey(), trace));
         }
+        return true;
     }
 
     private Analysis getAnalysis() {
@@ -71,8 +78,10 @@ public class MonteCarlo {
     private void collectTraces(final Node node) {
         if (!isNodeValid(node))
             return;
-        if (node.getLocationId().equals(targetId)) {
-            Vector<Node> trace = new Vector<>();
+        if (node.getLocationId().id == Math.abs(targetSid)) {
+            if (node.getChildLabel(tree.getAnalysisIndex(), targetSid < 0 ? 0 : 1) != Node.ChildLabel.NOT_VISITED)
+                return;
+            final Vector<Node> trace = new Vector<>();
             for (Node n = node; n != null; n = n.getParent())
                 trace.add(n);
             Collections.reverse(trace);
