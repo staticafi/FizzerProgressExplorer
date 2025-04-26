@@ -1,6 +1,6 @@
 package fizzer;
 
-public class LocationId {
+public class LocationId implements Comparable<LocationId> {
     public final int id;
 
     public LocationId(int id_) {
@@ -9,6 +9,11 @@ public class LocationId {
 
     public boolean equals(int id_) {
         return id == id_;
+    }
+
+    @Override
+    public int compareTo(LocationId id_) {
+        return id - id_.id;
     }
 
     @Override
