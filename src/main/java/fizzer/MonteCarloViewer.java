@@ -143,21 +143,8 @@ public class MonteCarloViewer extends JPanel {
     private void computeLocationColors() {
         java.util.List<Integer> allLocations = method.getSignedLocations().stream().sorted().toList();
         locationColors.clear();
-        int size = 2;
-        while (size * size * size < allLocations.size())
-            ++size;
-        int l = 0;
-        for (int i = 0; i < size; ++i)
-            for (int j = 0; j < size; ++j)
-                for (int k = 0; k < size; ++k) {
-                    if (locationColors.size() == allLocations.size())
-                        return;
-                    locationColors.put(allLocations.get(l), new Color(
-                        Math.round((i/(float)(size - 1)) * 200),
-                        Math.round((j/(float)(size - 1)) * 200),
-                        Math.round((k/(float)(size - 1)) * 200)));
-                    ++l;
-                }
+        for (int i = 0; i < allLocations.size(); ++i)
+            locationColors.put(allLocations.get(i), Color.getHSBColor(i/(float)(allLocations.size() + 1), 1.0f, 0.8f));
     }
 
     private void render(Graphics g) {
