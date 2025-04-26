@@ -323,8 +323,18 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             case 2: { // C
                 int id = sourceC.getSourceViewer().getIdOfCurrentLine(e);
                 if (id != -1) {
-                    tabbedPane.setSelectedIndex(3);
-                    sourceLL.getSourceViewer().setLine(sourceMapping.getCondMapLL(id));
+                    if (e.isControlDown()) {
+                        final LocationId locationId = new LocationId(id);
+                        final boolean leftCovered = executionTree.isCovered(locationId, false);
+                        final boolean rightCovered = executionTree.isCovered(locationId, true);
+                        if (leftCovered != rightCovered) {
+                            monteCarloViewer.onTargetChanged((leftCovered ? 1 : -1) * id);
+                            tabbedPane.setSelectedIndex(4);
+                        }
+                    } else {
+                        tabbedPane.setSelectedIndex(3);
+                        sourceLL.getSourceViewer().setLine(sourceMapping.getCondMapLL(id));
+                    }
                 }
                 break;
             }

@@ -30,13 +30,8 @@ public class MonteCarlo {
     public double getSampleValue(int sampleIndex) { return getTraceValue(traces.get(sampleIndex)); }
     public Set<Integer> getSignedLocations() { return samples.keySet(); }
 
-    public void clear() {
-        targetSid = 0;
-        traces.clear();
-        samples.clear();
-    }
-
-    public boolean compute(final Node node) {
+    public void setTargetSid(final int sid) { targetSid = sid; }
+    public boolean setTargetSid(final Node node) {
         if (!isNodeValid(node))
             return false;
         final boolean leftNotVisited = node.getChildLabel(tree.getAnalysisIndex(), 0) == Node.ChildLabel.NOT_VISITED;
@@ -44,6 +39,18 @@ public class MonteCarlo {
         if (leftNotVisited == rightNotVisited)
             return false;
         targetSid = (leftNotVisited ? -1 : 1) * node.getLocationId().id;
+        return true;
+    }
+
+    public void clear() {
+        targetSid = 0;
+        traces.clear();
+        samples.clear();
+    }
+
+    public void compute() {
+        if (isEmpty())
+            return;
         collectTraces(tree.getRootNode());
         traces.sort(new Comparator<Vector<Node>>() {
             @Override
@@ -64,7 +71,6 @@ public class MonteCarlo {
             for (Vector<Node> trace : traces)
                 entry.getValue().add(computeSample(entry.getKey(), trace));
         }
-        return true;
     }
 
     private Analysis getAnalysis() {

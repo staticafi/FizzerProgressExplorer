@@ -132,8 +132,25 @@ public class MonteCarloViewer extends JPanel {
 
     public boolean onTargetChanged(final Node node) {
         clear();
-        if (!method.compute(node))
+        if (!method.setTargetSid(node))
             return false;
+        compute();
+        return true;
+    }
+
+    public void onTargetChanged(final int sid) {
+        clear();
+        method.setTargetSid(sid);
+        compute();
+    }
+
+    public void redraw() {
+        paper.revalidate();
+        paper.repaint();
+    }
+
+    private void compute() {
+        method.compute();
         computeLocationColors();
         int maxSamples = 0;
         for (int sid : method.getSignedLocations().stream().sorted().toList()) {
@@ -143,12 +160,6 @@ public class MonteCarloViewer extends JPanel {
         locations.setSelectedIndex(0);
         paper.setPreferredSize(new Dimension(paperWidth, (maxSamples + 1) * samplesStride));
         redraw();
-        return true;
-    }
-
-    public void redraw() {
-        paper.revalidate();
-        paper.repaint();
     }
 
     private void computeLocationColors() {
