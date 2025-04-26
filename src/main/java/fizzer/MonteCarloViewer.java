@@ -51,16 +51,20 @@ public class MonteCarloViewer extends JPanel {
         locationsScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         locationsScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
-        JScrollPane paperScrollPane = new JScrollPane(samplesPainter);
-        paperScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
-        paperScrollPane.getVerticalScrollBar().setUnitIncrement(20);
+        JScrollPane samplesScrollPane = new JScrollPane(samplesPainter);
+        samplesScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
+        samplesScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setOpaque(true);
         leftPanel.add(targetLabel, BorderLayout.NORTH);
         leftPanel.add(locationsScrollPane, BorderLayout.CENTER);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, paperScrollPane);
+        stages = new JTabbedPane();
+        stages.addTab("Samples", samplesScrollPane);
+        stages.setSelectedIndex(0);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, stages);
         splitPane.setOneTouchExpandable(true);
         splitPane.setDividerLocation(100);
 
@@ -121,11 +125,15 @@ public class MonteCarloViewer extends JPanel {
     }
 
     private void resize(final int maxSamples) {
-        samplesPainter.resize(maxSamples);
+        switch (stages.getSelectedIndex()) {
+            case 0: samplesPainter.resize(maxSamples); break;
+        }
     }
 
     private void redraw() {
-        samplesPainter.redraw();
+        switch (stages.getSelectedIndex()) {
+            case 0: samplesPainter.redraw(); break;
+        }
     }
 
     private class SamplesPainter extends JPanel {
@@ -220,5 +228,6 @@ public class MonteCarloViewer extends JPanel {
 
     private Label targetLabel;
     private JList<Integer> locations;
+    private JTabbedPane stages;
     private SamplesPainter samplesPainter;
 }
