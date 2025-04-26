@@ -4,11 +4,6 @@ import java.util.*;
 
 public class MonteCarlo {
 
-    private final ExecutionTree tree;
-    private int targetSid;
-    private final Vector<Vector<Node>> traces;
-    private final HashMap<Integer, Vector<Vector<Float>>> samples;
-
     public MonteCarlo(final ExecutionTree tree) {
         this.tree = tree;
         targetSid = 0;
@@ -51,6 +46,19 @@ public class MonteCarlo {
     public void compute() {
         if (isEmpty())
             return;
+        collectTraces();
+        computeSamples();
+    }
+
+    private Analysis getAnalysis() {
+        return tree.getAnalyses()[tree.getAnalysisIndex()];
+    }
+
+    private boolean isNodeValid(final Node node) {
+        return node.getDiscoveryIndex() <= getAnalysis().getViewProps().maxDiscoveryIndex;
+    }
+
+    private void collectTraces() {
         collectTraces(tree.getRootNode());
         traces.sort(new Comparator<Vector<Node>>() {
             @Override
@@ -66,19 +74,6 @@ public class MonteCarlo {
                 return left.size() - right.size();
             }
         });
-        for (Map.Entry<Integer, Vector<Vector<Float>>> entry : samples.entrySet()) {
-            entry.setValue(new Vector<>());
-            for (Vector<Node> trace : traces)
-                entry.getValue().add(computeSample(entry.getKey(), trace));
-        }
-    }
-
-    private Analysis getAnalysis() {
-        return tree.getAnalyses()[tree.getAnalysisIndex()];
-    }
-
-    private boolean isNodeValid(final Node node) {
-        return node.getDiscoveryIndex() <= getAnalysis().getViewProps().maxDiscoveryIndex;
     }
 
     private void collectTraces(final Node node) {
@@ -100,6 +95,14 @@ public class MonteCarlo {
                 collectTraces(node.getChildren()[i]);
     }
 
+    private void computeSamples() {
+        for (Map.Entry<Integer, Vector<Vector<Float>>> entry : samples.entrySet()) {
+            entry.setValue(new Vector<>());
+            for (Vector<Node> trace : traces)
+                entry.getValue().add(computeSample(entry.getKey(), trace));
+        }
+    }
+
     private static Vector<Float> computeSample(final int sid, final Vector<Node> trace) {
         final int id = Math.abs(sid);
         final int dir = sid < 0 ? 0 : 1;
@@ -110,4 +113,8 @@ public class MonteCarlo {
         return sample;
     }
 
+    private final ExecutionTree tree;
+    private int targetSid;
+    private final Vector<Vector<Node>> traces;
+    private final HashMap<Integer, Vector<Vector<Float>>> samples;
 }
