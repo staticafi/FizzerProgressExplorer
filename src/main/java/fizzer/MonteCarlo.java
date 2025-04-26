@@ -4,12 +4,12 @@ import java.util.*;
 
 public class MonteCarlo {
 
-    private ExecutionTree tree;
+    private final ExecutionTree tree;
     private LocationId targetId;
-    private Vector<Vector<Node>> traces;
-    private HashMap<LocationId, Vector<Vector<Float>>> samples;
+    private final Vector<Vector<Node>> traces;
+    private final HashMap<Integer, Vector<Vector<Float>>> samples;
 
-    public MonteCarlo(ExecutionTree tree) {
+    public MonteCarlo(final ExecutionTree tree) {
         this.tree = tree;
         targetId = null;
         traces = new Vector<>();
@@ -25,10 +25,10 @@ public class MonteCarlo {
     public double getNodeValue(Node node) { return node.getBestValue(tree.getAnalysisIndex()); }
     public double getTraceValue(Vector<Node> trace) { return getNodeValue(getTraceTargetNode(trace)); }
     public double getTraceValue(int traceIndex) { return getTraceValue(traces.get(traceIndex)); }
-    public HashMap<LocationId, Vector<Vector<Float>>> getSamples() { return samples; }
-    public Vector<Vector<Float>> getSamples(LocationId id) { return samples.get(id); }
+    public HashMap<Integer, Vector<Vector<Float>>> getSamples() { return samples; }
+    public Vector<Vector<Float>> getSamples(int sid) { return samples.get(sid); }
     public double getSampleValue(int sampleIndex) { return getTraceValue(traces.get(sampleIndex)); }
-    public Set<LocationId> getLocations() { return samples.keySet(); }
+    public Set<Integer> getSignedLocations() { return samples.keySet(); }
 
     public void clear() {
         targetId = null;
@@ -36,7 +36,7 @@ public class MonteCarlo {
         samples.clear();
     }
 
-    public void compute(LocationId targetId) {
+    public void compute(final LocationId targetId) {
         this.targetId = targetId;
         collectTraces(tree.getRootNode());
         traces.sort(new Comparator<Vector<Node>>() {
@@ -53,7 +53,7 @@ public class MonteCarlo {
                 return left.size() - right.size();
             }
         });
-        for (Map.Entry<LocationId, Vector<Vector<Float>>> entry : samples.entrySet()) {
+        for (Map.Entry<Integer, Vector<Vector<Float>>> entry : samples.entrySet()) {
             entry.setValue(new Vector<>());
             for (Vector<Node> trace : traces)
                 entry.getValue().add(computeSample(entry.getKey(), trace));
@@ -64,20 +64,20 @@ public class MonteCarlo {
         return tree.getAnalyses()[tree.getAnalysisIndex()];
     }
 
-    private boolean isNodeValid(Node node) {
+    private boolean isNodeValid(final Node node) {
         return node.getDiscoveryIndex() <= getAnalysis().getViewProps().maxDiscoveryIndex;
     }
 
-    private void collectTraces(Node node) {
+    private void collectTraces(final Node node) {
         if (!isNodeValid(node))
             return;
         if (node.getLocationId().equals(targetId)) {
             Vector<Node> trace = new Vector<>();
             for (Node n = node; n != null; n = n.getParent())
                 trace.add(n);
-            for (Node n = node.getParent(); n != null; n = n.getParent())
-                samples.putIfAbsent(n.getLocationId(), null);
             Collections.reverse(trace);
+            for (int i = 0; i + 1 < trace.size(); ++i)
+                samples.putIfAbsent((trace.get(i).getChildren()[0] == trace.get(i + 1) ? -1 : 1) * trace.get(i).getLocationId().id, null);
             traces.add(trace);
         }
         for (int i = 0; i != 2; ++i)
@@ -85,10 +85,12 @@ public class MonteCarlo {
                 collectTraces(node.getChildren()[i]);
     }
 
-    private static Vector<Float> computeSample(LocationId id, Vector<Node> trace) {
+    private static Vector<Float> computeSample(final int sid, final Vector<Node> trace) {
+        final int id = Math.abs(sid);
+        final int dir = sid < 0 ? 0 : 1;
         Vector<Float> sample = new Vector<>();
         for (int i = 0, n = trace.size() - 1; i < n; ++i)
-            if (trace.get(i).getLocationId().equals(id))
+            if (trace.get(i).getLocationId().id == id && trace.get(i).getChildren()[dir] == trace.get(i + 1))
                 sample.add((float)i / (float)(Math.max(n - 1, 1)));
         return sample;
     }

@@ -28,7 +28,7 @@ public class MonteCarloViewer extends JPanel {
             }
         });
 
-        locations = new JList<>(new DefaultListModel<String>());
+        locations = new JList<>(new DefaultListModel<Integer>());
         locations.setFont(font);
         locations.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         locations.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -40,7 +40,7 @@ public class MonteCarloViewer extends JPanel {
                 int maxIndex = lsm.getMaxSelectionIndex();
                 for (int i = minIndex; i <= maxIndex; i++)
                     if (lsm.isSelectedIndex(i))
-                        activeLocations.add(new LocationId(Integer.parseInt(locations.getModel().getElementAt(i))));
+                        activeLocations.add(locations.getModel().getElementAt(i));
                 redraw();
             }
         });
@@ -113,7 +113,7 @@ public class MonteCarloViewer extends JPanel {
         locationColors.clear();
 
         stageSelector.setSelectedItem(stage.toString());
-        ((DefaultListModel<String>)locations.getModel()).clear();
+        ((DefaultListModel<Integer>)locations.getModel()).clear();
         redraw();
     }
 
@@ -126,9 +126,9 @@ public class MonteCarloViewer extends JPanel {
         method.compute(targetId);
         computeLocationColors();
         int maxSamples = 0;
-        for (LocationId id : method.getLocations().stream().sorted().toList()) {
-            ((DefaultListModel<String>)(locations.getModel())).addElement(id.toString());
-            maxSamples = Math.max(maxSamples, method.getSamples(id).size());
+        for (int sid : method.getSignedLocations().stream().sorted().toList()) {
+            ((DefaultListModel<Integer>)(locations.getModel())).addElement(sid);
+            maxSamples = Math.max(maxSamples, method.getSamples(sid).size());
         }
         locations.setSelectedIndex(0);
         paper.setPreferredSize(new Dimension(paperWidth, (maxSamples + 1) * samplesStride));
@@ -141,7 +141,7 @@ public class MonteCarloViewer extends JPanel {
     }
 
     private void computeLocationColors() {
-        java.util.List<LocationId> allLocations = method.getLocations().stream().sorted().toList();
+        java.util.List<Integer> allLocations = method.getSignedLocations().stream().sorted().toList();
         locationColors.clear();
         int size = 2;
         while (size * size * size < allLocations.size())
@@ -172,8 +172,8 @@ public class MonteCarloViewer extends JPanel {
         int start = sampleMarginLeft;
         int end = paperWidth - sampleMarginRight;
         g.setColor(Color.LIGHT_GRAY);
-        for (LocationId id : activeLocations) {
-            Vector<Vector<Float>> samples = method.getSamples(id);
+        for (int sid : activeLocations) {
+            Vector<Vector<Float>> samples = method.getSamples(sid);
             for (int i = 0; i != samples.size(); ++i) {
                 int y = samplesStride * (i+1);
                 g.setColor(Color.LIGHT_GRAY);
@@ -183,9 +183,9 @@ public class MonteCarloViewer extends JPanel {
             }
         }
         ((Graphics2D)g).setStroke(new BasicStroke(3));
-        for (LocationId id : activeLocations) {
-            g.setColor(locationColors.get(id));
-            Vector<Vector<Float>> samples = method.getSamples(id);
+        for (int sid : activeLocations) {
+            g.setColor(locationColors.get(sid));
+            Vector<Vector<Float>> samples = method.getSamples(sid);
             for (int i = 0; i != samples.size(); ++i) {
                 int y = samplesStride * (i+1);
                 for (float t : samples.get(i)) {
@@ -205,11 +205,11 @@ public class MonteCarloViewer extends JPanel {
 
     private MonteCarlo method;
     private Stage stage;
-    private Vector<LocationId> activeLocations;
-    private HashMap<LocationId, Color> locationColors;
+    private Vector<Integer> activeLocations;
+    private HashMap<Integer, Color> locationColors;
 
     private JComboBox<String> stageSelector;
-    private JList<String> locations;
+    private JList<Integer> locations;
     private JPanel paper;
 
     private static final int sampleSize = 6;
