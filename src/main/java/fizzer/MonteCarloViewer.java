@@ -107,26 +107,23 @@ public class MonteCarloViewer extends JPanel {
 
         targetLabel.setText("Tgt: " + Integer.toString(method.getTargetSIid()));
         computeLocationColors();
-        int maxSamples = 0;
-        for (int sid : method.getSignedLocations().stream().sorted().toList()) {
+        for (int sid : method.getSignedLocations())
             ((DefaultListModel<Integer>)(locations.getModel())).addElement(sid);
-            maxSamples = Math.max(maxSamples, method.getSamples(sid).size());
-        }
         locations.setSelectedIndex(0);
-        resize(maxSamples);
+        resize();
         redraw();
     }
 
     private void computeLocationColors() {
-        java.util.List<Integer> allLocations = method.getSignedLocations().stream().sorted().toList();
+        java.util.List<Integer> allLocations = method.getSignedLocations();
         locationColors.clear();
         for (int i = 0; i < allLocations.size(); ++i)
             locationColors.put(allLocations.get(i), Color.getHSBColor(i/(float)(allLocations.size() + 1), 1.0f, 0.8f));
     }
 
-    private void resize(final int maxSamples) {
+    private void resize() {
         switch (stages.getSelectedIndex()) {
-            case 0: samplesPainter.resize(maxSamples); break;
+            case 0: samplesPainter.resize(); break;
         }
     }
 
@@ -171,8 +168,8 @@ public class MonteCarloViewer extends JPanel {
             addMouseMotionListener(ma);
         }
 
-        void resize(int maxSamples) {
-            setPreferredSize(new Dimension(paperWidth, (maxSamples + 1) * samplesStride));
+        void resize() {
+            setPreferredSize(new Dimension(paperWidth, (method.getTraces().size() + 1) * samplesStride));
         }
 
         void redraw() {

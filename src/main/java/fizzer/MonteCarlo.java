@@ -8,7 +8,10 @@ public class MonteCarlo {
         this.tree = tree;
         targetSid = 0;
         traces = new Vector<>();
+        locations = new Vector<>();
         samples = new HashMap<>();
+        sizes = new HashMap<>();
+        frequencies = new Vector<>();
     }
 
     public ExecutionTree getTree() { return tree; }
@@ -23,7 +26,11 @@ public class MonteCarlo {
     public HashMap<Integer, Vector<Vector<Float>>> getSamples() { return samples; }
     public Vector<Vector<Float>> getSamples(int sid) { return samples.get(sid); }
     public double getSampleValue(int sampleIndex) { return getTraceValue(traces.get(sampleIndex)); }
-    public Set<Integer> getSignedLocations() { return samples.keySet(); }
+    public Vector<Integer> getSignedLocations() { return locations; }
+    public HashMap<Integer, Vector<Integer>> getSizes() { return sizes; }
+    public Vector<Integer> getSizes(int sid) { return sizes.get(sid); }
+    public Vector<Vector<Float>> getFrequencies() { return frequencies; }
+    public Vector<Float> getFrequencies(int sample) { return frequencies.get(sample); }
 
     public void setTargetSid(final int sid) { targetSid = sid; }
     public boolean setTargetSid(final Node node) {
@@ -40,7 +47,9 @@ public class MonteCarlo {
     public void clear() {
         targetSid = 0;
         traces.clear();
+        locations.clear();
         samples.clear();
+        sizes.clear();
     }
 
     public void compute() {
@@ -48,6 +57,9 @@ public class MonteCarlo {
             return;
         collectTraces();
         computeSamples();
+        computeLocations();
+        computeSizes();
+        computeFrequencies();
     }
 
     private Analysis getAnalysis() {
@@ -113,8 +125,40 @@ public class MonteCarlo {
         return sample;
     }
 
+    private void computeLocations() {
+        for (int sid : samples.keySet().stream().sorted().toList())
+            locations.add(sid);
+    }
+
+    private void computeSizes() {
+        for (Map.Entry<Integer, Vector<Vector<Float>>> entry : samples.entrySet()) {
+            Vector<Integer> v = new Vector<>();
+            for (Vector<Float> sample : entry.getValue())
+                v.add(sample.size());
+            sizes.put(entry.getKey(), v);
+        }
+    }
+
+    private void computeFrequencies() {
+        for (int i = 0; i < traces.size(); ++i) {
+            Vector<Float> f = new Vector<>();
+            int sum = 0;
+            for (int sid : locations) {
+                int s = samples.get(sid).size();
+                f.add((float)s);
+                sum += s;
+            }
+            for (int j = 0; j < f.size(); ++j)
+                f.set(j, f.get(j) / sum);
+            frequencies.add(f);
+        }
+    }
+
     private final ExecutionTree tree;
     private int targetSid;
     private final Vector<Vector<Node>> traces;
+    private final Vector<Integer> locations;
     private final HashMap<Integer, Vector<Vector<Float>>> samples;
+    private final HashMap<Integer, Vector<Integer>> sizes;
+    private final Vector<Vector<Float>> frequencies;
 }
