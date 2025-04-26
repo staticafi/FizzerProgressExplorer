@@ -144,7 +144,7 @@ public class MonteCarlo {
             Vector<Float> f = new Vector<>();
             int sum = 0;
             for (int sid : locations) {
-                int s = samples.get(sid).size();
+                int s = sizes.get(sid).get(i);
                 f.add((float)s);
                 sum += s;
             }
