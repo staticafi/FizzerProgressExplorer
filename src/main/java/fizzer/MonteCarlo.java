@@ -54,6 +54,7 @@ public class MonteCarlo {
         locations.clear();
         samples.clear();
         sizes.clear();
+        frequencies.clear();
         consumptions.clear();
     }
 
