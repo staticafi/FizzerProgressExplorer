@@ -8,13 +8,13 @@ import java.util.*;
 
 public class MonteCarloViewer extends JPanel {
 
-    public MonteCarloViewer(MonteCarlo method, SourceMapping sourceMapping) {
-        this.sourceMapping = sourceMapping;
-        this.method = method;
-        this.activeLocations = new Vector<>();
-        this.locationColors = new HashMap<>();
+    public MonteCarloViewer(MonteCarlo method_, SourceMapping sourceMapping_) {
+        sourceMapping = sourceMapping_;
+        method = method_;
+        activeLocations = new Vector<>();
+        locationColors = new HashMap<>();
 
-        Font font = new Font("Monospaced", Font.PLAIN, ProgressExplorer.textFontSize);
+        final Font font = new Font("Monospaced", Font.PLAIN, ProgressExplorer.textFontSize);
 
         targetLabel = new Label("Tgt: 0");
         targetLabel.setFont(font);
@@ -48,24 +48,29 @@ public class MonteCarloViewer extends JPanel {
         samplesPainter = new SamplesPainter(font);
         sizesPainter = new SizesPainter(font);
         frequenciesPainter = new FrequenciesPainter(font);
+        consumptionsPainter = new ConsumptionsPainter(font);
 
-        JScrollPane locationsScrollPane = new JScrollPane(locations);
+        final JScrollPane locationsScrollPane = new JScrollPane(locations);
         locationsScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         locationsScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
-        JScrollPane samplesScrollPane = new JScrollPane(samplesPainter);
+        final JScrollPane samplesScrollPane = new JScrollPane(samplesPainter);
         samplesScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         samplesScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
-        JScrollPane sizesScrollPane = new JScrollPane(sizesPainter);
+        final JScrollPane sizesScrollPane = new JScrollPane(sizesPainter);
         sizesScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         sizesScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
-        JScrollPane frequenciesScrollPane = new JScrollPane(frequenciesPainter);
+        final JScrollPane frequenciesScrollPane = new JScrollPane(frequenciesPainter);
         frequenciesScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         frequenciesScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
-        JPanel leftPanel = new JPanel(new BorderLayout());
+        final JScrollPane consumptionsScrollPane = new JScrollPane(consumptionsPainter);
+        consumptionsScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
+        consumptionsScrollPane.getVerticalScrollBar().setUnitIncrement(20);
+
+        final JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setOpaque(true);
         leftPanel.add(targetLabel, BorderLayout.NORTH);
         leftPanel.add(locationsScrollPane, BorderLayout.CENTER);
@@ -74,9 +79,10 @@ public class MonteCarloViewer extends JPanel {
         stages.addTab("Samples", samplesScrollPane);
         stages.addTab("Sizes", sizesScrollPane);
         stages.addTab("Frequencies", frequenciesScrollPane);
+        stages.addTab("Consumptions", consumptionsScrollPane);
         stages.setSelectedIndex(0);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, stages);
+        final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, stages);
         splitPane.setOneTouchExpandable(true);
         splitPane.setDividerLocation(100);
 
@@ -137,6 +143,7 @@ public class MonteCarloViewer extends JPanel {
         samplesPainter.resize();
         sizesPainter.resize();
         frequenciesPainter.resize();
+        consumptionsPainter.resize();
     }
 
     private void redraw() {
@@ -144,6 +151,7 @@ public class MonteCarloViewer extends JPanel {
             case 0: samplesPainter.redraw(); break;
             case 1: sizesPainter.redraw(); break;
             case 2: frequenciesPainter.redraw(); break;
+            case 3: consumptionsPainter.redraw(); break;
         }
     }
 
@@ -183,7 +191,7 @@ public class MonteCarloViewer extends JPanel {
         }
 
         void resize() {
-            setPreferredSize(new Dimension(paperWidth, (method.getTraces().size() + 1) * samplesStride));
+            setPreferredSize(new Dimension(paperWidth, (method.getTraces().size()) * samplesStride() + panelBottomMargin));
         }
 
         void redraw() {
@@ -205,7 +213,7 @@ public class MonteCarloViewer extends JPanel {
             for (int sid : activeLocations) {
                 final Vector<Vector<Float>> samples = method.getSamples(sid);
                 for (int i = 0; i != samples.size(); ++i) {
-                    final int y = samplesStride * (i+1);
+                    final int y = samplesStride() * (i+1);
                     g.setColor(Color.LIGHT_GRAY);
                     g.drawLine(sampleMarginLeft, y, sampleMarginRight, y);
                     g.setColor(Color.BLACK);
@@ -214,17 +222,17 @@ public class MonteCarloViewer extends JPanel {
             }
         }
 
-        protected int sampleLineX(float t) {
-            return Math.round(sampleMarginLeft + t * (sampleMarginRight - sampleMarginLeft));
-        }
+        protected int sampleLineX(final float t) { return Math.round(sampleMarginLeft + t * (sampleMarginRight - sampleMarginLeft)); }
+        protected int sampleLineY(final int index) { return samplesStride() * (index + 1); }
+        protected int samplesStride() { return 20; }
 
         protected static final int paperWidth = 1250;
-        protected static final int samplesStride = 20;
         protected static final int sampleMarginLeft = 10;
         protected static final int sampleMarginRight = paperWidth - 100;
         protected static final int sampleValueShiftX = 10;
         protected static final int sampleValueShiftY = 5;
         protected static final int sampleThickness = 6;
+        protected static final int panelBottomMargin = 20;
     }
 
     private class SamplesPainter extends Painter {
@@ -240,7 +248,7 @@ public class MonteCarloViewer extends JPanel {
                 g.setColor(locationColors.get(sid));
                 final Vector<Vector<Float>> samples = method.getSamples(sid);
                 for (int i = 0; i != samples.size(); ++i) {
-                    final int y = samplesStride * (i+1);
+                    final int y = sampleLineY(i);
                     for (float t : samples.get(i)) {
                         final int x = sampleLineX(t);
                         g.drawLine(x, y-sampleThickness/2, x, y+sampleThickness/2);
@@ -268,7 +276,7 @@ public class MonteCarloViewer extends JPanel {
                 maxSize = Math.max(maxSize, sum);
             }
             for (int i = 0; i != method.getNumTraces(); ++i) {
-                final int y = samplesStride * (i+1);
+                final int y = sampleLineY(i);
                 float accumulator = 0.0f;
                 for (int sid : activeLocations) {
                     final int x = sampleLineX(accumulator);
@@ -291,7 +299,7 @@ public class MonteCarloViewer extends JPanel {
             renderLinesAndValues(g);
             final Vector<Vector<Float>> frequencies = method.getFrequencies();
             for (int i = 0; i != frequencies.size(); ++i) {
-                final int y = samplesStride * (i+1);
+                final int y = sampleLineY(i);
                 final Vector<Float> f = frequencies.get(i);
                 float accumulator = 0.0f;
                 for (int j = 0; j != f.size(); ++j) {
@@ -302,6 +310,42 @@ public class MonteCarloViewer extends JPanel {
                 }
             }
         }
+    }
+
+    private class ConsumptionsPainter extends Painter {
+        ConsumptionsPainter(final Font font) {
+            super(font);
+        }
+
+        @Override
+        protected void render(Graphics g) {
+            renderLinesAndValues(g);
+            ((Graphics2D)g).setStroke(new BasicStroke(lineWidth));
+            for (int sid : activeLocations) {
+                g.setColor(locationColors.get(sid));
+                final Vector<Vector<Float[]>> consumptions = method.getConsumptions(sid);
+                for (int i = 0; i != consumptions.size(); ++i)
+                    if (!consumptions.get(i).isEmpty()) {
+                        final int y = sampleLineY(i);
+                        int x0 = sampleLineX(0.0f);;
+                        int y0 = 0;
+                        for (Float[] point : consumptions.get(i)) {
+                            final int x1 = sampleLineX(point[0]);
+                            g.drawLine(x0, y - y0, x1, y - y0);
+                            g.drawLine(x1, y - y0, x1, y - Math.round(point[1] * curveHeight));
+                            x0 = x1;
+                            y0 = Math.round(point[1] * curveHeight);
+                        }
+                        g.drawLine(x0, y - y0, sampleLineX(1.0f), y - curveHeight);
+                    }
+            }
+        }
+
+        @Override
+        protected int samplesStride() { return curveHeight + 20; }
+
+        private static final int curveHeight = 100;
+        private static final int lineWidth = 2;
     }
 
     @SuppressWarnings("unused")
@@ -317,4 +361,5 @@ public class MonteCarloViewer extends JPanel {
     private SamplesPainter samplesPainter;
     private SizesPainter sizesPainter;
     private FrequenciesPainter frequenciesPainter;
+    private ConsumptionsPainter consumptionsPainter;
 }
