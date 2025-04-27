@@ -18,6 +18,7 @@ public class MonteCarlo {
     public int getTargetSIid() { return targetSid; }
     public boolean isEmpty() { return targetSid == 0; }
     public Vector<Vector<Node>> getTraces() { return traces; }
+    public int getNumTraces() { return traces.size(); }
     public Node getTraceTargetNode(Vector<Node> trace) { return trace.get(trace.size() - 1); }
     public Node getTraceTargetNode(int traceIndex) { return getTraceTargetNode(traces.get(traceIndex)); }
     public double getNodeValue(Node node) { return node.getBestValue(tree.getAnalysisIndex()); }

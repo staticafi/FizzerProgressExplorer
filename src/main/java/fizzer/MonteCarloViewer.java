@@ -219,12 +219,12 @@ public class MonteCarloViewer extends JPanel {
         }
 
         protected static final int paperWidth = 1250;
-        protected static final int sampleSize = 6;
         protected static final int samplesStride = 20;
         protected static final int sampleMarginLeft = 10;
         protected static final int sampleMarginRight = paperWidth - 100;
         protected static final int sampleValueShiftX = 10;
         protected static final int sampleValueShiftY = 5;
+        protected static final int sampleThickness = 6;
     }
 
     private class SamplesPainter extends Painter {
@@ -235,7 +235,7 @@ public class MonteCarloViewer extends JPanel {
         @Override
         protected void render(Graphics g) {
             renderLinesAndValues(g);
-            ((Graphics2D)g).setStroke(new BasicStroke(3));
+            ((Graphics2D)g).setStroke(new BasicStroke(lineWidth));
             for (int sid : activeLocations) {
                 g.setColor(locationColors.get(sid));
                 final Vector<Vector<Float>> samples = method.getSamples(sid);
@@ -243,11 +243,13 @@ public class MonteCarloViewer extends JPanel {
                     final int y = samplesStride * (i+1);
                     for (float t : samples.get(i)) {
                         final int x = sampleLineX(t);
-                        g.drawLine(x, y-sampleSize/2, x, y+sampleSize/2);
+                        g.drawLine(x, y-sampleThickness/2, x, y+sampleThickness/2);
                     }
                 }
             }
         }
+
+        private static final int lineWidth = 3;
     }
 
     private class SizesPainter extends Painter {
@@ -259,17 +261,21 @@ public class MonteCarloViewer extends JPanel {
         protected void render(Graphics g) {
             renderLinesAndValues(g);
             int maxSize = 0;
-            for (int sid : activeLocations)
-                for (int size : method.getSizes(sid))
-                    maxSize = Math.max(maxSize, size);
-            ((Graphics2D)g).setStroke(new BasicStroke(3));
-            for (int sid : activeLocations) {
-                g.setColor(locationColors.get(sid));
-                final Vector<Integer> sizes = method.getSizes(sid);
-                for (int i = 0; i != sizes.size(); ++i) {
-                    final int y = samplesStride * (i+1);
-                    final int x = sampleLineX(sizes.get(i) / (float)maxSize);
-                    g.drawLine(x, y-sampleSize/2, x, y+sampleSize/2);
+            for (int i = 0; i != method.getNumTraces(); ++i) {
+                int sum = 0;
+                for (int sid : activeLocations)
+                    sum += method.getSizes(sid).get(i);
+                maxSize = Math.max(maxSize, sum);
+            }
+            for (int i = 0; i != method.getNumTraces(); ++i) {
+                final int y = samplesStride * (i+1);
+                float accumulator = 0.0f;
+                for (int sid : activeLocations) {
+                    final int x = sampleLineX(accumulator);
+                    final float size = method.getSizes(sid).get(i) / (float)maxSize;
+                    g.setColor(locationColors.get(sid));
+                    g.fillRect(x, y - sampleThickness/2, sampleLineX(accumulator + size) - x, sampleThickness);
+                    accumulator += size;
                 }
             }
         }
@@ -283,15 +289,15 @@ public class MonteCarloViewer extends JPanel {
         @Override
         protected void render(Graphics g) {
             renderLinesAndValues(g);
-            ((Graphics2D)g).setStroke(new BasicStroke(sampleSize));
             final Vector<Vector<Float>> frequencies = method.getFrequencies();
             for (int i = 0; i != frequencies.size(); ++i) {
                 final int y = samplesStride * (i+1);
                 final Vector<Float> f = frequencies.get(i);
                 float accumulator = 0.0f;
                 for (int j = 0; j != f.size(); ++j) {
+                    final int x = sampleLineX(accumulator);
                     g.setColor(locationColors.get(method.getSignedLocations().get(j)));
-                    g.drawLine(sampleLineX(accumulator), y, sampleLineX(accumulator + f.get(j)), y);
+                    g.fillRect(x, y - sampleThickness/2, sampleLineX(accumulator + f.get(j)) - x, sampleThickness);
                     accumulator += f.get(j);
                 }
             }
