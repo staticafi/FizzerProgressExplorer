@@ -13,6 +13,7 @@ public class MonteCarlo {
         sizes = new HashMap<>();
         frequencies = new Vector<>();
         consumptions = new HashMap<>();
+        functionSizes = new HashMap<>();
     }
 
     public ExecutionTree getTree() { return tree; }
@@ -35,6 +36,13 @@ public class MonteCarlo {
     public Vector<Float> getFrequencies(int sample) { return frequencies.get(sample); }
     public HashMap<Integer, Vector<Vector<Float[]>>> getConsumptions() { return consumptions; }
     public Vector<Vector<Float[]>> getConsumptions(int sid) { return consumptions.get(sid); }
+    public HashMap<Integer, Vector<Float>> getFunctionSizes() { return functionSizes; }
+    public Vector<Float> getFunctionSizes(int sid) { return functionSizes.get(sid); }
+    public Vector<Float> getFunctionSizesOverall() { return functionSizes.get(0); }
+    public int evalFunctionSizesLinear(int sid, float value) {
+        Vector<Float> c = functionSizes.get(sid);
+        return Math.round(c.get(0) + value * c.get(1));
+    }
 
     public void setTargetSid(final int sid) { targetSid = sid; }
     public boolean setTargetSid(final Node node) {
@@ -56,6 +64,7 @@ public class MonteCarlo {
         sizes.clear();
         frequencies.clear();
         consumptions.clear();
+        functionSizes.clear();
     }
 
     public void compute() {
@@ -67,6 +76,7 @@ public class MonteCarlo {
         computeSizes();
         computeFrequencies();
         computeConsumptions();
+        computeFunctionSizes();
     }
 
     private Analysis getAnalysis() {
@@ -177,6 +187,48 @@ public class MonteCarlo {
         }
     }
 
+    private void computeFunctionSizes() {
+        for (int sid : locations)
+            functionSizes.put(sid, computeFunctionSizes(sizes.get(sid)));
+        Vector<Integer> all = new Vector<>();
+        for (int i = 0; i != getNumTraces(); ++i) {
+            int sum = 0;
+            for (int sid : locations)
+                sum += sizes.get(sid).get(i);
+            all.add(sum);
+        }
+        functionSizes.put(0, computeFunctionSizes(all));
+    }
+
+    private Vector<Float> computeFunctionSizes(Vector<Integer> data) {
+        Vector<Vec2> input = new Vector<>();
+        for (int i = 0; i != data.size(); ++i)
+            input.add(new Vec2((float)getTraceValue(i), (float)data.get(i)));
+        Vector<Float> output = new Vector<>();
+        computeLinearApproximation(input, output);
+        computeQuadraticApproximation(input, output);
+        return output;
+    }
+
+    private void computeLinearApproximation(Vector<Vec2> input, Vector<Float> output) {
+        float A = 0, B = 0, C = 0, D = 0;
+        for (int i = 0; i != input.size(); ++i) {
+            Vec2 p = input.get(i);
+            A += p.x * p.x;
+            B += p.x;
+            C += p.x * p.y;
+            D += p.y;
+        }
+        float a = (input.size() * C - B * D) / (input.size() * A - B * B);
+        float b = (D - a * B) / input.size();
+        output.add(b);
+        output.add(a);
+    }
+
+    private void computeQuadraticApproximation(Vector<Vec2> input, Vector<Float> output) {
+
+    }
+
     private final ExecutionTree tree;
     private int targetSid;
     private final Vector<Vector<Node>> traces;
@@ -185,4 +237,5 @@ public class MonteCarlo {
     private final HashMap<Integer, Vector<Integer>> sizes;
     private final Vector<Vector<Float>> frequencies;
     private final HashMap<Integer, Vector<Vector<Float[]>>> consumptions;
+    private final HashMap<Integer, Vector<Float>> functionSizes;
 }

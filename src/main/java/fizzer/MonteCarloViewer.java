@@ -5,6 +5,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.util.*;
+import java.util.function.*;
 
 public class MonteCarloViewer extends JPanel {
 
@@ -226,6 +227,14 @@ public class MonteCarloViewer extends JPanel {
         protected int sampleLineY(final int index) { return samplesStride() * (index + 1); }
         protected int samplesStride() { return 20; }
 
+        protected <T> Function<Double, T> wrapFunction(final BiFunction<Integer, Float, T> f) {
+            return  activeLocations.size() == 1 ?
+                        (t) -> f.apply(activeLocations.get(0), t.floatValue()) :
+                    activeLocations.isEmpty() || activeLocations.size() == method.getSignedLocations().size() ?
+                        (t) -> f.apply(0, t.floatValue()) :
+                        null;
+        }
+
         protected static final int paperWidth = 1250;
         protected static final int sampleMarginLeft = 10;
         protected static final int sampleMarginRight = paperWidth - 100;
@@ -233,6 +242,7 @@ public class MonteCarloViewer extends JPanel {
         protected static final int sampleValueShiftY = 5;
         protected static final int sampleThickness = 6;
         protected static final int panelBottomMargin = 20;
+        protected static final int functionMarkSize = 12;
     }
 
     private class SamplesPainter extends Painter {
@@ -268,12 +278,15 @@ public class MonteCarloViewer extends JPanel {
         @Override
         protected void render(Graphics g) {
             renderLinesAndValues(g);
+            final Function<Double, Integer> functionLinear = wrapFunction((sid, t) -> method.evalFunctionSizesLinear(sid, t));
             int maxSize = 0;
             for (int i = 0; i != method.getNumTraces(); ++i) {
                 int sum = 0;
                 for (int sid : activeLocations)
                     sum += method.getSizes(sid).get(i);
                 maxSize = Math.max(maxSize, sum);
+                if (functionLinear != null)
+                    maxSize = Math.max(maxSize, functionLinear.apply(method.getTraceValue(i)));
             }
             for (int i = 0; i != method.getNumTraces(); ++i) {
                 final int y = sampleLineY(i);
@@ -284,6 +297,11 @@ public class MonteCarloViewer extends JPanel {
                     g.setColor(locationColors.get(sid));
                     g.fillRect(x, y - sampleThickness/2, sampleLineX(accumulator + size) - x, sampleThickness);
                     accumulator += size;
+                }
+                if (functionLinear != null) {
+                    g.setColor(Color.BLACK);
+                    final int x = sampleLineX(functionLinear.apply(method.getTraceValue(i)) / (float)maxSize);
+                    g.fillRect(x - sampleThickness/2, y - functionMarkSize/2, sampleThickness, functionMarkSize);
                 }
             }
         }
