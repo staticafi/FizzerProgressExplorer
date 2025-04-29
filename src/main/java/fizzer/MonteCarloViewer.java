@@ -315,16 +315,26 @@ public class MonteCarloViewer extends JPanel {
         @Override
         protected void render(Graphics g) {
             renderLinesAndValues(g);
-            final Vector<Vector<Float>> frequencies = method.getFrequencies();
-            for (int i = 0; i != frequencies.size(); ++i) {
+            for (int i = 0; i != method.getFrequencies().size(); ++i) {
                 final int y = sampleLineY(i);
-                final Vector<Float> f = frequencies.get(i);
+                Vector<Float> f = method.getFrequencies().get(i);
                 float accumulator = 0.0f;
                 for (int j = 0; j != f.size(); ++j) {
                     final int x = sampleLineX(accumulator);
                     g.setColor(locationColors.get(method.getSignedLocations().get(j)));
                     g.fillRect(x, y - sampleThickness/2, sampleLineX(accumulator + f.get(j)) - x, sampleThickness);
                     accumulator += f.get(j);
+                }
+                f = method.evalFunctionFrequenciesLinear((float)method.getTraceValue(i)); 
+                accumulator = 0.0f;
+                HashSet<Integer> locs = new HashSet<>(activeLocations);
+                for (int j = 0; j != f.size(); ++j) {
+                    accumulator += f.get(j);
+                    if (locs.contains(method.getSignedLocations().get(j))) {
+                        final int x = sampleLineX(accumulator);
+                        g.setColor(locationColors.get(method.getSignedLocations().get(j)));
+                        g.fillRect(x - sampleThickness/2, y - functionMarkSize/2, sampleThickness, functionMarkSize);
+                    }
                 }
             }
         }

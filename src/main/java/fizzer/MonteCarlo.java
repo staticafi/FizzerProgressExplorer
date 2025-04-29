@@ -14,6 +14,7 @@ public class MonteCarlo {
         frequencies = new Vector<>();
         consumptions = new HashMap<>();
         functionSizes = new HashMap<>();
+        functionFrequencies = new Vector<>();
     }
 
     public ExecutionTree getTree() { return tree; }
@@ -39,9 +40,23 @@ public class MonteCarlo {
     public HashMap<Integer, Vector<Float>> getFunctionSizes() { return functionSizes; }
     public Vector<Float> getFunctionSizes(int sid) { return functionSizes.get(sid); }
     public Vector<Float> getFunctionSizesOverall() { return functionSizes.get(0); }
-    public int evalFunctionSizesLinear(int sid, float value) {
-        Vector<Float> c = functionSizes.get(sid);
-        return Math.round(c.get(0) + value * c.get(1));
+    public int evalFunctionSizesLinear(int sid, float value) { return Math.round(evalFunctionLinear(functionSizes.get(sid), value)); }
+    public Vector<Float> getFunctionFrequencies(int locationIndex) { return functionFrequencies.get(locationIndex); }
+    public float evalFunctionFrequenciesLinear(int locationIndex, float value) {
+        return Math.max(0.0f, evalFunctionLinear(getFunctionFrequencies(locationIndex), value));
+    }
+    public Vector<Float> evalFunctionFrequenciesLinear(float value) {
+        Vector<Float> result = new Vector<>();
+        float sum = 0.0f;
+        for (int i = 0; i != locations.size(); ++i) {
+            final float r = evalFunctionFrequenciesLinear(i, value);
+            result.add(r);
+            sum += r;
+        }
+        if (sum > 0.0f)
+            for (int i = 0; i != result.size(); ++i)
+                result.set(i, result.get(i) / sum);
+        return result;
     }
 
     public void setTargetSid(final int sid) { targetSid = sid; }
@@ -65,6 +80,7 @@ public class MonteCarlo {
         frequencies.clear();
         consumptions.clear();
         functionSizes.clear();
+        functionFrequencies.clear();
     }
 
     public void compute() {
@@ -77,6 +93,7 @@ public class MonteCarlo {
         computeFrequencies();
         computeConsumptions();
         computeFunctionSizes();
+        computeFunctionFrequencies();
     }
 
     private Analysis getAnalysis() {
@@ -201,16 +218,29 @@ public class MonteCarlo {
     }
 
     private Vector<Float> computeFunctionSizes(Vector<Integer> data) {
-        Vector<Vec2> input = new Vector<>();
+        final Vector<Vec2> input = new Vector<>();
         for (int i = 0; i != data.size(); ++i)
             input.add(new Vec2((float)getTraceValue(i), (float)data.get(i)));
-        Vector<Float> output = new Vector<>();
+        return computeApproximations(input);
+    }
+
+    private void computeFunctionFrequencies() {
+        for (int i = 0; i < locations.size(); ++i) {
+            final Vector<Vec2> input = new Vector<>();
+            for (int j = 0; j < frequencies.size(); ++j)
+                input.add(new Vec2((float)getTraceValue(j), frequencies.get(j).get(i)));
+            functionFrequencies.add(computeApproximations(input));
+        }
+    }
+
+    private Vector<Float> computeApproximations(final Vector<Vec2> input) {
+        final Vector<Float> output = new Vector<>();
         computeLinearApproximation(input, output);
         computeQuadraticApproximation(input, output);
         return output;
     }
 
-    private void computeLinearApproximation(Vector<Vec2> input, Vector<Float> output) {
+    private void computeLinearApproximation(final Vector<Vec2> input, final Vector<Float> output) {
         float A = 0, B = 0, C = 0, D = 0;
         for (int i = 0; i != input.size(); ++i) {
             Vec2 p = input.get(i);
@@ -225,8 +255,15 @@ public class MonteCarlo {
         output.add(a);
     }
 
-    private void computeQuadraticApproximation(Vector<Vec2> input, Vector<Float> output) {
+    private void computeQuadraticApproximation(final Vector<Vec2> input, final Vector<Float> output) {
+        // TODO!
+        output.add(0.0f);
+        output.add(0.0f);
+        output.add(0.0f);
+    }
 
+    private float evalFunctionLinear(final Vector<Float> coefficients, final float value) {
+        return coefficients.get(0) + value * coefficients.get(1);
     }
 
     private final ExecutionTree tree;
@@ -238,4 +275,5 @@ public class MonteCarlo {
     private final Vector<Vector<Float>> frequencies;
     private final HashMap<Integer, Vector<Vector<Float[]>>> consumptions;
     private final HashMap<Integer, Vector<Float>> functionSizes;
+    private final Vector<Vector<Float>> functionFrequencies;
 }
