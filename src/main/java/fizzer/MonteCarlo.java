@@ -28,20 +28,18 @@ public class MonteCarlo {
     }
 
     public static class Extrapolations {
-        public Extrapolations(final Vector<Vec2> input, final boolean splitBySign) {
-            if (splitBySign) {
-                final Vector<Vec2> positive = new Vector<>();
-                final Vector<Vec2> negative = new Vector<>();
-                final Vector<Vec2> zero = new Vector<>();
-                for (Vec2 point : input)
-                    (point.x > 0.0f ? positive : point.x < 0.0f ? negative : zero).add(point);
-                if (!positive.isEmpty() && !negative.isEmpty()) {
-                    positive.addAll(zero);
-                    negative.addAll(zero);
-                    linearPositive = new ExtrapolationLinear(positive);
-                    linearNegative = new ExtrapolationLinear(negative);
-                    return;
-                }
+        public Extrapolations(final Vector<Vec2> input) {
+            final Vector<Vec2> positive = new Vector<>();
+            final Vector<Vec2> negative = new Vector<>();
+            final Vector<Vec2> zero = new Vector<>();
+            for (Vec2 point : input)
+                (point.x > 0.0f ? positive : point.x < 0.0f ? negative : zero).add(point);
+            if (!positive.isEmpty() && !negative.isEmpty()) {
+                positive.addAll(zero);
+                negative.addAll(zero);
+                linearPositive = new ExtrapolationLinear(positive);
+                linearNegative = new ExtrapolationLinear(negative);
+                return;
             }
             linearPositive = new ExtrapolationLinear(input);
             linearNegative = linearPositive;
@@ -270,7 +268,7 @@ public class MonteCarlo {
         final Vector<Vec2> input = new Vector<>();
         for (int i = 0; i != data.size(); ++i)
             input.add(new Vec2((float)getTraceValue(i), (float)data.get(i)));
-        return new Extrapolations(input, true);
+        return new Extrapolations(input);
     }
 
     private void computeFrequenciesExtrapolation() {
@@ -278,7 +276,7 @@ public class MonteCarlo {
             final Vector<Vec2> input = new Vector<>();
             for (int j = 0; j < frequencies.size(); ++j)
                 input.add(new Vec2((float)getTraceValue(j), frequencies.get(j).get(i)));
-            frequenciesExtrapolation.add(new Extrapolations(input, true));
+            frequenciesExtrapolation.add(new Extrapolations(input));
         }
     }
 
