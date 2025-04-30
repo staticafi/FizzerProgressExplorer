@@ -67,6 +67,42 @@ public class MonteCarlo {
         private final ExtrapolationLinear linearNegative;
     }
 
+    public static class Clip {
+        public static Vector<Vec2> extrapolationLinear(final Vector<Vec2> Au, final Vec2 lo, final Vec2 hi) {
+            final Vec2 A = Au.get(0);
+            final Vec2 u = Au.get(1);
+            float tx, tX;
+            if (u.x == 0.0f) {
+                if (A.x < lo.x || A.x > hi.x) return null;
+                tx = -Float.MAX_VALUE;
+                tX = Float.MAX_VALUE;
+            } else {
+                final float l = (lo.x - A.x) / u.x;
+                final float h = (hi.x - A.x) / u.x;
+                tx = Math.min(l, h);
+                tX = Math.max(l, h);
+            }
+            float ty, tY;
+            if (u.y == 0.0f) {
+                if (A.y < lo.y || A.y > hi.y) return null;
+                ty = -Float.MAX_VALUE;
+                tY = Float.MAX_VALUE;
+            } else {
+                final float l = (lo.y - A.y) / u.y;
+                final float h = (hi.y - A.y) / u.y;
+                ty = Math.min(l, h);
+                tY = Math.max(l, h);
+            }
+            final float t0 = Math.max(tx, ty);
+            final float t1 = Math.min(tX, tY);
+            if (t1 < t0) return null;
+            final Vector<Vec2> result = new Vector<>();
+            result.add(A.add(u.mul(t0)));
+            result.add(A.add(u.mul(t1)));
+            return result;
+        }
+    }
+
     public MonteCarlo(final ExecutionTree tree) {
         this.tree = tree;
         targetSid = 0;
