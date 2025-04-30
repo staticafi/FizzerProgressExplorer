@@ -278,7 +278,7 @@ public class MonteCarloViewer extends JPanel {
         @Override
         protected void render(Graphics g) {
             renderLinesAndValues(g);
-            final Function<Double, Integer> functionLinear = wrapFunction((sid, t) -> method.evalFunctionSizesLinear(sid, t));
+            final Function<Double, Integer> functionLinear = wrapFunction((sid, t) -> method.extrapolateSizesLinear(sid, t));
             int maxSize = 0;
             for (int i = 0; i != method.getNumTraces(); ++i) {
                 int sum = 0;
