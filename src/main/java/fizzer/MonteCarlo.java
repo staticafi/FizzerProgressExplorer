@@ -88,8 +88,8 @@ public class MonteCarlo {
     public Vector<Integer> getSizes(int sid) { return sizes.get(sid); }
     public Vector<Vector<Float>> getFrequencies() { return frequencies; }
     public Vector<Float> getFrequencies(int sample) { return frequencies.get(sample); }
-    public HashMap<Integer, Vector<Vector<Float[]>>> getConsumptions() { return consumptions; }
-    public Vector<Vector<Float[]>> getConsumptions(int sid) { return consumptions.get(sid); }
+    public HashMap<Integer, Vector<Vector<Vec2>>> getConsumptions() { return consumptions; }
+    public Vector<Vector<Vec2>> getConsumptions(int sid) { return consumptions.get(sid); }
     public int extrapolateSizesLinear(int sid, float value) { return Math.round(sizesExtrapolation.get(sid).applyLinear(value)); }
     public float extrapolateFrequenciesLinear(int locationIndex, float value) {
         return Math.max(0.0f, frequenciesExtrapolation.get(locationIndex).applyLinear(value));
@@ -239,13 +239,13 @@ public class MonteCarlo {
 
     private void computeConsumptions() {
         for (Map.Entry<Integer, Vector<Vector<Float>>> entry : samples.entrySet()) {
-            final Vector<Vector<Float[]>> u = new Vector<>();
+            final Vector<Vector<Vec2>> u = new Vector<>();
             for (Vector<Float> sample : entry.getValue()) {
-                final Vector<Float[]> v = new Vector<>();
+                final Vector<Vec2> v = new Vector<>();
                 int count = 0;
                 for (float t : sample) {
                     ++count;
-                    v.add(new Float[] { t, count / (float)sample.size() });
+                    v.add(new Vec2(t, count / (float)sample.size()));
                 }
                 u.add(v);
             }
@@ -289,7 +289,7 @@ public class MonteCarlo {
     private final HashMap<Integer, Vector<Vector<Float>>> samples;
     private final HashMap<Integer, Vector<Integer>> sizes;
     private final Vector<Vector<Float>> frequencies;
-    private final HashMap<Integer, Vector<Vector<Float[]>>> consumptions;
+    private final HashMap<Integer, Vector<Vector<Vec2>>> consumptions;
     private final HashMap<Integer, Extrapolations> sizesExtrapolation;
     private final Vector<Extrapolations> frequenciesExtrapolation;
 }

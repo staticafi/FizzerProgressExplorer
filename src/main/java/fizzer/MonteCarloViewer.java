@@ -351,18 +351,18 @@ public class MonteCarloViewer extends JPanel {
             ((Graphics2D)g).setStroke(new BasicStroke(lineWidth));
             for (int sid : activeLocations) {
                 g.setColor(locationColors.get(sid));
-                final Vector<Vector<Float[]>> consumptions = method.getConsumptions(sid);
+                final Vector<Vector<Vec2>> consumptions = method.getConsumptions(sid);
                 for (int i = 0; i != consumptions.size(); ++i)
                     if (!consumptions.get(i).isEmpty()) {
                         final int y = sampleLineY(i);
                         int x0 = sampleLineX(0.0f);;
                         int y0 = 0;
-                        for (Float[] point : consumptions.get(i)) {
-                            final int x1 = sampleLineX(point[0]);
+                        for (Vec2 point : consumptions.get(i)) {
+                            final int x1 = sampleLineX(point.x);
                             g.drawLine(x0, y - y0, x1, y - y0);
-                            g.drawLine(x1, y - y0, x1, y - Math.round(point[1] * curveHeight));
+                            g.drawLine(x1, y - y0, x1, y - Math.round(point.y * curveHeight));
                             x0 = x1;
-                            y0 = Math.round(point[1] * curveHeight);
+                            y0 = Math.round(point.y * curveHeight);
                         }
                         g.drawLine(x0, y - y0, sampleLineX(1.0f), y - curveHeight);
                     }
