@@ -18,7 +18,10 @@ public class MonteCarlo {
             c0 = (D - c1 * B) / input.size();
         }
 
-        public float apply(final float value) {return c0 + value * c1; }
+        public Vector<Float> getCoefficients() { Vector<Float> v = new Vector<>(); v.add(c0); v.add(c1); return v; }
+
+        public static float apply(final float value, final float c0, final float c1) {return c0 + value * c1; }
+        public float apply(final float value) { return apply(value, c0, c1); }
 
         private final float c0;
         private final float c1;
