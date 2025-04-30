@@ -114,6 +114,7 @@ public class MonteCarlo {
         consumptions = new HashMap<>();
         sizesExtrapolation = new HashMap<>();
         frequenciesExtrapolation = new Vector<>();
+        consumptionsExtrapolation = new HashMap<>();
     }
 
     public ExecutionTree getTree() { return tree; }
@@ -153,6 +154,12 @@ public class MonteCarlo {
                 result.set(i, result.get(i) / sum);
         return result;
     }
+    public Vector<Vec2> extrapolateConsumptionsLinear(int sid, int traceIndex) {
+        final Vector<Extrapolations> e = consumptionsExtrapolation.get(sid);
+        final float value = (float)getTraceValue(traceIndex);
+        final Vector<Vec2> Au = ExtrapolationLinear.parametric(e.get(0).applyLinear(value), e.get(1).applyLinear(value));
+        return Clip.extrapolationLinear(Au, Vec2.zero, new Vec2(1.0f, 1.0f));
+    }
 
     public void setTargetSid(final int sid) { targetSid = sid; }
     public boolean setTargetSid(final Node node) {
@@ -176,6 +183,7 @@ public class MonteCarlo {
         consumptions.clear();
         sizesExtrapolation.clear();
         frequenciesExtrapolation.clear();
+        consumptionsExtrapolation.clear();
     }
 
     public void compute() {
@@ -189,6 +197,7 @@ public class MonteCarlo {
         computeConsumptions();
         computeSizesExtrapolation();
         computeFrequenciesExtrapolation();
+        computeConsumptionsExtrapolation();
     }
 
     private Analysis getAnalysis() {
@@ -328,6 +337,23 @@ public class MonteCarlo {
         }
     }
 
+    private void computeConsumptionsExtrapolation() {
+        for (int sid : locations) {
+            final Vector<Vector<Float>> coefficients = new Vector<>();
+            for (Vector<Vec2> input : consumptions.get(sid))
+                coefficients.add(input.isEmpty() ? null : new ExtrapolationLinear(input).getCoefficients());
+            final Vector<Extrapolations> v = new Vector<>();
+            for (int j = 0; j != 2; ++j) {
+                final Vector<Vec2> input = new Vector<>();
+                for (int i = 0; i != coefficients.size(); ++i)
+                    if (coefficients.get(i) != null)
+                        input.add(new Vec2((float)getTraceValue(i), coefficients.get(i).get(j)));
+                v.add(new Extrapolations(input));
+            }
+            consumptionsExtrapolation.put(sid, v);
+        }
+    }
+
     private final ExecutionTree tree;
     private int targetSid;
     private final Vector<Vector<Node>> traces;
@@ -338,4 +364,5 @@ public class MonteCarlo {
     private final HashMap<Integer, Vector<Vector<Vec2>>> consumptions;
     private final HashMap<Integer, Extrapolations> sizesExtrapolation;
     private final Vector<Extrapolations> frequenciesExtrapolation;
+    private final HashMap<Integer, Vector<Extrapolations>> consumptionsExtrapolation;
 }

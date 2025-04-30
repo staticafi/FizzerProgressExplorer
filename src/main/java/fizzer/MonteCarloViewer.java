@@ -355,7 +355,7 @@ public class MonteCarloViewer extends JPanel {
                 for (int i = 0; i != consumptions.size(); ++i)
                     if (!consumptions.get(i).isEmpty()) {
                         final int y = sampleLineY(i);
-                        int x0 = sampleLineX(0.0f);;
+                        int x0 = sampleLineX(0.0f);
                         int y0 = 0;
                         for (Vec2 point : consumptions.get(i)) {
                             final int x1 = sampleLineX(point.x);
@@ -366,6 +366,21 @@ public class MonteCarloViewer extends JPanel {
                         }
                         g.drawLine(x0, y - y0, sampleLineX(1.0f), y - curveHeight);
                     }
+            }
+            ((Graphics2D)g).setStroke(new BasicStroke(2 * lineWidth));
+            for (int sid : activeLocations) {
+                g.setColor(locationColors.get(sid));
+                for (int i = 0; i != method.getNumTraces(); ++i) {
+                    final Vector<Vec2> points = method.extrapolateConsumptionsLinear(sid, i);
+                    if (points != null) {
+                        final int x0 = sampleLineX(points.get(0).x);
+                        final int y0 = Math.round(points.get(0).y * curveHeight);
+                        final int x1 = sampleLineX(points.get(1).x);
+                        final int y1 = Math.round(points.get(1).y * curveHeight);
+                        final int y = sampleLineY(i);
+                        g.drawLine(x0, y - y0, x1, y - y1);
+                    }
+                }
             }
         }
 
