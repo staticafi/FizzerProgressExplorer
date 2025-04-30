@@ -19,9 +19,21 @@ public class MonteCarlo {
         }
 
         public Vector<Float> getCoefficients() { Vector<Float> v = new Vector<>(); v.add(c0); v.add(c1); return v; }
+        public Vector<Vec2> parametric() { return parametric(c0, c1); }
 
-        public static float apply(final float value, final float c0, final float c1) {return c0 + value * c1; }
-        public float apply(final float value) { return apply(value, c0, c1); }
+        public static Vector<Vec2> parametric(final float c0, final float c1) {
+            final Vector<Vec2> Au = new Vector<>();
+            final Vec2 A = new Vec2(0.0f, c0);
+            final Vec2 B = new Vec2(1.0f, c0 + c1);
+            final Vec2 u = B.sub(A);
+            Au.add(A);
+            Au.add(u);
+            return Au;
+        }
+
+        public static float apply(final Vector<Float> coeffs, final float value) { return apply(coeffs.get(0), coeffs.get(1), value); }
+        public static float apply(final float c0, final float c1, final float value) { return c0 + value * c1; }
+        public float apply(final float value) { return apply(c0, c1, value); }
 
         private final float c0;
         private final float c1;
