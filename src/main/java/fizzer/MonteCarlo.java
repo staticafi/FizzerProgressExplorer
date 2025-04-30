@@ -14,8 +14,8 @@ public class MonteCarlo {
                 C += p.x * p.y;
                 D += p.y;
             }
-            c1 = (input.size() * C - B * D) / (input.size() * A - B * B);
-            c0 = (D - c1 * B) / input.size();
+            c1 = input.isEmpty() || input.size() * A - B * B == 0.0f ? 0.0f : (input.size() * C - B * D) / (input.size() * A - B * B);
+            c0 = input.isEmpty() ? 0.0f : (D - c1 * B) / input.size();
         }
 
         public Vector<Float> getCoefficients() { Vector<Float> v = new Vector<>(); v.add(c0); v.add(c1); return v; }
