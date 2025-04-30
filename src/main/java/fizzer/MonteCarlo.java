@@ -4,6 +4,56 @@ import java.util.*;
 
 public class MonteCarlo {
 
+    public static class ExtrapolationLinear {
+        public ExtrapolationLinear(final Vector<Vec2> input) {
+            float A = 0, B = 0, C = 0, D = 0;
+            for (int i = 0; i != input.size(); ++i) {
+                Vec2 p = input.get(i);
+                A += p.x * p.x;
+                B += p.x;
+                C += p.x * p.y;
+                D += p.y;
+            }
+            c1 = (input.size() * C - B * D) / (input.size() * A - B * B);
+            c0 = (D - c1 * B) / input.size();
+        }
+
+        public float apply(final float value) {return c0 + value * c1; }
+
+        private final float c0;
+        private final float c1;
+    }
+
+    public static class Extrapolations {
+        public Extrapolations(final Vector<Vec2> input, final boolean splitBySign) {
+            if (splitBySign) {
+                final Vector<Vec2> positive = new Vector<>();
+                final Vector<Vec2> negative = new Vector<>();
+                final Vector<Vec2> zero = new Vector<>();
+                for (Vec2 point : input)
+                    (point.x > 0.0f ? positive : point.x < 0.0f ? negative : zero).add(point);
+                if (!positive.isEmpty() && !negative.isEmpty()) {
+                    positive.addAll(zero);
+                    negative.addAll(zero);
+                    linearPositive = new ExtrapolationLinear(positive);
+                    linearNegative = new ExtrapolationLinear(negative);
+                    return;
+                }
+            }
+            linearPositive = new ExtrapolationLinear(input);
+            linearNegative = linearPositive;
+        }
+
+        public float applyLinear(final float value) {
+            if (value > 0.0f) return linearPositive.apply(value);
+            if (value < 0.0f) return linearNegative.apply(value);
+            return 0.5f * (linearPositive.apply(value) + linearNegative.apply(value));
+        }
+
+        private final ExtrapolationLinear linearPositive;
+        private final ExtrapolationLinear linearNegative;
+    }
+
     public MonteCarlo(final ExecutionTree tree) {
         this.tree = tree;
         targetSid = 0;
@@ -14,7 +64,7 @@ public class MonteCarlo {
         frequencies = new Vector<>();
         consumptions = new HashMap<>();
         functionSizes = new HashMap<>();
-        functionFrequencies = new Vector<>();
+        frequenciesExtrapolation = new Vector<>();
     }
 
     public ExecutionTree getTree() { return tree; }
@@ -41,15 +91,14 @@ public class MonteCarlo {
     public Vector<Float> getFunctionSizes(int sid) { return functionSizes.get(sid); }
     public Vector<Float> getFunctionSizesOverall() { return functionSizes.get(0); }
     public int evalFunctionSizesLinear(int sid, float value) { return Math.round(evalFunctionLinear(functionSizes.get(sid), value)); }
-    public Vector<Float> getFunctionFrequencies(int locationIndex) { return functionFrequencies.get(locationIndex); }
-    public float evalFunctionFrequenciesLinear(int locationIndex, float value) {
-        return Math.max(0.0f, evalFunctionLinear(getFunctionFrequencies(locationIndex), value));
+    public float extrapolateFrequenciesLinear(int locationIndex, float value) {
+        return Math.max(0.0f, frequenciesExtrapolation.get(locationIndex).applyLinear(value));
     }
-    public Vector<Float> evalFunctionFrequenciesLinear(float value) {
+    public Vector<Float> extrapolateFrequenciesLinear(float value) {
         Vector<Float> result = new Vector<>();
         float sum = 0.0f;
         for (int i = 0; i != locations.size(); ++i) {
-            final float r = evalFunctionFrequenciesLinear(i, value);
+            final float r = extrapolateFrequenciesLinear(i, value);
             result.add(r);
             sum += r;
         }
@@ -80,7 +129,7 @@ public class MonteCarlo {
         frequencies.clear();
         consumptions.clear();
         functionSizes.clear();
-        functionFrequencies.clear();
+        frequenciesExtrapolation.clear();
     }
 
     public void compute() {
@@ -93,7 +142,7 @@ public class MonteCarlo {
         computeFrequencies();
         computeConsumptions();
         computeFunctionSizes();
-        computeFunctionFrequencies();
+        computeFrequenciesExtrapolation();
     }
 
     private Analysis getAnalysis() {
@@ -224,12 +273,12 @@ public class MonteCarlo {
         return computeApproximations(input);
     }
 
-    private void computeFunctionFrequencies() {
+    private void computeFrequenciesExtrapolation() {
         for (int i = 0; i < locations.size(); ++i) {
             final Vector<Vec2> input = new Vector<>();
             for (int j = 0; j < frequencies.size(); ++j)
                 input.add(new Vec2((float)getTraceValue(j), frequencies.get(j).get(i)));
-            functionFrequencies.add(computeApproximations(input));
+            frequenciesExtrapolation.add(new Extrapolations(input, true));
         }
     }
 
@@ -275,5 +324,5 @@ public class MonteCarlo {
     private final Vector<Vector<Float>> frequencies;
     private final HashMap<Integer, Vector<Vector<Float[]>>> consumptions;
     private final HashMap<Integer, Vector<Float>> functionSizes;
-    private final Vector<Vector<Float>> functionFrequencies;
+    private final Vector<Extrapolations> frequenciesExtrapolation;
 }

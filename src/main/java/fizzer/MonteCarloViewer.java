@@ -325,7 +325,7 @@ public class MonteCarloViewer extends JPanel {
                     g.fillRect(x, y - sampleThickness/2, sampleLineX(accumulator + f.get(j)) - x, sampleThickness);
                     accumulator += f.get(j);
                 }
-                f = method.evalFunctionFrequenciesLinear((float)method.getTraceValue(i)); 
+                f = method.extrapolateFrequenciesLinear((float)method.getTraceValue(i)); 
                 accumulator = 0.0f;
                 HashSet<Integer> locs = new HashSet<>(activeLocations);
                 for (int j = 0; j != f.size(); ++j) {
