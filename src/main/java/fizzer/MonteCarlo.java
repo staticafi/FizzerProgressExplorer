@@ -103,8 +103,19 @@ public class MonteCarlo {
         }
     }
 
-    public MonteCarlo(final ExecutionTree tree) {
+    public static interface NodeEvaluator { float getValue(Node node); }
+    public static class BestValue implements NodeEvaluator {
+        public BestValue(ExecutionTree tree_) { tree = tree_; }
+        @Override public float getValue(Node node) { return node.getBestValue(tree.getAnalysisIndex()).floatValue(); }
+        private final ExecutionTree tree;
+    }
+    public static class InputSize implements NodeEvaluator {
+        @Override public float getValue(Node node) { return (float)node.getNumInputBytes(); }
+    }
+
+    public MonteCarlo(final ExecutionTree tree, final NodeEvaluator nodeEvaluator) {
         this.tree = tree;
+        this.nodeEvaluator = nodeEvaluator;
         targetSid = 0;
         traces = new Vector<>();
         locations = new Vector<>();
@@ -124,12 +135,11 @@ public class MonteCarlo {
     public int getNumTraces() { return traces.size(); }
     public Node getTraceTargetNode(Vector<Node> trace) { return trace.get(trace.size() - 1); }
     public Node getTraceTargetNode(int traceIndex) { return getTraceTargetNode(traces.get(traceIndex)); }
-    public double getNodeValue(Node node) { return node.getBestValue(tree.getAnalysisIndex()); }
+    public double getNodeValue(Node node) { return nodeEvaluator.getValue(node); }
     public double getTraceValue(Vector<Node> trace) { return getNodeValue(getTraceTargetNode(trace)); }
     public double getTraceValue(int traceIndex) { return getTraceValue(traces.get(traceIndex)); }
     public HashMap<Integer, Vector<Vector<Float>>> getSamples() { return samples; }
     public Vector<Vector<Float>> getSamples(int sid) { return samples.get(sid); }
-    public double getSampleValue(int sampleIndex) { return getTraceValue(traces.get(sampleIndex)); }
     public Vector<Integer> getSignedLocations() { return locations; }
     public HashMap<Integer, Vector<Integer>> getSizes() { return sizes; }
     public Vector<Integer> getSizes(int sid) { return sizes.get(sid); }
@@ -355,6 +365,7 @@ public class MonteCarlo {
     }
 
     private final ExecutionTree tree;
+    final NodeEvaluator nodeEvaluator;
     private int targetSid;
     private final Vector<Vector<Node>> traces;
     private final Vector<Integer> locations;

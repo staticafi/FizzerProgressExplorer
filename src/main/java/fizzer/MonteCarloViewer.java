@@ -9,9 +9,19 @@ import java.util.function.*;
 
 public class MonteCarloViewer extends JPanel {
 
-    public MonteCarloViewer(MonteCarlo method_, SourceMapping sourceMapping_) {
+    public static enum NodeValueType {
+        BestValue,
+        InputSize
+    }
+
+    public MonteCarloViewer(ExecutionTree executionTree, SourceMapping sourceMapping_) {
         sourceMapping = sourceMapping_;
-        method = method_;
+
+        methods = new HashMap<>();
+        methods.put(NodeValueType.BestValue, new MonteCarlo(executionTree, new MonteCarlo.BestValue(executionTree)));
+        methods.put(NodeValueType.InputSize, new MonteCarlo(executionTree, new MonteCarlo.InputSize()));
+        method = methods.get(NodeValueType.BestValue);
+
         activeLocations = new Vector<>();
         locationColors = new HashMap<>();
 
@@ -46,6 +56,17 @@ public class MonteCarloViewer extends JPanel {
             }
         });
 
+        nodeValueSelector = new JComboBox<>(NodeValueType.values());
+        nodeValueSelector.setFont(font);
+        nodeValueSelector.addActionListener(new ActionListener() {
+            @Override
+            @SuppressWarnings("unchecked")
+            public void actionPerformed(ActionEvent ae) {
+                method = methods.get((NodeValueType)((JComboBox<NodeValueType>)ae.getSource()).getSelectedItem());
+                redraw();
+            }
+        });
+
         samplesPainter = new SamplesPainter(font);
         sizesPainter = new SizesPainter(font);
         frequenciesPainter = new FrequenciesPainter(font);
@@ -75,6 +96,7 @@ public class MonteCarloViewer extends JPanel {
         leftPanel.setOpaque(true);
         leftPanel.add(targetLabel, BorderLayout.NORTH);
         leftPanel.add(locationsScrollPane, BorderLayout.CENTER);
+        leftPanel.add(nodeValueSelector, BorderLayout.SOUTH);
 
         stages = new JTabbedPane();
         stages.addTab("Samples", samplesScrollPane);
@@ -92,7 +114,8 @@ public class MonteCarloViewer extends JPanel {
     }
 
     public void clear() {
-        method.clear();
+        for (MonteCarlo monteCarlo : methods.values())
+            monteCarlo.clear();
 
         activeLocations.clear();
         locationColors.clear();
@@ -107,22 +130,25 @@ public class MonteCarloViewer extends JPanel {
 
     public boolean onTargetChanged(final Node node) {
         clear();
-        if (!method.setTargetSid(node)) {
-            targetLabel.setText("Tgt: 0");
-            return false;
-        }
+        for (MonteCarlo monteCarlo : methods.values())
+            if (!monteCarlo.setTargetSid(node)) {
+                targetLabel.setText("Tgt: 0");
+                return false;
+            }
         compute();
         return true;
     }
 
     public void onTargetChanged(final int sid) {
         clear();
-        method.setTargetSid(sid);
+        for (MonteCarlo monteCarlo : methods.values())
+            monteCarlo.setTargetSid(sid);
         compute();
     }
 
     private void compute() {
-        method.compute();
+        for (MonteCarlo monteCarlo : methods.values())
+            monteCarlo.compute();
 
         targetLabel.setText("Tgt: " + Integer.toString(method.getTargetSIid()));
         computeLocationColors();
@@ -218,7 +244,7 @@ public class MonteCarloViewer extends JPanel {
                     g.setColor(Color.LIGHT_GRAY);
                     g.drawLine(sampleMarginLeft, y, sampleMarginRight, y);
                     g.setColor(Color.BLACK);
-                    g.drawString(Double.toString(method.getSampleValue(i)), sampleMarginRight + sampleValueShiftX, y + sampleValueShiftY);
+                    g.drawString(Double.toString(method.getTraceValue(i)), sampleMarginRight + sampleValueShiftX, y + sampleValueShiftY);
                 }
             }
         }
@@ -392,17 +418,19 @@ public class MonteCarloViewer extends JPanel {
     }
 
     @SuppressWarnings("unused")
-    private SourceMapping sourceMapping;
+    private final SourceMapping sourceMapping;
 
     private MonteCarlo method;
-    private Vector<Integer> activeLocations;
-    private HashMap<Integer, Color> locationColors;
+    private final HashMap<NodeValueType, MonteCarlo> methods;
+    private final Vector<Integer> activeLocations;
+    private final HashMap<Integer, Color> locationColors;
 
-    private Label targetLabel;
-    private JList<Integer> locations;
-    private JTabbedPane stages;
-    private SamplesPainter samplesPainter;
-    private SizesPainter sizesPainter;
-    private FrequenciesPainter frequenciesPainter;
-    private ConsumptionsPainter consumptionsPainter;
+    private final Label targetLabel;
+    private final JList<Integer> locations;
+    private final JComboBox<NodeValueType> nodeValueSelector;
+    private final JTabbedPane stages;
+    private final SamplesPainter samplesPainter;
+    private final SizesPainter sizesPainter;
+    private final FrequenciesPainter frequenciesPainter;
+    private final ConsumptionsPainter consumptionsPainter;
 }

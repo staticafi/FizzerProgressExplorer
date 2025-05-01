@@ -13,7 +13,6 @@ import fizzer.SourceMapping.LineColumn;
 public class ProgressExplorer implements MouseListener, ActionListener, ListSelectionListener, ChangeListener {
     private SourceMapping sourceMapping;
     private ExecutionTree executionTree;
-    private MonteCarlo monteCarlo;
 
     private JPanel rootPanel;
 
@@ -79,7 +78,6 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     public ProgressExplorer() {
         sourceMapping = new SourceMapping();
         executionTree = new ExecutionTree();
-        monteCarlo = new MonteCarlo(executionTree);
 
         analysesTable = new JTable(new DefaultTableModel(null, new Object[]{"Index", "Type", "Start", "Stop", "Traces", "Strategy"}));
         analysesTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -129,7 +127,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         });
 
         executionTreeViewer = new ExecutionTreeViewer(executionTree, sourceMapping);
-        monteCarloViewer = new MonteCarloViewer(monteCarlo, sourceMapping);
+        monteCarloViewer = new MonteCarloViewer(executionTree, sourceMapping);
 
         sourceC = new SourceViewerC(sourceMapping, executionTree);
         sourceLL = new SourceViewerLL(sourceMapping, executionTree);
