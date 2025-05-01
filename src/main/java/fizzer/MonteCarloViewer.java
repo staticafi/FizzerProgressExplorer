@@ -14,8 +14,8 @@ public class MonteCarloViewer extends JPanel {
         InputSize
     }
 
-    public MonteCarloViewer(ExecutionTree executionTree, SourceMapping sourceMapping_) {
-        sourceMapping = sourceMapping_;
+    public MonteCarloViewer(ExecutionTree executionTree, ExecutionTreeViewer treeViewer_) {
+        treeViewer = treeViewer_;
 
         methods = new HashMap<>();
         methods.put(NodeValueType.BestValue, new MonteCarlo(executionTree, new MonteCarlo.BestValue(executionTree)));
@@ -26,6 +26,34 @@ public class MonteCarloViewer extends JPanel {
         locationColors = new HashMap<>();
 
         final Font font = new Font("Monospaced", Font.PLAIN, ProgressExplorer.textFontSize);
+
+        nodeValueSelector = new JComboBox<>(NodeValueType.values());
+        nodeValueSelector.setFont(font);
+        nodeValueSelector.addActionListener(new ActionListener() {
+            @Override
+            @SuppressWarnings("unchecked")
+            public void actionPerformed(ActionEvent ae) {
+                method = methods.get((NodeValueType)((JComboBox<NodeValueType>)ae.getSource()).getSelectedItem());
+                redraw();
+            }
+        });
+
+        targetValue = new JTextField(8);
+        targetValue.setFont(font);
+        targetValue.setText("0.0");
+        targetValue.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                if (method.isEmpty()) return;
+                try {
+                    final MonteCarlo.NodeAndDirection nd = method.selectNodeForValue(Float.parseFloat(targetValue.getText()));
+                    treeViewer.setMark(nd.node, nd.direction == 0 ? false : true);
+                    treeViewer.makeMarkNodeVisible();
+                    getParentTabbedPane().setSelectedIndex(1);
+                } catch (NumberFormatException e) {}
+                redraw();
+            }
+        });
 
         targetLabel = new Label("Tgt: 0");
         targetLabel.setFont(font);
@@ -56,21 +84,16 @@ public class MonteCarloViewer extends JPanel {
             }
         });
 
-        nodeValueSelector = new JComboBox<>(NodeValueType.values());
-        nodeValueSelector.setFont(font);
-        nodeValueSelector.addActionListener(new ActionListener() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public void actionPerformed(ActionEvent ae) {
-                method = methods.get((NodeValueType)((JComboBox<NodeValueType>)ae.getSource()).getSelectedItem());
-                redraw();
-            }
-        });
-
         samplesPainter = new SamplesPainter(font);
         sizesPainter = new SizesPainter(font);
         frequenciesPainter = new FrequenciesPainter(font);
         consumptionsPainter = new ConsumptionsPainter(font);
+
+        final JPanel controlPanel = new JPanel(new BorderLayout());
+        controlPanel.setOpaque(true);
+        controlPanel.add(nodeValueSelector, BorderLayout.NORTH);
+        controlPanel.add(targetValue, BorderLayout.CENTER);
+        controlPanel.add(targetLabel, BorderLayout.SOUTH);
 
         final JScrollPane locationsScrollPane = new JScrollPane(locations);
         locationsScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
@@ -94,9 +117,8 @@ public class MonteCarloViewer extends JPanel {
 
         final JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setOpaque(true);
-        leftPanel.add(targetLabel, BorderLayout.NORTH);
+        leftPanel.add(controlPanel, BorderLayout.NORTH);
         leftPanel.add(locationsScrollPane, BorderLayout.CENTER);
-        leftPanel.add(nodeValueSelector, BorderLayout.SOUTH);
 
         stages = new JTabbedPane();
         stages.addTab("Samples", samplesScrollPane);
@@ -164,6 +186,13 @@ public class MonteCarloViewer extends JPanel {
         locationColors.clear();
         for (int i = 0; i < allLocations.size(); ++i)
             locationColors.put(allLocations.get(i), Color.getHSBColor(i/(float)(allLocations.size() + 1), 1.0f, 0.8f));
+    }
+
+    private JTabbedPane getParentTabbedPane() {
+        for (Container c = getParent(); c != null; c = c.getParent())
+            if (c instanceof JTabbedPane)
+                return (JTabbedPane)c;
+        throw new RuntimeException("MonteCarloView.getParentTabbedPane: No parent of type JTabbedPane.");
     }
 
     private void resize() {
@@ -417,17 +446,17 @@ public class MonteCarloViewer extends JPanel {
         private static final int lineWidth = 2;
     }
 
-    @SuppressWarnings("unused")
-    private final SourceMapping sourceMapping;
+    private final ExecutionTreeViewer treeViewer;
 
     private MonteCarlo method;
     private final HashMap<NodeValueType, MonteCarlo> methods;
     private final Vector<Integer> activeLocations;
     private final HashMap<Integer, Color> locationColors;
 
+    private final JComboBox<NodeValueType> nodeValueSelector;
+    private final JTextField targetValue;
     private final Label targetLabel;
     private final JList<Integer> locations;
-    private final JComboBox<NodeValueType> nodeValueSelector;
     private final JTabbedPane stages;
     private final SamplesPainter samplesPainter;
     private final SizesPainter sizesPainter;

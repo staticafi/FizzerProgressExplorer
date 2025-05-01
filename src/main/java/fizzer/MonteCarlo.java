@@ -5,6 +5,7 @@ import java.util.*;
 public class MonteCarlo {
 
     public static class ExtrapolationLinear {
+        public ExtrapolationLinear(final float c0_, final float c1_) { c0 = c0_; c1 = c1_; }
         public ExtrapolationLinear(final Vector<Vec2> input) {
             float A = 0, B = 0, C = 0, D = 0;
             for (int i = 0; i != input.size(); ++i) {
@@ -103,6 +104,12 @@ public class MonteCarlo {
         }
     }
 
+    public static class NodeAndDirection {
+        public NodeAndDirection(final Node node_, final int direction_) { node = node_; direction = direction_; }
+        public final Node node;
+        public final int direction;
+    } 
+
     public static interface NodeEvaluator { float getValue(Node node); }
     public static class BestValue implements NodeEvaluator {
         public BestValue(ExecutionTree tree_) { tree = tree_; }
@@ -170,6 +177,7 @@ public class MonteCarlo {
         final Vector<Vec2> Au = ExtrapolationLinear.parametric(e.get(0).applyLinear(value), e.get(1).applyLinear(value));
         return Clip.extrapolationLinear(Au, Vec2.zero, new Vec2(1.0f, 1.0f));
     }
+    public NodeAndDirection selectNodeForValue(final float value) { return selectNode(value); }
 
     public void setTargetSid(final int sid) { targetSid = sid; }
     public boolean setTargetSid(final Node node) {
@@ -361,6 +369,58 @@ public class MonteCarlo {
                 v.add(new Extrapolations(input));
             }
             consumptionsExtrapolation.put(sid, v);
+        }
+    }
+
+    private NodeAndDirection selectNode(final float value) {
+        final HashMap<Integer, Integer> S = new HashMap<>();
+        final HashMap<Integer, Integer> s = new HashMap<>();
+        final HashMap<Integer, ExtrapolationLinear> C = new HashMap<>();
+        int length = 0;
+        for (int sid : locations) {
+            final int l = Math.max(0, Math.round(sizesExtrapolation.get(sid).applyLinear(value)));
+            S.put(sid, l);
+            length += l;
+            s.put(sid, 0);
+            final Vector<Extrapolations> e = consumptionsExtrapolation.get(sid);
+            C.put(sid, new ExtrapolationLinear(e.get(0).applyLinear(value), e.get(1).applyLinear(value)));
+        }
+        final int[] sid = { 0, 0 };
+        final float[] desire = { 0, 0 };
+        Node node = tree.getRootNode();
+        for (int l = 0; true; l = Math.min(l + 1, length)) {
+            int m = 0;
+            for (int dir = 0; dir != 2; ++dir) {
+                boolean isChildAvailable;
+                switch (node.getChildLabel(tree.getAnalysisIndex(), dir)) {
+                    case END_EXCEPTIONAL: case END_NORMAL: isChildAvailable = false; break;
+                    case VISITED: isChildAvailable = !node.getChildren()[dir].isClosed(tree.getAnalysisIndex()); break;
+                    default: isChildAvailable = true; break;
+                }
+                if (isChildAvailable) {
+                    sid[m] = (dir == 0 ? -1 : 1) * node.getLocationId().id;
+                    if (S.containsKey(sid[m])) {
+                        final float current = Math.max(0.0f, Math.min(1.0f, s.get(sid[m]) / S.get(sid[m])));
+                        final float expected = Math.max(0.0f, Math.min(1.0f, C.get(sid[m]).apply(l / (float)length)));
+                        desire[m] = Math.max(0.0f, Math.min(1.0f, expected - current));
+                    } else
+                        desire[m] = 0.0f;
+                    ++m;
+                }
+            }
+            if (m == 0)
+                throw new RuntimeException("MonteCarlo.selectNode: Cannot advance in in the execution tree.");
+            if (m == 2) {
+                sid[0] = desire[0] >= desire[1] ? sid[0] : sid[1];
+                m = 1;
+            }
+            if (s.containsKey(sid[0]))
+                s.put(sid[0], s.get(sid[0]) + 1);
+            final int dir = sid[0] < 0 ? 0 : 1;
+            final Node n = node.getChildren()[dir];
+            if (n == null || n.getDiscoveryIndex() > tree.getAnalysisIndex())
+                return new NodeAndDirection(node, dir);
+            node = n;
         }
     }
 

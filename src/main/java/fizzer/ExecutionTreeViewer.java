@@ -52,11 +52,18 @@ public class ExecutionTreeViewer extends JPanel {
     private LocationViewType locationViewType;
     private Rectangle viewRect;
     private List<TrNode> visibleNodes;
-    private Font font = makeFont(1.0f);
+    private Font font;
+    private NodeAndDirection mark;
     
     private Font makeFont(float zoom) {
         return font = new Font("Monospaced", Font.PLAIN, Math.round((1.0f * nodeHeight) * zoom));
     }
+
+    private class NodeAndDirection {
+        public NodeAndDirection(final Node node_, final boolean direction_) { node = node_; direction = direction_; }
+        public final Node node;
+        public final boolean direction;
+    } 
 
     // Node with Transformed Coordinates
     private class TrNode {
@@ -89,6 +96,10 @@ public class ExecutionTreeViewer extends JPanel {
         viewRect = getVisibleRect();
         visibleNodes = new ArrayList<>();
 
+        font = makeFont(zoom);
+
+        mark = new NodeAndDirection(null, false);
+
         setAutoscrolls(true);
         MouseAdapter ma = new MouseAdapter() {
             private Point origin = null;
@@ -103,8 +114,9 @@ public class ExecutionTreeViewer extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1)
                     origin = null;
-                else if (e.getButton() == MouseEvent.BUTTON2)
-                    makeAnalysisNodeVisible();
+                else if (e.getButton() == MouseEvent.BUTTON2) {
+                    if (e.isControlDown()) makeMarkNodeVisible(); else makeAnalysisNodeVisible();
+                }
             }
 
             @Override
@@ -256,14 +268,25 @@ public class ExecutionTreeViewer extends JPanel {
         updateArea();
     }
 
+    public void clearMark() { mark = new NodeAndDirection(null, false); revalidate(); repaint(); }
+    public void setMark(Node node, boolean dir) { mark = new NodeAndDirection(node, dir); revalidate(); repaint(); }
+
     public List<TrNode> getVisibleNodes() {
         return Collections.unmodifiableList(visibleNodes);
     }
 
     public void makeAnalysisNodeVisible() {
-        if (getAnalysis().getNode() == null)
+        makeNodeVisible(getAnalysis().getNode());
+    }
+
+    public void makeMarkNodeVisible() {
+        makeNodeVisible(mark.node);
+    }
+
+    public void makeNodeVisible(Node node) {
+        if (node == null || node.getDiscoveryIndex() > executionTree.getAnalysisIndex())
             return;
-        Node.ViewProps props = getAnalysis().getNode().getViewProps(); 
+        Node.ViewProps props = node.getViewProps(); 
         Rectangle r = new Rectangle(getVisibleRect());
         r.x = Math.round(zoom * props.x) - r.width / 2;
         r.y = Math.round(zoom * props.y) - r.height / 2;
@@ -513,6 +536,16 @@ public class ExecutionTreeViewer extends JPanel {
                 Math.round(zoom * (node.getViewProps().x - nodeWidth/2 + textShift)),
                 Math.round(zoom * (node.getViewProps().y + nodeHeight/2 - textShift))
             );
+        }
+
+        if (node == mark.node) {
+            g.setColor(edgeColors[mark.direction ? 1 : 0]);
+            g.drawRect(
+                Math.round(zoom * (node.getViewProps().x - nodeWidth/2 - separatorHorizontal/2)),
+                Math.round(zoom * (node.getViewProps().y - nodeHeight/2 - separatorVertical/2)),
+                Math.round(zoom * (nodeWidth + separatorHorizontal)),
+                Math.round(zoom * (nodeHeight + separatorVertical))
+                );
         }
     }
 }

@@ -127,7 +127,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         });
 
         executionTreeViewer = new ExecutionTreeViewer(executionTree, sourceMapping);
-        monteCarloViewer = new MonteCarloViewer(executionTree, sourceMapping);
+        monteCarloViewer = new MonteCarloViewer(executionTree, executionTreeViewer);
 
         sourceC = new SourceViewerC(sourceMapping, executionTree);
         sourceLL = new SourceViewerLL(sourceMapping, executionTree);
