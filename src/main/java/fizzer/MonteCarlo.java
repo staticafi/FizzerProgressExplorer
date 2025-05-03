@@ -41,6 +41,10 @@ public class MonteCarlo {
     }
 
     public static class Extrapolations {
+        public Extrapolations(final float c0, final float c1) {
+            linearPositive = new ExtrapolationLinear(c0, c1);
+            linearNegative = linearPositive;
+        }
         public Extrapolations(final Vector<Vec2> input) {
             final Vector<Vec2> positive = new Vector<>();
             final Vector<Vec2> negative = new Vector<>();
@@ -356,18 +360,40 @@ public class MonteCarlo {
     }
 
     private void computeConsumptionsExtrapolation() {
+        final Vector<Integer> failedSids = new Vector<>();
         for (int sid : locations) {
             final Vector<Vector<Float>> coefficients = new Vector<>();
-            for (Vector<Vec2> input : consumptions.get(sid))
+            boolean hasValid = false;
+            for (Vector<Vec2> input : consumptions.get(sid)) {
                 coefficients.add(input.size() < 2 ? null : new ExtrapolationLinear(input).getCoefficients());
-            final Vector<Extrapolations> v = new Vector<>();
-            for (int j = 0; j != 2; ++j) {
-                final Vector<Vec2> input = new Vector<>();
-                for (int i = 0; i != coefficients.size(); ++i)
-                    if (coefficients.get(i) != null)
-                        input.add(new Vec2((float)getTraceValue(i), coefficients.get(i).get(j)));
-                v.add(new Extrapolations(input));
+                hasValid = hasValid || input.size() > 1;
             }
+            if (hasValid) {
+                final Vector<Extrapolations> v = new Vector<>();
+                for (int j = 0; j != 2; ++j) {
+                    final Vector<Vec2> input = new Vector<>();
+                    for (int i = 0; i != coefficients.size(); ++i)
+                        if (coefficients.get(i) != null)
+                            input.add(new Vec2((float)getTraceValue(i), coefficients.get(i).get(j)));
+                    v.add(new Extrapolations(input));
+                }
+                consumptionsExtrapolation.put(sid, v);
+            }
+            else
+                failedSids.add(sid);
+        }
+        for (int sid : failedSids) {
+            final Vector<Vec2> input = new Vector<>();
+            final Vector<Vector<Vec2>> C = consumptions.get(sid);
+            final float slope = 1.0f;
+            for (int i = 0; i != C.size(); ++i)
+                if (!C.get(i).isEmpty()) {
+                    final float value = (float)getTraceValue(i);
+                    input.add(new Vec2(value, 1.0f - slope * C.get(i).get(0).x));
+                }
+            final Vector<Extrapolations> v = new Vector<>();
+            v.add(new Extrapolations(input));
+            v.add(new Extrapolations(slope, 0.0f));
             consumptionsExtrapolation.put(sid, v);
         }
     }
