@@ -424,7 +424,7 @@ public class MonteCarlo {
                 s.put(sid[0], s.get(sid[0]) + 1);
             final int dir = sid[0] < 0 ? 0 : 1;
             final Node n = node.getChildren()[dir];
-            if (n == null || n.getDiscoveryIndex() > tree.getAnalysisIndex())
+            if (n == null || !isNodeValid(n))
                 return new NodeAndDirection(node, dir);
             node = n;
         }
