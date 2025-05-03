@@ -385,7 +385,7 @@ public class MonteCarlo {
         for (int sid : failedSids) {
             final Vector<Vec2> input = new Vector<>();
             final Vector<Vector<Vec2>> C = consumptions.get(sid);
-            final float slope = 1.0f;
+            final float slope = 100000.0f;
             for (int i = 0; i != C.size(); ++i)
                 if (!C.get(i).isEmpty()) {
                     final float value = (float)getTraceValue(i);
@@ -413,8 +413,9 @@ public class MonteCarlo {
         }
         final int[] sid = { 0, 0 };
         final float[] expectation = { 0, 0 };
+        final int[] count = { 0, 0 };
         Node node = tree.getRootNode();
-        for (int l = 0; true; ++l) {
+        for (int traceIndex = 0; true; ++traceIndex) {
             int m = 0;
             for (int dir = 0; dir != 2; ++dir) {
                 boolean isChildAvailable;
@@ -426,15 +427,21 @@ public class MonteCarlo {
                 if (isChildAvailable) {
                     sid[m] = (dir == 0 ? -1 : 1) * node.getLocationId().id;
                     if (S.containsKey(sid[m])) {
-                        final float current = (s.get(sid[m]) + 1.0f) / (float)Math.max(1, S.get(sid[m]));
-                        final float expected = Math.max(0.0f, Math.min(1.0f, C.get(sid[m]).apply(Math.min(l + 1, length) / (float)length)));
-                        expectation[m] = expected - current;
-                    } else if (targetSid == sid[m] && l >= length) {
+                        final int currentCount = s.get(sid[m]);
+                        final int endCount = S.get(sid[m]);
+                        final float rawExpectedRatio = C.get(sid[m]).apply(Math.min(traceIndex, length) / (float)length);
+                        final float expectedRatio = Math.min(1.0f, rawExpectedRatio);
+                        final float expected = endCount * expectedRatio;
+                        expectation[m] = expected - (float)currentCount;
+                        count[m] = endCount - currentCount;
+                    } else if (targetSid == sid[m] && traceIndex >= length) {
                         sid[0] = targetSid;
                         m = 1;
                         break;
-                    } else
-                        expectation[m] = -Float.MAX_VALUE;
+                    } else {
+                        expectation[m] = Integer.MIN_VALUE;
+                        count[m] = Integer.MIN_VALUE;
+                    }
                     ++m;
                 }
             }
@@ -443,7 +450,7 @@ public class MonteCarlo {
             if (m == 2) {
                 sid[0] = expectation[0] > expectation[1] ? sid[0] :
                          expectation[0] < expectation[1] ? sid[1] :
-                         S.get(sid[0]) - s.get(sid[0]) <= S.get(sid[1]) - s.get(sid[1])  ? sid[0] : sid[1];
+                         count[0] < count[1]             ? sid[1] : sid[0];
                 m = 1;
             }
             if (s.containsKey(sid[0]))
