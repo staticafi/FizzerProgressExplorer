@@ -6,11 +6,13 @@ import java.net.URL;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
 import fizzer.SourceMapping.LineColumn;
 
 public class ProgressExplorer implements MouseListener, ActionListener, ListSelectionListener, ChangeListener {
+    final Vector<String> options;
+
     private SourceMapping sourceMapping;
     private ExecutionTree executionTree;
 
@@ -75,7 +77,9 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     public static final int zoomScrollMultiplier = 10;
     public static final int textFontSize = 14;
 
-    public ProgressExplorer() {
+    public ProgressExplorer(final Vector<String> options_) {
+        options = options_;
+
         sourceMapping = new SourceMapping();
         executionTree = new ExecutionTree();
 
@@ -703,13 +707,19 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     }
 
     public static void main( String[] args ) {
+        final Vector<String> options = new Vector<>();
+        final String loadPath = args.length > 0 && Files.isDirectory(Paths.get(args[0]))? args[0] : null;
+        for (int i = loadPath == null ? 0 : 1; i < args.length; ++i)
+            if (args[i].startsWith("--"))
+                options.add(args[i]);
+
         // try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
 
         JFrame frame = new JFrame("Fizzer's ProgressExplorer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(1024, 768));
 
-        ProgressExplorer explorer = new ProgressExplorer();
+        ProgressExplorer explorer = new ProgressExplorer(options);
 
         explorer.activeAnalysisCard();
 
@@ -763,8 +773,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         frame.setVisible(true);
 
         try { Thread.sleep(250); } catch (InterruptedException e) {}
-        if (args.length == 1)
-            explorer.load(Paths.get(args[0]).toAbsolutePath().toString());
+        if (loadPath != null)
+            explorer.load(Paths.get(loadPath).toAbsolutePath().toString());
         try { Thread.sleep(250); } catch (InterruptedException e) {}
     }
 }
