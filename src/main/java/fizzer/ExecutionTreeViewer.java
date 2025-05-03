@@ -284,7 +284,7 @@ public class ExecutionTreeViewer extends JPanel {
     }
 
     public void makeNodeVisible(Node node) {
-        if (node == null || node.getDiscoveryIndex() > executionTree.getAnalysisIndex())
+        if (node == null || getAnalysis().getViewProps().maxDiscoveryIndex < node.getDiscoveryIndex())
             return;
         Node.ViewProps props = node.getViewProps(); 
         Rectangle r = new Rectangle(getVisibleRect());
