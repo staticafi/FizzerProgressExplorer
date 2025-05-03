@@ -131,7 +131,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         });
 
         executionTreeViewer = new ExecutionTreeViewer(executionTree, sourceMapping);
-        monteCarloViewer = new MonteCarloViewer(executionTree, executionTreeViewer);
+        monteCarloViewer = options.contains("--showMonteCarloTab") ? new MonteCarloViewer(executionTree, executionTreeViewer) : null;
 
         sourceC = new SourceViewerC(sourceMapping, executionTree);
         sourceLL = new SourceViewerLL(sourceMapping, executionTree);
@@ -243,16 +243,19 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         treePanel.add(zoomSlider, BorderLayout.NORTH);
         treePanel.add(treeScrollPane, BorderLayout.CENTER);
 
-        monteCarloScrollPane = new JScrollPane(monteCarloViewer);
-        monteCarloScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
-        monteCarloScrollPane.getVerticalScrollBar().setUnitIncrement(20);
+        if (monteCarloViewer != null) {
+            monteCarloScrollPane = new JScrollPane(monteCarloViewer);
+            monteCarloScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
+            monteCarloScrollPane.getVerticalScrollBar().setUnitIncrement(20);
+        }
 
         tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Analysis", analysisPanel);
         tabbedPane.addTab("Tree", treePanel);
         tabbedPane.addTab("C", sourceC);
         tabbedPane.addTab("LL", sourceLL);
-        tabbedPane.addTab("MonteCarlo", monteCarloViewer);
+        if (monteCarloViewer != null)
+            tabbedPane.addTab("MonteCarlo", monteCarloViewer);
         menuViewAnalysisTab.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 tabbedPane.setSelectedIndex(0);
@@ -291,7 +294,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.addMouseListener(this);
         sourceC.getSourceViewer().addMouseListener(this);
         sourceLL.getSourceViewer().addMouseListener(this);
-        monteCarloViewer.addMouseListener(this);
+        if (monteCarloViewer != null)
+            monteCarloViewer.addMouseListener(this);
     }
 
     public void mouseReleased(MouseEvent e) {
@@ -311,7 +315,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 if (node != null) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         if (e.isControlDown()) {
-                            if (monteCarloViewer.onTargetChanged(node))
+                            if (monteCarloViewer != null && monteCarloViewer.onTargetChanged(node))
                                 tabbedPane.setSelectedIndex(4);
                         } else
                             navigateFromTree(node);
@@ -329,7 +333,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                         final LocationId locationId = new LocationId(id);
                         final boolean leftCovered = executionTree.isCovered(locationId, false);
                         final boolean rightCovered = executionTree.isCovered(locationId, true);
-                        if (leftCovered != rightCovered) {
+                        if (monteCarloViewer != null && leftCovered != rightCovered) {
                             monteCarloViewer.onTargetChanged((leftCovered ? 1 : -1) * id);
                             tabbedPane.setSelectedIndex(4);
                         }
@@ -550,9 +554,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.onAnalysisChanged();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
-        monteCarloViewer.onAnalysisChanged();
-        if (tabbedPane.getSelectedIndex() == 4) // MonteCarlo?
-            tabbedPane.setSelectedIndex(1); // Tree
+        if (monteCarloViewer != null) {
+            monteCarloViewer.onAnalysisChanged();
+            if (tabbedPane.getSelectedIndex() == 4) // MonteCarlo?
+                tabbedPane.setSelectedIndex(1); // Tree
+        }
         updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
     }
 
@@ -680,7 +686,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.onLoad();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
-        monteCarloViewer.onAnalysisChanged();
+        if (monteCarloViewer != null)
+            monteCarloViewer.onAnalysisChanged();
         updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
 
         String rawName = Paths.get("").toAbsolutePath().relativize(Paths.get(dir)).toString();
@@ -703,7 +710,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.clear();
         sourceC.clear();
         sourceLL.clear();
-        monteCarloViewer.clear();
+        if (monteCarloViewer != null)
+            monteCarloViewer.clear();
     }
 
     public static void main( String[] args ) {
