@@ -359,7 +359,7 @@ public class MonteCarlo {
         for (int sid : locations) {
             final Vector<Vector<Float>> coefficients = new Vector<>();
             for (Vector<Vec2> input : consumptions.get(sid))
-                coefficients.add(input.isEmpty() ? null : new ExtrapolationLinear(input).getCoefficients());
+                coefficients.add(input.size() < 2 ? null : new ExtrapolationLinear(input).getCoefficients());
             final Vector<Extrapolations> v = new Vector<>();
             for (int j = 0; j != 2; ++j) {
                 final Vector<Vec2> input = new Vector<>();
@@ -386,9 +386,9 @@ public class MonteCarlo {
             C.put(sid, new ExtrapolationLinear(e.get(0).applyLinear(value), e.get(1).applyLinear(value)));
         }
         final int[] sid = { 0, 0 };
-        final float[] desire = { 0, 0 };
+        final float[] expectation = { 0, 0 };
         Node node = tree.getRootNode();
-        for (int l = 0; true; l = Math.min(l + 1, length)) {
+        for (int l = 0; true; ++l) {
             int m = 0;
             for (int dir = 0; dir != 2; ++dir) {
                 boolean isChildAvailable;
@@ -400,18 +400,24 @@ public class MonteCarlo {
                 if (isChildAvailable) {
                     sid[m] = (dir == 0 ? -1 : 1) * node.getLocationId().id;
                     if (S.containsKey(sid[m])) {
-                        final float current = Math.max(0.0f, Math.min(1.0f, s.get(sid[m]) / S.get(sid[m])));
-                        final float expected = Math.max(0.0f, Math.min(1.0f, C.get(sid[m]).apply(l / (float)length)));
-                        desire[m] = Math.max(0.0f, Math.min(1.0f, expected - current));
+                        final float current = (s.get(sid[m]) + 1.0f) / (float)Math.max(1, S.get(sid[m]));
+                        final float expected = Math.max(0.0f, Math.min(1.0f, C.get(sid[m]).apply(Math.min(l + 1, length) / (float)length)));
+                        expectation[m] = expected - current;
+                    } else if (targetSid == sid[m] && l >= length) {
+                        sid[0] = targetSid;
+                        m = 1;
+                        break;
                     } else
-                        desire[m] = 0.0f;
+                        expectation[m] = -Float.MAX_VALUE;
                     ++m;
                 }
             }
             if (m == 0)
-                throw new RuntimeException("MonteCarlo.selectNode: Cannot advance in in the execution tree.");
+                throw new RuntimeException("MonteCarlo.selectNode: Cannot advance in the execution tree.");
             if (m == 2) {
-                sid[0] = desire[0] >= desire[1] ? sid[0] : sid[1];
+                sid[0] = expectation[0] > expectation[1] ? sid[0] :
+                         expectation[0] < expectation[1] ? sid[1] :
+                         S.get(sid[0]) - s.get(sid[0]) <= S.get(sid[1]) - s.get(sid[1])  ? sid[0] : sid[1];
                 m = 1;
             }
             if (s.containsKey(sid[0]))
