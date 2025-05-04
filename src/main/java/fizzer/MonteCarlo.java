@@ -150,7 +150,7 @@ public class MonteCarlo {
         private static Vector<Node> better(final Vector<Node> left, final Vector<Node> right) {
             return sizeError(left) <= sizeError(right) ? left : right;
         }
-        private static int sizeError(final Vector<Node> trace) { return trace.size() - idealSize(trace); }
+        private static int sizeError(final Vector<Node> trace) { return Math.abs(idealSize(trace) - trace.size()); }
         private static int idealSize(final Vector<Node> trace) { return 2 * (maxReadIndex(trace) + 1); }
         private static int maxReadIndex(final Vector<Node> trace) {
             int index = 0;
