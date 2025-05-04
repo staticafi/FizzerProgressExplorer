@@ -19,25 +19,13 @@ public class MonteCarloViewer extends JPanel {
         InputUse
     }
 
-    public MonteCarloViewer(ExecutionTree executionTree, ExecutionTreeViewer treeViewer_) {
+    public MonteCarloViewer(final ExecutionTreeViewer treeViewer_) {
         treeViewer = treeViewer_;
 
-        methods = new HashMap<>();
-        {
-            final MonteCarlo.BestValue evalBestValue = new MonteCarlo.BestValue(executionTree);
-            final MonteCarlo.InputSize evalInputSize = new MonteCarlo.InputSize();
-            final MonteCarlo.KeepAll filterAll = new MonteCarlo.KeepAll();
-            final MonteCarlo.InputUse filterInputUse = new MonteCarlo.InputUse();
-            HashMap<TracesFilterType, MonteCarlo> m = new HashMap<>();
-            m.put(TracesFilterType.All, new MonteCarlo(executionTree, evalBestValue, filterAll));
-            m.put(TracesFilterType.InputUse, new MonteCarlo(executionTree, evalBestValue, filterInputUse));
-            methods.put(NodeValueType.BestValue, m);
-            m = new HashMap<>();
-            m.put(TracesFilterType.All, new MonteCarlo(executionTree, evalInputSize, filterAll));
-            m.put(TracesFilterType.InputUse, new MonteCarlo(executionTree, evalInputSize, filterInputUse));
-            methods.put(NodeValueType.InputSize, m);
-        }
-        method = methods.get(NodeValueType.BestValue).get(TracesFilterType.All);
+        evalBestValue = new MonteCarlo.BestValue(treeViewer.getTree());
+        evalInputSize = new MonteCarlo.InputSize();
+        filterAll = new MonteCarlo.KeepAll();
+        filterInputUse = new MonteCarlo.InputUse();
 
         activeLocations = new Vector<>();
         locationColors = new HashMap<>();
@@ -50,9 +38,10 @@ public class MonteCarloViewer extends JPanel {
             @Override
             @SuppressWarnings("unchecked")
             public void actionPerformed(ActionEvent ae) {
-                method = methods.get((NodeValueType)((JComboBox<NodeValueType>)ae.getSource()).getSelectedItem())
-                                .get((TracesFilterType)tracesFilterSelector.getSelectedItem());
-                redraw();
+                constructMonteCarloMethod(
+                    (NodeValueType)((JComboBox<NodeValueType>)ae.getSource()).getSelectedItem(),
+                    (TracesFilterType)tracesFilterSelector.getSelectedItem()
+                    );
             }
         });
 
@@ -62,9 +51,10 @@ public class MonteCarloViewer extends JPanel {
             @Override
             @SuppressWarnings("unchecked")
             public void actionPerformed(ActionEvent ae) {
-                method = methods.get((NodeValueType)nodeValueSelector.getSelectedItem())
-                                .get((TracesFilterType)((JComboBox<TracesFilterType>)ae.getSource()).getSelectedItem());
-                redraw();
+                constructMonteCarloMethod(
+                    (NodeValueType)nodeValueSelector.getSelectedItem(),
+                    (TracesFilterType)((JComboBox<TracesFilterType>)ae.getSource()).getSelectedItem()
+                    );
             }
         });
 
@@ -74,9 +64,9 @@ public class MonteCarloViewer extends JPanel {
         targetValue.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                if (method.isEmpty()) return;
+                if (monteCarlo.isEmpty()) return;
                 try {
-                    final MonteCarlo.NodeAndDirection nd = method.selectNodeForValue(Float.parseFloat(targetValue.getText()));
+                    final MonteCarlo.NodeAndDirection nd = monteCarlo.selectNodeForValue(Float.parseFloat(targetValue.getText()));
                     treeViewer.setMark(nd.node, nd.direction == 0 ? false : true);
                     treeViewer.makeMarkNodeVisible();
                     getParentTabbedPane().setSelectedIndex(1);
@@ -85,7 +75,7 @@ public class MonteCarloViewer extends JPanel {
             }
         });
 
-        targetLabel = new Label("Tgt: 0");
+        targetLabel = new Label(targetLabelPrefix + "0");
         targetLabel.setFont(font);
 
         locations = new JList<>(new DefaultListModel<Integer>());
@@ -165,12 +155,13 @@ public class MonteCarloViewer extends JPanel {
 
         setLayout(new BorderLayout());
         add(splitPane);
+
+        nodeValueSelector.setSelectedItem(NodeValueType.BestValue);
+        tracesFilterSelector.setSelectedItem(TracesFilterType.All);
     }
 
     public void clear() {
-        for (HashMap<TracesFilterType, MonteCarlo> monteCarlos : methods.values())
-            for (MonteCarlo monteCarlo : monteCarlos.values())
-                monteCarlo.clear();
+        monteCarlo.clear();
 
         activeLocations.clear();
         locationColors.clear();
@@ -185,32 +176,49 @@ public class MonteCarloViewer extends JPanel {
 
     public boolean onTargetChanged(final Node node) {
         clear();
-        for (HashMap<TracesFilterType, MonteCarlo> monteCarlos : methods.values())
-            for (MonteCarlo monteCarlo : monteCarlos.values())
-                if (!monteCarlo.setTargetSid(node)) {
-                    targetLabel.setText("Tgt: 0");
-                    return false;
-                }
+        if (!monteCarlo.setTargetSid(node)) {
+            targetLabel.setText(targetLabelPrefix + "0");
+            return false;
+        }
         compute();
         return true;
     }
 
     public void onTargetChanged(final int sid) {
         clear();
-        for (HashMap<TracesFilterType, MonteCarlo> monteCarlos : methods.values())
-            for (MonteCarlo monteCarlo : monteCarlos.values())
-                monteCarlo.setTargetSid(sid);
+        monteCarlo.setTargetSid(sid);
         compute();
     }
 
-    private void compute() {
-        for (HashMap<TracesFilterType, MonteCarlo> monteCarlos : methods.values())
-            for (MonteCarlo monteCarlo : monteCarlos.values())
-                monteCarlo.compute();
+    private void constructMonteCarloMethod(final NodeValueType valuatorType, final TracesFilterType filterType) {
+        MonteCarlo.NodeEvaluator evaluator = null;
+        switch (valuatorType) {
+            case BestValue: evaluator = evalBestValue; break;
+            case InputSize: evaluator = evalInputSize; break;
+        }
+        MonteCarlo.TracesFilter filter = null;
+        switch (filterType) {
+            case All: filter = filterAll; break;
+            case InputUse: filter = filterInputUse; break;
+        }
+        if (monteCarlo != null && monteCarlo.getNodeEvaluator() == evaluator && monteCarlo.getTracesFilter() == filter)
+            return;
+        monteCarlo = new MonteCarlo(treeViewer.getTree(), evaluator, filter);
+        final int sid = Integer.parseInt(targetLabel.getText().substring(targetLabelPrefix.length()));
+        if (sid != 0) {
+            clear();
+            monteCarlo.setTargetSid(sid);
+            compute();
+        } else
+            redraw();
+    }
 
-        targetLabel.setText("Tgt: " + Integer.toString(method.getTargetSIid()));
+    private void compute() {
+        monteCarlo.compute();
+
+        targetLabel.setText(targetLabelPrefix + Integer.toString(monteCarlo.getTargetSIid()));
         computeLocationColors();
-        for (int sid : method.getSignedLocations())
+        for (int sid : monteCarlo.getSignedLocations())
             ((DefaultListModel<Integer>)(locations.getModel())).addElement(sid);
         locations.setSelectedIndex(0);
         resize();
@@ -218,7 +226,7 @@ public class MonteCarloViewer extends JPanel {
     }
 
     private void computeLocationColors() {
-        java.util.List<Integer> allLocations = method.getSignedLocations();
+        java.util.List<Integer> allLocations = monteCarlo.getSignedLocations();
         locationColors.clear();
         for (int i = 0; i < allLocations.size(); ++i)
             locationColors.put(allLocations.get(i), Color.getHSBColor(i/(float)(allLocations.size() + 1), 1.0f, 0.8f));
@@ -283,7 +291,7 @@ public class MonteCarloViewer extends JPanel {
         }
 
         void resize() {
-            setPreferredSize(new Dimension(paperWidth, (method.getTraces().size()) * samplesStride() + panelBottomMargin));
+            setPreferredSize(new Dimension(paperWidth, (monteCarlo.getTraces().size()) * samplesStride() + panelBottomMargin));
         }
 
         void redraw() {
@@ -294,7 +302,7 @@ public class MonteCarloViewer extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (!method.isEmpty())
+            if (!monteCarlo.isEmpty())
                 render(g);
         }
 
@@ -303,13 +311,13 @@ public class MonteCarloViewer extends JPanel {
         protected void renderLinesAndValues(Graphics g) {
             g.setColor(Color.LIGHT_GRAY);
             for (int sid : activeLocations) {
-                final Vector<Vector<Float>> samples = method.getSamples(sid);
+                final Vector<Vector<Float>> samples = monteCarlo.getSamples(sid);
                 for (int i = 0; i != samples.size(); ++i) {
                     final int y = samplesStride() * (i+1);
                     g.setColor(Color.LIGHT_GRAY);
                     g.drawLine(sampleMarginLeft, y, sampleMarginRight, y);
                     g.setColor(Color.BLACK);
-                    g.drawString(Double.toString(method.getTraceValue(i)), sampleMarginRight + sampleValueShiftX, y + sampleValueShiftY);
+                    g.drawString(Double.toString(monteCarlo.getTraceValue(i)), sampleMarginRight + sampleValueShiftX, y + sampleValueShiftY);
                 }
             }
         }
@@ -321,7 +329,7 @@ public class MonteCarloViewer extends JPanel {
         protected <T> Function<Double, T> wrapFunction(final BiFunction<Integer, Float, T> f) {
             return  activeLocations.size() == 1 ?
                         (t) -> f.apply(activeLocations.get(0), t.floatValue()) :
-                    activeLocations.isEmpty() || activeLocations.size() == method.getSignedLocations().size() ?
+                    activeLocations.isEmpty() || activeLocations.size() == monteCarlo.getSignedLocations().size() ?
                         (t) -> f.apply(0, t.floatValue()) :
                         null;
         }
@@ -347,7 +355,7 @@ public class MonteCarloViewer extends JPanel {
             ((Graphics2D)g).setStroke(new BasicStroke(lineWidth));
             for (int sid : activeLocations) {
                 g.setColor(locationColors.get(sid));
-                final Vector<Vector<Float>> samples = method.getSamples(sid);
+                final Vector<Vector<Float>> samples = monteCarlo.getSamples(sid);
                 for (int i = 0; i != samples.size(); ++i) {
                     final int y = sampleLineY(i);
                     for (float t : samples.get(i)) {
@@ -369,29 +377,29 @@ public class MonteCarloViewer extends JPanel {
         @Override
         protected void render(Graphics g) {
             renderLinesAndValues(g);
-            final Function<Double, Integer> functionLinear = wrapFunction((sid, t) -> method.extrapolateSizesLinear(sid, t));
+            final Function<Double, Integer> functionLinear = wrapFunction((sid, t) -> monteCarlo.extrapolateSizesLinear(sid, t));
             int maxSize = 0;
-            for (int i = 0; i != method.getNumTraces(); ++i) {
+            for (int i = 0; i != monteCarlo.getNumTraces(); ++i) {
                 int sum = 0;
                 for (int sid : activeLocations)
-                    sum += method.getSizes(sid).get(i);
+                    sum += monteCarlo.getSizes(sid).get(i);
                 maxSize = Math.max(maxSize, sum);
                 if (functionLinear != null)
-                    maxSize = Math.max(maxSize, functionLinear.apply(method.getTraceValue(i)));
+                    maxSize = Math.max(maxSize, functionLinear.apply(monteCarlo.getTraceValue(i)));
             }
-            for (int i = 0; i != method.getNumTraces(); ++i) {
+            for (int i = 0; i != monteCarlo.getNumTraces(); ++i) {
                 final int y = sampleLineY(i);
                 float accumulator = 0.0f;
                 for (int sid : activeLocations) {
                     final int x = sampleLineX(accumulator);
-                    final float size = method.getSizes(sid).get(i) / (float)maxSize;
+                    final float size = monteCarlo.getSizes(sid).get(i) / (float)maxSize;
                     g.setColor(locationColors.get(sid));
                     g.fillRect(x, y - sampleThickness/2, sampleLineX(accumulator + size) - x, sampleThickness);
                     accumulator += size;
                 }
                 if (functionLinear != null) {
                     g.setColor(Color.BLACK);
-                    final int x = sampleLineX(functionLinear.apply(method.getTraceValue(i)) / (float)maxSize);
+                    final int x = sampleLineX(functionLinear.apply(monteCarlo.getTraceValue(i)) / (float)maxSize);
                     g.fillRect(x - sampleThickness/2, y - functionMarkSize/2, sampleThickness, functionMarkSize);
                 }
             }
@@ -406,24 +414,24 @@ public class MonteCarloViewer extends JPanel {
         @Override
         protected void render(Graphics g) {
             renderLinesAndValues(g);
-            for (int i = 0; i != method.getFrequencies().size(); ++i) {
+            for (int i = 0; i != monteCarlo.getFrequencies().size(); ++i) {
                 final int y = sampleLineY(i);
-                Vector<Float> f = method.getFrequencies().get(i);
+                Vector<Float> f = monteCarlo.getFrequencies().get(i);
                 float accumulator = 0.0f;
                 for (int j = 0; j != f.size(); ++j) {
                     final int x = sampleLineX(accumulator);
-                    g.setColor(locationColors.get(method.getSignedLocations().get(j)));
+                    g.setColor(locationColors.get(monteCarlo.getSignedLocations().get(j)));
                     g.fillRect(x, y - sampleThickness/2, sampleLineX(accumulator + f.get(j)) - x, sampleThickness);
                     accumulator += f.get(j);
                 }
-                f = method.extrapolateFrequenciesLinear((float)method.getTraceValue(i)); 
+                f = monteCarlo.extrapolateFrequenciesLinear((float)monteCarlo.getTraceValue(i)); 
                 accumulator = 0.0f;
                 HashSet<Integer> locs = new HashSet<>(activeLocations);
                 for (int j = 0; j != f.size(); ++j) {
                     accumulator += f.get(j);
-                    if (locs.contains(method.getSignedLocations().get(j))) {
+                    if (locs.contains(monteCarlo.getSignedLocations().get(j))) {
                         final int x = sampleLineX(accumulator);
-                        g.setColor(locationColors.get(method.getSignedLocations().get(j)));
+                        g.setColor(locationColors.get(monteCarlo.getSignedLocations().get(j)));
                         g.fillRect(x - sampleThickness/2, y - functionMarkSize/2, sampleThickness, functionMarkSize);
                     }
                 }
@@ -442,7 +450,7 @@ public class MonteCarloViewer extends JPanel {
             ((Graphics2D)g).setStroke(new BasicStroke(lineWidth));
             for (int sid : activeLocations) {
                 g.setColor(locationColors.get(sid));
-                final Vector<Vector<Vec2>> consumptions = method.getConsumptions(sid);
+                final Vector<Vector<Vec2>> consumptions = monteCarlo.getConsumptions(sid);
                 for (int i = 0; i != consumptions.size(); ++i)
                     if (!consumptions.get(i).isEmpty()) {
                         final int y = sampleLineY(i);
@@ -461,8 +469,8 @@ public class MonteCarloViewer extends JPanel {
             ((Graphics2D)g).setStroke(new BasicStroke(2 * lineWidth));
             for (int sid : activeLocations) {
                 g.setColor(locationColors.get(sid));
-                for (int i = 0; i != method.getNumTraces(); ++i) {
-                    final Vector<Vec2> points = method.extrapolateConsumptionsLinear(sid, i);
+                for (int i = 0; i != monteCarlo.getNumTraces(); ++i) {
+                    final Vector<Vec2> points = monteCarlo.extrapolateConsumptionsLinear(sid, i);
                     if (points != null) {
                         final int x0 = sampleLineX(points.get(0).x);
                         final int y0 = Math.round(points.get(0).y * curveHeight);
@@ -484,8 +492,10 @@ public class MonteCarloViewer extends JPanel {
 
     private final ExecutionTreeViewer treeViewer;
 
-    private MonteCarlo method;
-    private final HashMap<NodeValueType, HashMap<TracesFilterType, MonteCarlo>> methods;
+    private final MonteCarlo.BestValue evalBestValue;
+    private final MonteCarlo.InputSize evalInputSize;
+    private final MonteCarlo.KeepAll filterAll;
+    private final MonteCarlo.InputUse filterInputUse;
     private final Vector<Integer> activeLocations;
     private final HashMap<Integer, Color> locationColors;
 
@@ -499,4 +509,8 @@ public class MonteCarloViewer extends JPanel {
     private final SizesPainter sizesPainter;
     private final FrequenciesPainter frequenciesPainter;
     private final ConsumptionsPainter consumptionsPainter;
+
+    private MonteCarlo monteCarlo;
+
+    private static final String targetLabelPrefix = "Tgt: ";
 }

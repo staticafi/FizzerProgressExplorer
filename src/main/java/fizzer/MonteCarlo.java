@@ -178,6 +178,8 @@ public class MonteCarlo {
     }
 
     public ExecutionTree getTree() { return tree; }
+    public NodeEvaluator getNodeEvaluator() { return nodeEvaluator; }
+    public TracesFilter getTracesFilter() { return tracesFilter; }
     public int getTargetSIid() { return targetSid; }
     public boolean isEmpty() { return targetSid == 0; }
     public Vector<Vector<Node>> getTraces() { return traces; }

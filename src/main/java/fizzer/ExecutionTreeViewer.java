@@ -133,6 +133,10 @@ public class ExecutionTreeViewer extends JPanel {
         addMouseMotionListener(ma);
     }
 
+    public ExecutionTree getTree() {
+        return executionTree;
+    }
+
     public Analysis getAnalysis(int analysisIndex) {
         return executionTree.getAnalyses()[analysisIndex];
     }
