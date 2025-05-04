@@ -14,13 +14,30 @@ public class MonteCarloViewer extends JPanel {
         InputSize
     }
 
+    public static enum TracesFilterType {
+        All,
+        InputUse
+    }
+
     public MonteCarloViewer(ExecutionTree executionTree, ExecutionTreeViewer treeViewer_) {
         treeViewer = treeViewer_;
 
         methods = new HashMap<>();
-        methods.put(NodeValueType.BestValue, new MonteCarlo(executionTree, new MonteCarlo.BestValue(executionTree)));
-        methods.put(NodeValueType.InputSize, new MonteCarlo(executionTree, new MonteCarlo.InputSize()));
-        method = methods.get(NodeValueType.BestValue);
+        {
+            final MonteCarlo.BestValue evalBestValue = new MonteCarlo.BestValue(executionTree);
+            final MonteCarlo.InputSize evalInputSize = new MonteCarlo.InputSize();
+            final MonteCarlo.KeepAll filterAll = new MonteCarlo.KeepAll();
+            final MonteCarlo.InputUse filterInputUse = new MonteCarlo.InputUse();
+            HashMap<TracesFilterType, MonteCarlo> m = new HashMap<>();
+            m.put(TracesFilterType.All, new MonteCarlo(executionTree, evalBestValue, filterAll));
+            m.put(TracesFilterType.InputUse, new MonteCarlo(executionTree, evalBestValue, filterInputUse));
+            methods.put(NodeValueType.BestValue, m);
+            m = new HashMap<>();
+            m.put(TracesFilterType.All, new MonteCarlo(executionTree, evalInputSize, filterAll));
+            m.put(TracesFilterType.InputUse, new MonteCarlo(executionTree, evalInputSize, filterInputUse));
+            methods.put(NodeValueType.InputSize, m);
+        }
+        method = methods.get(NodeValueType.BestValue).get(TracesFilterType.All);
 
         activeLocations = new Vector<>();
         locationColors = new HashMap<>();
@@ -33,7 +50,20 @@ public class MonteCarloViewer extends JPanel {
             @Override
             @SuppressWarnings("unchecked")
             public void actionPerformed(ActionEvent ae) {
-                method = methods.get((NodeValueType)((JComboBox<NodeValueType>)ae.getSource()).getSelectedItem());
+                method = methods.get((NodeValueType)((JComboBox<NodeValueType>)ae.getSource()).getSelectedItem())
+                                .get((TracesFilterType)tracesFilterSelector.getSelectedItem());
+                redraw();
+            }
+        });
+
+        tracesFilterSelector = new JComboBox<TracesFilterType>(TracesFilterType.values());
+        tracesFilterSelector.setFont(font);
+        tracesFilterSelector.addActionListener(new ActionListener() {
+            @Override
+            @SuppressWarnings("unchecked")
+            public void actionPerformed(ActionEvent ae) {
+                method = methods.get((NodeValueType)nodeValueSelector.getSelectedItem())
+                                .get((TracesFilterType)((JComboBox<TracesFilterType>)ae.getSource()).getSelectedItem());
                 redraw();
             }
         });
@@ -89,11 +119,13 @@ public class MonteCarloViewer extends JPanel {
         frequenciesPainter = new FrequenciesPainter(font);
         consumptionsPainter = new ConsumptionsPainter(font);
 
-        final JPanel controlPanel = new JPanel(new BorderLayout());
+        final JPanel controlPanel = new JPanel();
+        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.setOpaque(true);
-        controlPanel.add(nodeValueSelector, BorderLayout.NORTH);
-        controlPanel.add(targetValue, BorderLayout.CENTER);
-        controlPanel.add(targetLabel, BorderLayout.SOUTH);
+        controlPanel.add(nodeValueSelector);
+        controlPanel.add(tracesFilterSelector);
+        controlPanel.add(targetValue);
+        controlPanel.add(targetLabel);
 
         final JScrollPane locationsScrollPane = new JScrollPane(locations);
         locationsScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
@@ -136,8 +168,9 @@ public class MonteCarloViewer extends JPanel {
     }
 
     public void clear() {
-        for (MonteCarlo monteCarlo : methods.values())
-            monteCarlo.clear();
+        for (HashMap<TracesFilterType, MonteCarlo> monteCarlos : methods.values())
+            for (MonteCarlo monteCarlo : monteCarlos.values())
+                monteCarlo.clear();
 
         activeLocations.clear();
         locationColors.clear();
@@ -152,25 +185,28 @@ public class MonteCarloViewer extends JPanel {
 
     public boolean onTargetChanged(final Node node) {
         clear();
-        for (MonteCarlo monteCarlo : methods.values())
-            if (!monteCarlo.setTargetSid(node)) {
-                targetLabel.setText("Tgt: 0");
-                return false;
-            }
+        for (HashMap<TracesFilterType, MonteCarlo> monteCarlos : methods.values())
+            for (MonteCarlo monteCarlo : monteCarlos.values())
+                if (!monteCarlo.setTargetSid(node)) {
+                    targetLabel.setText("Tgt: 0");
+                    return false;
+                }
         compute();
         return true;
     }
 
     public void onTargetChanged(final int sid) {
         clear();
-        for (MonteCarlo monteCarlo : methods.values())
-            monteCarlo.setTargetSid(sid);
+        for (HashMap<TracesFilterType, MonteCarlo> monteCarlos : methods.values())
+            for (MonteCarlo monteCarlo : monteCarlos.values())
+                monteCarlo.setTargetSid(sid);
         compute();
     }
 
     private void compute() {
-        for (MonteCarlo monteCarlo : methods.values())
-            monteCarlo.compute();
+        for (HashMap<TracesFilterType, MonteCarlo> monteCarlos : methods.values())
+            for (MonteCarlo monteCarlo : monteCarlos.values())
+                monteCarlo.compute();
 
         targetLabel.setText("Tgt: " + Integer.toString(method.getTargetSIid()));
         computeLocationColors();
@@ -449,11 +485,12 @@ public class MonteCarloViewer extends JPanel {
     private final ExecutionTreeViewer treeViewer;
 
     private MonteCarlo method;
-    private final HashMap<NodeValueType, MonteCarlo> methods;
+    private final HashMap<NodeValueType, HashMap<TracesFilterType, MonteCarlo>> methods;
     private final Vector<Integer> activeLocations;
     private final HashMap<Integer, Color> locationColors;
 
     private final JComboBox<NodeValueType> nodeValueSelector;
+    private final JComboBox<TracesFilterType> tracesFilterSelector;
     private final JTextField targetValue;
     private final Label targetLabel;
     private final JList<Integer> locations;

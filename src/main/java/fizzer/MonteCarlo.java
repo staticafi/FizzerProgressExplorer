@@ -124,9 +124,47 @@ public class MonteCarlo {
         @Override public float getValue(Node node) { return (float)node.getNumInputBytes(); }
     }
 
-    public MonteCarlo(final ExecutionTree tree, final NodeEvaluator nodeEvaluator) {
+    public static interface TracesFilter { void run(Vector<Vector<Node>> input, NodeEvaluator evaluator, Vector<Vector<Node>> output); }
+    public static class KeepAll implements TracesFilter {
+        @Override public void run(final Vector<Vector<Node>> input, final NodeEvaluator evaluator, final Vector<Vector<Node>> output) {
+            output.addAll(input);
+        }
+    }
+    public static class InputUse implements TracesFilter {
+        @Override
+        public void run(final Vector<Vector<Node>> input, final NodeEvaluator evaluator, final Vector<Vector<Node>> output) {
+            final HashMap<Float, Vector<Vector<Node>>> tracesMap = new HashMap<>();
+            for (Vector<Node> trace : input)
+                tracesMap.compute(evaluator.getValue(trace.lastElement()), (k ,v) -> {
+                    final Vector<Vector<Node>> V = v == null ? new Vector<>() : v; 
+                    V.add(trace);
+                    return V;
+                });
+            for (Map.Entry<Float, Vector<Vector<Node>>> entry : tracesMap.entrySet()) {
+                Vector<Node> winner = null;
+                for (Vector<Node> trace : entry.getValue())
+                    winner = winner == null ? trace : better(winner, trace);
+                output.add(winner);
+            }
+        }
+        private static Vector<Node> better(final Vector<Node> left, final Vector<Node> right) {
+            return sizeError(left) <= sizeError(right) ? left : right;
+        }
+        private static int sizeError(final Vector<Node> trace) { return trace.size() - idealSize(trace); }
+        private static int idealSize(final Vector<Node> trace) { return 2 * (maxReadIndex(trace) + 1); }
+        private static int maxReadIndex(final Vector<Node> trace) {
+            int index = 0;
+            for (int i = 1; i < trace.size(); ++i)
+                if (trace.get(index).getNumInputBytes() < trace.get(i).getNumInputBytes())
+                    index = i;
+            return index;
+        }
+    }
+
+    public MonteCarlo(final ExecutionTree tree, final NodeEvaluator nodeEvaluator, final TracesFilter tracesFilter) {
         this.tree = tree;
         this.nodeEvaluator = nodeEvaluator;
+        this.tracesFilter = tracesFilter;
         targetSid = 0;
         traces = new Vector<>();
         locations = new Vector<>();
@@ -144,7 +182,7 @@ public class MonteCarlo {
     public boolean isEmpty() { return targetSid == 0; }
     public Vector<Vector<Node>> getTraces() { return traces; }
     public int getNumTraces() { return traces.size(); }
-    public Node getTraceTargetNode(Vector<Node> trace) { return trace.get(trace.size() - 1); }
+    public Node getTraceTargetNode(Vector<Node> trace) { return trace.lastElement(); }
     public Node getTraceTargetNode(int traceIndex) { return getTraceTargetNode(traces.get(traceIndex)); }
     public double getNodeValue(Node node) { return nodeEvaluator.getValue(node); }
     public double getTraceValue(Vector<Node> trace) { return getNodeValue(getTraceTargetNode(trace)); }
@@ -231,7 +269,9 @@ public class MonteCarlo {
     }
 
     private void collectTraces() {
-        collectTraces(tree.getRootNode());
+        final Vector<Vector<Node>> allTraces = new Vector<>();
+        collectTraces(tree.getRootNode(), allTraces);
+        tracesFilter.run(allTraces, nodeEvaluator, traces);
         traces.sort(new Comparator<Vector<Node>>() {
             @Override
             public int compare(Vector<Node> left, Vector<Node> right) {
@@ -248,7 +288,7 @@ public class MonteCarlo {
         });
     }
 
-    private void collectTraces(final Node node) {
+    private void collectTraces(final Node node, final Vector<Vector<Node>> result) {
         if (!isNodeValid(node))
             return;
         if (node.getLocationId().id == Math.abs(targetSid)) {
@@ -260,11 +300,11 @@ public class MonteCarlo {
             Collections.reverse(trace);
             for (int i = 0; i + 1 < trace.size(); ++i)
                 samples.putIfAbsent((trace.get(i).getChildren()[0] == trace.get(i + 1) ? -1 : 1) * trace.get(i).getLocationId().id, null);
-            traces.add(trace);
+            result.add(trace);
         }
         for (int i = 0; i != 2; ++i)
             if (node.getChildren()[i] != null)
-                collectTraces(node.getChildren()[i]);
+                collectTraces(node.getChildren()[i], result);
     }
 
     private void computeSamples() {
@@ -465,6 +505,7 @@ public class MonteCarlo {
 
     private final ExecutionTree tree;
     final NodeEvaluator nodeEvaluator;
+    final TracesFilter tracesFilter;
     private int targetSid;
     private final Vector<Vector<Node>> traces;
     private final Vector<Integer> locations;
