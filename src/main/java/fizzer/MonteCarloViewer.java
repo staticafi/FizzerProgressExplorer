@@ -206,9 +206,11 @@ public class MonteCarloViewer extends JPanel {
         monteCarlo = new MonteCarlo(treeViewer.getTree(), evaluator, filter);
         final int sid = Integer.parseInt(targetLabel.getText().substring(targetLabelPrefix.length()));
         if (sid != 0) {
+            final int[] selectedSids = locations.getSelectedIndices();
             clear();
             monteCarlo.setTargetSid(sid);
             compute();
+            locations.setSelectedIndices(selectedSids);
         } else
             redraw();
     }
