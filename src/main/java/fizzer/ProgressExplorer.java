@@ -167,9 +167,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuViewLLTab = new JMenuItem("LL tab");
         menuViewLLTab.setMnemonic(KeyEvent.VK_4);
         menuViewLLTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_4, KeyEvent.ALT_DOWN_MASK));
-        menuViewMonteCarloTab = new JMenuItem("MonteCarlo tab");
-        menuViewMonteCarloTab.setMnemonic(KeyEvent.VK_5);
-        menuViewMonteCarloTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_5, KeyEvent.ALT_DOWN_MASK));
+        if (monteCarloViewer != null) {
+            menuViewMonteCarloTab = new JMenuItem("MonteCarlo tab");
+            menuViewMonteCarloTab.setMnemonic(KeyEvent.VK_5);
+            menuViewMonteCarloTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_5, KeyEvent.ALT_DOWN_MASK));
+        }
 
         menuViewTreeId = new JMenuItem("Tree node id");
         menuViewTreeId.setMnemonic(KeyEvent.VK_I);
@@ -276,11 +278,12 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 tabbedPane.setSelectedIndex(3);
             }
         });
-        menuViewMonteCarloTab.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                tabbedPane.setSelectedIndex(4);
-            }
-        });
+        if (monteCarloViewer != null)
+            menuViewMonteCarloTab.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    tabbedPane.setSelectedIndex(4);
+                }
+            });
         tabbedPane.setSelectedIndex(1);
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, analysesSplitPane, tabbedPane);
@@ -746,7 +749,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuView.add(explorer.menuViewTreeTab);
         menuView.add(explorer.menuViewCTab);
         menuView.add(explorer.menuViewLLTab);
-        menuView.add(explorer.menuViewMonteCarloTab);
+        if (explorer.monteCarloViewer != null)
+            menuView.add(explorer.menuViewMonteCarloTab);
         menuView.addSeparator();
         menuView.add(explorer.menuViewTreeId);
         menuView.add(explorer.menuViewTreeC);
