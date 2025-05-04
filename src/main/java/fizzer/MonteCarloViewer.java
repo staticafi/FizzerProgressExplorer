@@ -380,7 +380,7 @@ public class MonteCarloViewer extends JPanel {
         protected void render(Graphics g) {
             renderLinesAndValues(g);
             final Function<Double, Integer> functionLinear = wrapFunction((sid, t) -> monteCarlo.extrapolateSizesLinear(sid, t));
-            int maxSize = 0;
+            int maxSize = 1;
             for (int i = 0; i != monteCarlo.getNumTraces(); ++i) {
                 int sum = 0;
                 for (int sid : activeLocations)
