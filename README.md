@@ -39,7 +39,9 @@ Located in the `target` directory created under the project's directory.
 
 Type this command to the terminal:
 ```
-java -Xss100m -Xms512m -Xmx10000m -jar <path-to>/ProgressExplorer-1.0-SNAPSHOT-jar-with-dependencies.jar [<data-dir>]
+java -Xss100m -Xms512m -Xmx10000m -Dsun.awt.disablegrab=true -jar <path-to>/ProgressExplorer-1.0-SNAPSHOT-jar-with-dependencies.jar [<data-dir>]
 ```
 The optional `<data-dir>` is a *directory* under which is stored recording of
 FIzzer's progress.
+*NOTE*: If you want to debug the application, then do not forget to specify the
+        option `-Dsun.awt.disablegrab=true`. That will prevent your IDE to freeze.
