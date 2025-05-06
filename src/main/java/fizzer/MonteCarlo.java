@@ -309,8 +309,6 @@ public class MonteCarlo {
             for (Node n = node; n != null; n = n.getParent())
                 trace.add(n);
             Collections.reverse(trace);
-            for (int i = 0; i + 1 < trace.size(); ++i)
-                samples.putIfAbsent((trace.get(i).getChildren()[0] == trace.get(i + 1) ? -1 : 1) * trace.get(i).getLocationId().id, null);
             result.add(trace);
         }
         for (int i = 0; i != 2; ++i)
@@ -319,6 +317,11 @@ public class MonteCarlo {
     }
 
     private void computeSamples() {
+        for (Vector<Node> trace : traces)
+            for (int i = 0; i + 1 < trace.size(); ++i) {
+                final int sid = (trace.get(i).getChildren()[0] == trace.get(i + 1) ? -1 : 1) * trace.get(i).getLocationId().id;
+                samples.compute(sid, (k, v) -> { return v == null ? new Vector<>() : v; });
+            }
         for (Map.Entry<Integer, Vector<Vector<Float>>> entry : samples.entrySet()) {
             entry.setValue(new Vector<>());
             for (Vector<Node> trace : traces)
