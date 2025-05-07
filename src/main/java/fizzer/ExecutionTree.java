@@ -16,6 +16,7 @@ public class ExecutionTree {
     private HashMap<LocationId,Integer>[] coverage;
     private HashMap<Integer,Integer>[] coveredIds;
     private HashMap<Long,Node> fromGuidsToNodes;
+    private boolean loaded;
 
     @SuppressWarnings("unchecked")
     public void load(String dir) throws Exception {
@@ -118,6 +119,8 @@ public class ExecutionTree {
         analysisIndex = analyses.length - 1;
         if (analysisIndex < 0)
             throw new RuntimeException("ERROR: no analysis performed on the benchmark => there is nothing to show.");
+
+        loaded = true;
     }
 
     public void executeTrace(
@@ -255,7 +258,7 @@ public class ExecutionTree {
     }
 
     public boolean isLoaded() {
-        return rootNode != null && analyses != null;
+        return loaded;
     }
 
     public void clear() {
@@ -263,5 +266,6 @@ public class ExecutionTree {
         analyses = null;
         analysisIndex = 0;
         coverage = null;
+        loaded = false;
     }
 }
