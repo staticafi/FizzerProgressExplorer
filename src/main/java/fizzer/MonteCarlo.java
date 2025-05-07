@@ -22,6 +22,12 @@ public class MonteCarlo {
         public Vector<Float> getCoefficients() { Vector<Float> v = new Vector<>(); v.add(c0); v.add(c1); return v; }
         public Vector<Vec2> parametric() { return parametric(c0, c1); }
 
+        public static ExtrapolationLinear fromLoHi(final Vector<Float> x) { return fromLoHi(x.get(0), x.get(1)); }
+        public static ExtrapolationLinear fromLoHi(float lo, float hi) {
+            final float slope = 1.0f / Math.max(1e-5f, hi - lo);
+            return new ExtrapolationLinear(-lo * slope, slope);
+        }
+
         public static Vector<Vec2> parametric(final float c0, final float c1) {
             final Vector<Vec2> Au = new Vector<>();
             final Vec2 A = new Vec2(0.0f, c0);
@@ -36,6 +42,9 @@ public class MonteCarlo {
         public static float apply(final float c0, final float c1, final float value) { return c0 + value * c1; }
         public float apply(final float value) { return apply(c0, c1, value); }
         public float applyInverse(final float value) { return Math.abs(c1) <= 1e-6f ? 0.0f : (value - c0) / c1; }
+        public float applyAndClip(final float value, final float lo, float hi) {
+            return Math.max(0.0f, Math.min(1.0f, apply(c0, c1, value)));
+        }
 
         private final float c0;
         private final float c1;
@@ -217,18 +226,24 @@ public class MonteCarlo {
         return result;
     }
     public Vector<Vec2> extrapolateConsumptionsLinear(int sid, int traceIndex) {
-        final ExtrapolationLinear e = computeConsumptionsExtrapolationLinear(sid, (float)getTraceValue(traceIndex));
-        return Clip.extrapolationLinear(e.parametric(), Vec2.zero, new Vec2(1.0f, 1.0f));
+        final Vector<Float> values = computeConsumptionsExtrapolationLinear(sid, (float)getTraceValue(traceIndex));
+        final Vector<Vec2> Au = new Vector<>();
+        Au.add(new Vec2(values.get(0), 0.0f));
+        Au.add(new Vec2(values.get(1) - values.get(0), 1.0f));
+        return Clip.extrapolationLinear(Au, Vec2.zero, new Vec2(1.0f, 1.0f));
     }
-    public ExtrapolationLinear computeConsumptionsExtrapolationLinear(int sid, float value) {
+    public Vector<Float> computeConsumptionsExtrapolationLinear(int sid, float value) {
+        final Vector<Float> values = new Vector<>();
         final Vector<Extrapolations> e = consumptionsExtrapolation.get(sid);
-        final float v0 = e.get(0).applyLinear(value);
-        final float v1 = e.get(1).applyLinear(value);
-        final float x0 = Math.min(v0, v1);
-        final float x1 = Math.max(v0, v1);
-        final float c1 = 1.0f / Math.max(1e-5f, x1 - x0);
-        final float c0 = -c1 * x0;
-        return new ExtrapolationLinear(c0, c1);
+        float v0 = e == null ? 0.0f : e.get(0).applyLinear(value);
+        float v1 = e == null ? 0.0f : e.get(1).applyLinear(value);
+        if (v0 >= v1) {
+            v1 = (v0 + v1) / 2;
+            v0 = v1 - 1.0f / Math.max(1.0f, sizesExtrapolation.get(0).applyLinear(value));
+        }
+        values.add(v0);
+        values.add(v1);
+        return values;
     }
     public NodeAndDirection selectNodeForValue(final float value) { return selectNode(value); }
 
@@ -459,62 +474,81 @@ public class MonteCarlo {
     }
 
     private NodeAndDirection selectNode(final float value) {
-        final HashMap<Integer, Integer> S = new HashMap<>();
-        final HashMap<Integer, Integer> s = new HashMap<>();
-        final HashMap<Integer, ExtrapolationLinear> C = new HashMap<>();
-        int length = 0;
-        for (int sid : locations) {
-            final int l = Math.max(0, Math.round(sizesExtrapolation.get(sid).applyLinear(value)));
-            S.put(sid, l);
-            length += l;
-            s.put(sid, 0);
-            C.put(sid, computeConsumptionsExtrapolationLinear(sid, value));
+        final class Counts {
+            Counts(int dir) { total[dir] = 1; }
+            Counts(int total0, int total1) { total[0] = total0; total[1] = total1; }
+            boolean depleted() { return current[0] >= total[0] && current[1] >= total[1]; }
+            void increment(int dir) { ++current[dir]; }
+            int computeDir() { return ratio(0) <= ratio(1) ? 0 : 1; }
+            float ratio(int dir) { return (current[dir] + 1) / (float)(total[dir] + 1); }
+            private final int[] total = { 0, 0 };
+            private final int[] current = { 0, 0 };
         }
-        final int[] sid = { 0, 0 };
-        final float[] expectation = { 0, 0 };
-        final int[] count = { 0, 0 };
-        Node node = tree.getRootNode();
-        for (int traceIndex = 0; true; ++traceIndex) {
-            int m = 0;
-            for (int dir = 0; dir != 2; ++dir) {
-                boolean isChildAvailable;
-                switch (node.getChildLabel(tree.getAnalysisIndex(), dir)) {
-                    case END_EXCEPTIONAL: case END_NORMAL: isChildAvailable = false; break;
-                    case VISITED: isChildAvailable = !node.getChildren()[dir].isClosed(tree.getAnalysisIndex()); break;
-                    default: isChildAvailable = true; break;
-                }
-                if (isChildAvailable) {
-                    sid[m] = (dir == 0 ? -1 : 1) * node.getLocationId().id;
-                    if (S.containsKey(sid[m])) {
-                        final int currentCount = s.get(sid[m]);
-                        final int endCount = S.get(sid[m]);
-                        final float rawExpectedRatio = C.get(sid[m]).apply(Math.min(traceIndex, length) / (float)length);
-                        final float expectedRatio = Math.min(1.0f, rawExpectedRatio);
-                        final float expected = endCount * expectedRatio;
-                        expectation[m] = expected - (float)currentCount;
-                        count[m] = endCount - currentCount;
-                    } else if (targetSid == sid[m] && traceIndex >= length) {
-                        sid[0] = targetSid;
-                        m = 1;
-                        break;
-                    } else {
-                        expectation[m] = Integer.MIN_VALUE;
-                        count[m] = Integer.MIN_VALUE;
+        final HashMap<Integer, Vector<Counts>> counts = new HashMap<>();
+        for (int sid : locations) {
+            final Extrapolations s0 = sizesExtrapolation.get(-Math.abs(sid));
+            final Extrapolations s1 = sizesExtrapolation.get(Math.abs(sid));
+            final int size0 = s0 == null ? 0 : Math.max(0, Math.round(s0.applyLinear(value)));
+            final int size1 = s1 == null ? 0 : Math.max(0, Math.round(s1.applyLinear(value)));
+            if (size0 > 0 || size1 > 0) {
+                final Vector<Counts> cnt = new Vector<>();
+                if (size0 > 0 && size1 > 0) {
+                    final Vector<Float> x0 = computeConsumptionsExtrapolationLinear(-Math.abs(sid), value);
+                    final Vector<Float> x1 = computeConsumptionsExtrapolationLinear(Math.abs(sid), value);
+                    final ExtrapolationLinear e0 = ExtrapolationLinear.fromLoHi(x0);
+                    final ExtrapolationLinear e1 = ExtrapolationLinear.fromLoHi(x1);
+                    final Vector<Float> x = new Vector<>(x0);
+                    x.addAll(x1);
+                    x.sort(new Comparator<Float>() {
+                        @Override public int compare(Float left, Float right) { return left < right ? -1 : left > right ? 1 : 0; }
+                    });
+                    for (int i = 1; i < x.size(); ++i) {
+                        final float fraction0 = e0.applyAndClip(x.get(i), 0.0f, 1.0f) - e0.applyAndClip(x.get(i-1), 0.0f, 1.0f);
+                        final float fraction1 = e1.applyAndClip(x.get(i), 0.0f, 1.0f) - e1.applyAndClip(x.get(i-1), 0.0f, 1.0f);
+                        final int count0 = Math.round(size0 * fraction0);
+                        final int count1 = Math.round(size1 * fraction1);
+                        if (count0 > 0 || count1 > 0)
+                            cnt.add(new Counts(count0, count1));
                     }
-                    ++m;
+                    Collections.reverse(cnt);
+                } else
+                    cnt.add(new Counts(size0, size1));
+                counts.put(Math.abs(sid), cnt);
+            }
+        }
+        counts.compute(Math.abs(targetSid), (k, v) -> {
+            Vector<Counts> c = v == null ? new Vector<>() : v;
+            c.add(0, new Counts(targetSid < 0 ? 0 : 1));
+            return c;
+        });
+        final boolean[] dirOpen = { false, false };
+        Node node = tree.getRootNode();
+        while (true) {
+            final int id = node.getLocationId().id;
+            final Vector<Counts> cnt = counts.computeIfAbsent(id, k -> {
+                final Vector<Counts> c = new Vector<>();
+                c.add(new Counts(0, 0));
+                return c;
+            });
+            int dir;
+            for (int i = 0; i != 2; ++i)
+                switch (node.getChildLabel(tree.getAnalysisIndex(), i)) {
+                    case END_EXCEPTIONAL: case END_NORMAL: dirOpen[i] = false; break;
+                    case VISITED: dirOpen[i] = !node.getChildren()[i].isClosed(tree.getAnalysisIndex()); break;
+                    default: dirOpen[i] = true; break;
                 }
-            }
-            if (m == 0)
+            if (dirOpen[0] && dirOpen[1])
+                dir = cnt.lastElement().computeDir();
+            else if (dirOpen[0])
+                dir = 0;
+            else if (dirOpen[1])
+                dir = 1;
+            else
                 throw new RuntimeException("MonteCarlo.selectNode: Cannot advance in the execution tree.");
-            if (m == 2) {
-                sid[0] = expectation[0] > expectation[1] ? sid[0] :
-                         expectation[0] < expectation[1] ? sid[1] :
-                         count[0] < count[1]             ? sid[1] : sid[0];
-                m = 1;
-            }
-            if (s.containsKey(sid[0]))
-                s.put(sid[0], s.get(sid[0]) + 1);
-            final int dir = sid[0] < 0 ? 0 : 1;
+            cnt.lastElement().increment(dir);
+            if (cnt.lastElement().depleted() && cnt.size() > 1)
+                cnt.remove(cnt.size() - 1);
+
             final Node n = node.getChildren()[dir];
             if (n == null || !isNodeValid(n))
                 return new NodeAndDirection(node, dir);
