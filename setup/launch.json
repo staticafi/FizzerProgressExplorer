@@ -13,7 +13,11 @@
             "stopOnEntry": false,
             "vmArgs": "-Xss100m -Xms512m -Xmx10000m -Dsun.awt.disablegrab=true",
             "cwd": "${workspaceFolder}",
-            "args": [ "../fizzer/dist/output/progress_recording", "--showMonteCarloTab" ]
+            "args": [
+                "../fizzer/dist/output/progress_recording",
+                "--showNavigatorTab"
+                //"--showMonteCarloTab"
+            ]
         }
     ]
 }
