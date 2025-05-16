@@ -318,8 +318,14 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 if (node != null) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         if (e.isControlDown()) {
-                            if (monteCarloViewer != null && monteCarloViewer.onTargetChanged(node))
+                            final boolean leftCovered = executionTree.isCovered(node.getLocationId(), false);
+                            final boolean rightCovered = executionTree.isCovered(node.getLocationId(), true);
+                            if (leftCovered != rightCovered) {
+                                final int sid = (leftCovered ? 1 : -1) * node.getLocationId().id;
+                                if (monteCarloViewer != null)
+                                    monteCarloViewer.onTargetChanged(sid);
                                 tabbedPane.setSelectedIndex(4);
+                            }
                         } else
                             navigateFromTree(node);
                     }
@@ -336,8 +342,10 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                         final LocationId locationId = new LocationId(id);
                         final boolean leftCovered = executionTree.isCovered(locationId, false);
                         final boolean rightCovered = executionTree.isCovered(locationId, true);
-                        if (monteCarloViewer != null && leftCovered != rightCovered) {
-                            monteCarloViewer.onTargetChanged((leftCovered ? 1 : -1) * id);
+                        if (leftCovered != rightCovered) {
+                            final int sid = (leftCovered ? 1 : -1) * id;
+                            if (monteCarloViewer != null)
+                                monteCarloViewer.onTargetChanged(sid);
                             tabbedPane.setSelectedIndex(4);
                         }
                     } else {
@@ -557,11 +565,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.onAnalysisChanged();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
-        if (monteCarloViewer != null) {
-            monteCarloViewer.onAnalysisChanged();
-            if (tabbedPane.getSelectedIndex() == 4) // MonteCarlo?
-                tabbedPane.setSelectedIndex(1); // Tree
-        }
+        if (monteCarloViewer != null)
+            monteCarloViewer.clear();
         updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
     }
 
@@ -690,7 +695,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
         if (monteCarloViewer != null)
-            monteCarloViewer.onAnalysisChanged();
+            monteCarloViewer.clear();
         updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
 
         String rawName = Paths.get("").toAbsolutePath().relativize(Paths.get(dir)).toString();

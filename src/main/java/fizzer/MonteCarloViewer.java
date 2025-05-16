@@ -170,20 +170,6 @@ public class MonteCarloViewer extends JPanel {
         redraw();
     }
 
-    public void onAnalysisChanged() {
-        clear();
-    }
-
-    public boolean onTargetChanged(final Node node) {
-        clear();
-        if (!monteCarlo.setTargetSid(node)) {
-            targetLabel.setText(targetLabelPrefix + "0");
-            return false;
-        }
-        compute();
-        return true;
-    }
-
     public void onTargetChanged(final int sid) {
         clear();
         monteCarlo.setTargetSid(sid);
