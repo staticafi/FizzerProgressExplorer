@@ -101,7 +101,7 @@ public class NavigatorViewer extends JPanel {
         consumptionsScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         consumptionsScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
-        sizesPainter = new InfosPainter(font) {
+        countsPainter = new InfosPainter(font) {
             @Override float getMaxValue(final Vector<Integer> sids) {
                 int maxValue = 0;
                 for (int i = 0; i != navigator.getInfos().size(); ++i)
@@ -114,15 +114,15 @@ public class NavigatorViewer extends JPanel {
             }
             @Override float getValue(Navigator.IdInfo info, int sid) { return sid < 0 ? info.counts[0] : info.counts[1]; }
         };
-        final JScrollPane sizesPainterScrollPane = new JScrollPane(sizesPainter);
-        sizesPainterScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
-        sizesPainterScrollPane.getVerticalScrollBar().setUnitIncrement(20);
+        final JScrollPane countsPainterScrollPane = new JScrollPane(countsPainter);
+        countsPainterScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
+        countsPainterScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
         ratiosPainters = new RatiosPainter[3];
 
         painterTabs = new JTabbedPane();
         painterTabs.addTab("Consumptions", consumptionsScrollPane);
-        painterTabs.addTab("Sizes", sizesPainterScrollPane);
+        painterTabs.addTab("Counts", countsPainterScrollPane);
         for (int i = 0; i != 3; ++i) {
             ratiosPainters[i] = new RatiosPainter(font, i);
             final JScrollPane scrollPane = new JScrollPane(ratiosPainters[i]);
@@ -212,7 +212,7 @@ public class NavigatorViewer extends JPanel {
 
     private void resize() {
         consumptionsPainter.resize();
-        sizesPainter.resize();
+        countsPainter.resize();
         for (int i = 0; i != 3; ++i)
             ratiosPainters[i].resize();
     }
@@ -220,7 +220,7 @@ public class NavigatorViewer extends JPanel {
     private void redraw() {
         switch (painterTabs.getSelectedIndex()) {
             case 0: consumptionsPainter.redraw(); break;
-            case 1: sizesPainter.redraw(); break;
+            case 1: countsPainter.redraw(); break;
             case 2: ratiosPainters[0].redraw(); break;
             case 3: ratiosPainters[1].redraw(); break;
             case 4: ratiosPainters[2].redraw(); break;
@@ -398,7 +398,7 @@ public class NavigatorViewer extends JPanel {
     private final HashMap<Integer, Color> locationColors;
     private final JTabbedPane painterTabs;
     private final ConsumptionsPainter consumptionsPainter;
-    private final InfosPainter sizesPainter;
+    private final InfosPainter countsPainter;
     private final RatiosPainter[] ratiosPainters;
 
     private static final String targetLabelPrefix = "Tgt: ";
