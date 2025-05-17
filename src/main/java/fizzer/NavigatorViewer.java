@@ -167,7 +167,9 @@ public class NavigatorViewer extends JPanel {
         All,
         Warm,
         Cold,
-        InputUse
+        InputUse,
+        InputWarm,
+        InputCold
     }
 
     private int getTargetSid() { return Integer.parseInt(targetSid.getText().substring(targetLabelPrefix.length())); }
@@ -199,6 +201,8 @@ public class NavigatorViewer extends JPanel {
             case Warm: filter = new Navigator.Signed(1.0f); break;
             case Cold: filter = new Navigator.Signed(-1.0f); break;
             case InputUse: filter = new Navigator.InputUse(); break;
+            case InputWarm: filter = new Navigator.Signed(1.0f).then(new Navigator.InputUse()); break;
+            case InputCold: filter = new Navigator.Signed(-1.0f).then(new Navigator.InputUse()); break;
             default: throw new RuntimeException();
         }
 

@@ -23,22 +23,34 @@ public class Navigator {
         }
     }
 
-    public static interface Filter { void run(Vector<Node> input, Metric metric, Vector<Node> output); }
-    public static class KeepAll implements Filter {
-        @Override public void run(final Vector<Node> input, final Metric metric, final Vector<Node> output) { output.addAll(input); }
+    public static abstract class Filter {
+        public final void run(Vector<Node> input, Metric metric, Vector<Node> output) {
+            if (next == null)
+                filter(input, metric, output);
+            else {
+                final Vector<Node> temp = new Vector<>();
+                filter(input, metric, temp);
+                next.run(temp, metric, output);
+            }
+        }
+        protected abstract void filter(Vector<Node> input, Metric metric, Vector<Node> output);
+        public Filter then(Filter filter) { next = filter; return this; }
+        protected Filter next = null;
     }
-    public static class Signed implements Filter {
+    public static class KeepAll extends Filter {
+        @Override protected void filter(final Vector<Node> input, final Metric metric, final Vector<Node> output) { output.addAll(input); }
+    }
+    public static class Signed extends Filter {
         public Signed(float sign_) { sign = sign_; }
-        @Override public void run(final Vector<Node> input, final Metric metric, final Vector<Node> output) {
+        @Override protected void filter(final Vector<Node> input, final Metric metric, final Vector<Node> output) {
             for (Node node : input)
                 if (metric.getValue(node) * sign >= 0.0f)
                     output.add(node);
         }
         private final float sign;
     }
-    public static class InputUse implements Filter {
-        @Override
-        public void run(Vector<Node> input, Metric metric, Vector<Node> output) {
+    public static class InputUse extends Filter {
+        @Override protected void filter(Vector<Node> input, Metric metric, Vector<Node> output) {
             final HashMap<Float, Vector<Node>> tracesMap = new HashMap<>();
             for (Node node : input)
                 tracesMap.compute(metric.getValue(node), (k ,v) -> {
