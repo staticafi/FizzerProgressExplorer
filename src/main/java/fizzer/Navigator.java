@@ -207,12 +207,43 @@ public class Navigator {
                     info.ratios[entry.getValue()][l] = avgRatios[entry.getValue()][l];
             }
         }
+
+        extrapolations = new HashMap<>();
+        for (int sid : sids) {
+            if (extrapolations.containsKey(Math.abs(sid)))
+                continue;
+            final IdExtra extra = new IdExtra();
+
+            final class Input { final Vector<Vec2> points = new Vector<>(); }
+            final class Inputs {
+                final Input[] counts = new Input[] { new Input(), new Input() };
+                final Input[][] ratios = new Input[][] { { new Input(), new Input(), new Input() }, { new Input(), new Input(), new Input() } };
+            }
+            final Inputs inputs = new Inputs();
+            for (int i = 0; i != infos.size(); ++i) {
+                final IdInfo info = infos.get(i).get(Math.abs(sid));
+                if (info == null)
+                    continue;
+                for (int j = 0; j != 2; ++j) {
+                    inputs.counts[j].points.add(new Vec2(values.get(i), info.counts[j]));
+                    for (int k = 0; k != 3; ++k)
+                        inputs.ratios[j][k].points.add(new Vec2(values.get(i), info.ratios[j][k]));
+                }
+            }
+            for (int j = 0; j != 2; ++j) {
+                extra.counts[j] = new Extrapolation(inputs.counts[j].points);
+                for (int k = 0; k != 3; ++k)
+                    extra.ratios[j][k] = new Extrapolation(inputs.ratios[j][k].points);
+            }
+            extrapolations.put(Math.abs(sid), extra);
+        }
     }
 
     public Vector<Integer> getSignedLocations() { return sids; }
     public Vector<HashMap<Integer, Vector<Float>>> getConsumptions() { return consumptions; }
     public Vector<Float> getValues() { return values; }
     public Vector<HashMap<Integer, IdInfo>> getInfos() { return infos; }
+    public HashMap<Integer, IdExtra> getExtrapolations() { return extrapolations; }
 
     public NodeAndDirection run(ExecutionTree tree, float value) {
         // TODO!
@@ -223,9 +254,34 @@ public class Navigator {
         public final int[] counts = new int[2];
         public final float[][] ratios = new float[2][3];
     }
-    
+
+    public static class Extrapolation {
+        public Extrapolation(final Vector<Vec2> input) {
+            float A = 0, B = 0, C = 0, D = 0;
+            for (int i = 0; i != input.size(); ++i) {
+                Vec2 p = input.get(i);
+                A += p.x * p.x;
+                B += p.x;
+                C += p.x * p.y;
+                D += p.y;
+            }
+            c1 = input.isEmpty() || input.size() * A - B * B == 0.0f ? 0.0f : (input.size() * C - B * D) / (input.size() * A - B * B);
+            c0 = input.isEmpty() ? 0.0f : (D - c1 * B) / input.size();
+        }
+        public static float apply(final float c0, final float c1, final float value) { return c0 + value * c1; }
+        public float apply(final float value) { return apply(c0, c1, value); }
+        private final float c0;
+        private final float c1;
+    }
+
+    public static class IdExtra {
+        public final Extrapolation[] counts = new Extrapolation[2];
+        public final Extrapolation[][] ratios = new Extrapolation[2][3];
+    }
+
     private final Vector<Integer> sids;
     private final Vector<HashMap<Integer, Vector<Float>>> consumptions;
     private final Vector<Float> values;
     private final Vector<HashMap<Integer, IdInfo>> infos;
+    private final HashMap<Integer, IdExtra> extrapolations;
 }

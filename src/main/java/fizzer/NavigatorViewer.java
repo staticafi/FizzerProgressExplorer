@@ -101,19 +101,7 @@ public class NavigatorViewer extends JPanel {
         consumptionsScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         consumptionsScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
-        countsPainter = new InfosPainter(font) {
-            @Override float getMaxValue(final Vector<Integer> sids) {
-                int maxValue = 0;
-                for (int i = 0; i != navigator.getInfos().size(); ++i)
-                    for (int sid : sids) {
-                        final Navigator.IdInfo info = navigator.getInfos().get(i).get(Math.abs(sid));
-                        if (info != null)
-                            maxValue = Math.max(maxValue, info.counts[sid < 0 ? 0 : 1]);
-                    }
-                return maxValue;
-            }
-            @Override float getValue(Navigator.IdInfo info, int sid) { return sid < 0 ? info.counts[0] : info.counts[1]; }
-        };
+        countsPainter = new CountsPainter(font);
         final JScrollPane countsPainterScrollPane = new JScrollPane(countsPainter);
         countsPainterScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         countsPainterScrollPane.getVerticalScrollBar().setUnitIncrement(20);
@@ -357,6 +345,7 @@ public class NavigatorViewer extends JPanel {
 
         float getMaxValue(Vector<Integer> sids) { return 1.0f; }
         abstract float getValue(Navigator.IdInfo info, int sid);
+        abstract Navigator.Extrapolation getExtra(Navigator.IdExtra extra, int sid);
 
         @Override
         protected void render(Graphics g) {
@@ -379,18 +368,54 @@ public class NavigatorViewer extends JPanel {
                     }
                 }
             }
+            ((Graphics2D)g).setStroke(new BasicStroke(2 * lineWidth));
+            for (int i = 0; i != navigator.getValues().size(); ++i) {
+                final int y = sampleLineY(i);
+                for (int j = 0; j != sids.size(); ++j) {
+                    final Navigator.IdExtra extra = navigator.getExtrapolations().get(Math.abs(sids.get(j)));
+                    if (extra == null)
+                        continue;
+                    float value = getExtra(extra, sids.get(j)).apply(navigator.getValues().get(i));
+                    value /= maxValue;
+                    value = Math.max(0.0f, Math.min(1.0f, value));
+                    g.setColor(locationColors.get(sids.get(j)));
+                    int x0 = sampleLineX(value);
+                    int y0 = y - (j + 1) * infoStride;
+                    g.drawLine(x0, y0 - lineHeight/2, x0, y0 + lineHeight/2);
+                }
+            }
         }
         @Override
         protected int samplesStride() { return locationsSelection.size() * (infoStride + 1 + lineWidth) + 30; }
 
-        private static final int infoStride = 10;
+        private static final int infoStride = 15;
         private static final int lineWidth = 4;
+        private static final int lineHeight = 6;
     }
+
+    private class CountsPainter extends InfosPainter {
+        CountsPainter(final Font font) { super(font); }
+        @Override float getMaxValue(final Vector<Integer> sids) {
+            int maxValue = 0;
+            for (int i = 0; i != navigator.getInfos().size(); ++i)
+                for (int sid : sids) {
+                    final Navigator.IdInfo info = navigator.getInfos().get(i).get(Math.abs(sid));
+                    if (info != null)
+                        maxValue = Math.max(maxValue, info.counts[sid < 0 ? 0 : 1]);
+                }
+            return maxValue;
+        }
+        @Override float getValue(Navigator.IdInfo info, int sid) { return sid < 0 ? info.counts[0] : info.counts[1]; }
+        @Override Navigator.Extrapolation getExtra(Navigator.IdExtra extra, int sid) { return sid < 0 ? extra.counts[0] : extra.counts[1]; }
+    };
 
     private class RatiosPainter extends InfosPainter {
         RatiosPainter(final Font font, final int index_) { super(font); index = index_; }
         @Override float getMaxValue(Vector<Integer> sids) { return 1.0f; }
         @Override float getValue(Navigator.IdInfo info, int sid) { return sid < 0 ? info.ratios[0][index] : info.ratios[1][index]; }
+        @Override Navigator.Extrapolation getExtra(Navigator.IdExtra extra, int sid) {
+            return sid < 0 ? extra.ratios[0][index] : extra.ratios[1][index];
+        }
         private final int index;
     }
 
