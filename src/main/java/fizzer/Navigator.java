@@ -244,8 +244,70 @@ public class Navigator {
     public HashMap<Integer, IdExtra> getExtrapolations() { return extrapolations; }
 
     public NodeAndDirection run(ExecutionTree tree, float value) {
-        // TODO!
-        return new NodeAndDirection(tree.getRootNode(), 0);
+        final int maxDiscoveryIndex = tree.getAnalyses()[tree.getAnalysisIndex()].getViewProps().maxDiscoveryIndex;
+
+        final class Counts {
+            Counts(int total0, int total1) { total[0] = total0; total[1] = total1; }
+            boolean depleted() { return current[0] >= total[0] && current[1] >= total[1]; }
+            void increment(int dir) { ++current[dir]; }
+            int chooseDir() { return ratio(0) <= ratio(1) ? 0 : 1; }
+            private float ratio(int dir) { return (current[dir] + 1) / (float)(total[dir] + 1); }
+            private final int[] total = { 0, 0 };
+            private final int[] current = { 0, 0 };
+        }
+        final HashMap<Integer, Vector<Counts>> counts = new HashMap<>();
+        for (int sid : sids)
+            if (!counts.containsKey(Math.abs(sid))) {
+                final IdExtra extra = extrapolations.get(Math.abs(sid));
+                final IdInfo info = new IdInfo();
+                for (int j = 0; j != 2; ++j) {
+                    info.counts[j] = Math.round(extra.counts[j].apply(value));
+                    for (int k = 0; k != 3; ++k)
+                        info.ratios[j][k] = extra.ratios[j][k].apply(value);
+                }
+                final Vector<Counts> cnt = new Vector<>();
+                for (int k = 0; k != 3; ++k)
+                    cnt.add(new Counts(Math.round(info.counts[0] * info.ratios[0][k]), Math.round(info.counts[1] * info.ratios[1][k])));
+                Collections.reverse(cnt);
+                counts.put(Math.abs(sid), cnt);
+            }
+
+        final boolean[] dirOpen = { false, false };
+        Node node = tree.getRootNode();
+        while (true) {
+            final int id = node.getLocationId().id;
+            final Vector<Counts> cnt = counts.computeIfAbsent(id, k -> {
+                final Vector<Counts> c = new Vector<>();
+                c.add(new Counts(0, 0));
+                return c;
+            });
+
+            int dir;
+            for (int i = 0; i != 2; ++i)
+                switch (node.getChildLabel(tree.getAnalysisIndex(), i)) {
+                    case END_EXCEPTIONAL: case END_NORMAL: dirOpen[i] = false; break;
+                    case VISITED: dirOpen[i] = !node.getChildren()[i].isClosed(tree.getAnalysisIndex()); break;
+                    default: dirOpen[i] = true; break;
+                }
+            if (dirOpen[0] && dirOpen[1])
+                dir = cnt.lastElement().chooseDir();
+            else if (dirOpen[0])
+                dir = 0;
+            else if (dirOpen[1])
+                dir = 1;
+            else
+                throw new RuntimeException("Navigator.run: Cannot advance in the execution tree.");
+
+            cnt.lastElement().increment(dir);
+            if (cnt.lastElement().depleted() && cnt.size() > 1)
+                cnt.remove(cnt.size() - 1);
+
+            final Node n = node.getChildren()[dir];
+            if (n == null || n.getDiscoveryIndex() > maxDiscoveryIndex)
+                return new NodeAndDirection(node, dir);
+
+            node = n;
+        }
     }
 
     public static class IdInfo {
