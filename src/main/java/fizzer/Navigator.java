@@ -119,18 +119,92 @@ public class Navigator {
             values.add(metric.getValue(node));
         }
         sids.addAll(sidSet.stream().sorted().toList());
+
+        infos = new Vector<>();
+        for (final HashMap<Integer, Vector<Float>> conMap : consumptions) {
+            final HashMap<Integer, IdInfo> map = new HashMap<>();
+            for (int sid : conMap.keySet())
+                map.compute(Math.abs(sid), (k, v) -> {
+                    if (v == null)
+                        v = new IdInfo();
+                    v.counts[sid < 0 ? 0 : 1] = conMap.get(sid).size();
+                    return v;
+                });
+            infos.add(map);
+        }
+        final HashSet<Integer> processed = new HashSet<>();
+        for (int sid : sids){
+            if (processed.contains(sid))
+                continue;
+            processed.add(sid);
+            processed.add(-sid);
+            int avgCount = 0;
+            final float[][] avgRatios = new float[2][3]; 
+            final HashMap<Integer, Integer> singular = new HashMap<>();
+            for (int i = 0; i != consumptions.size(); ++i) {
+                final Vector<Vector<Float>> x = new Vector<>();
+                x.add(consumptions.get(i).get(-Math.abs(sid)));
+                x.add(consumptions.get(i).get(Math.abs(sid)));
+                if (x.get(0) != null && x.get(1) != null) {
+                    final IdInfo info = infos.get(i).get(Math.abs(sid));
+                    for (int k = 0; k != 2; ++k) {
+                        final Vector<Float> f = x.get(k);
+                        final Vector<Float> g = x.get((k + 1) % 2);
+                        for (int j = 0; j < f.size() && f.get(j) < g.firstElement(); ++j)
+                            ++info.ratios[k][0];
+                        for (int j = f.size() - 1; j >= 0 && f.get(j) > g.lastElement(); --j)
+                            ++info.ratios[k][2];
+                        info.ratios[k][1] = f.size() - info.ratios[k][0] - info.ratios[k][2];
+                        for (int l = 0; l != 3; ++l) {
+                            info.ratios[k][l] /= f.size();
+                            avgRatios[k][l] += info.ratios[k][l];
+                        }
+                    }
+                    ++avgCount;
+                }
+                else if (x.get(0) != null)
+                    singular.put(i, 0);
+                else if (x.get(1) != null)
+                    singular.put(i, 1);
+            }
+            if (avgCount == 0)
+                for (int k = 0; k != 2; ++k)
+                    avgRatios[k][0] = 1.0f;
+            else
+                for (int k = 0; k != 2; ++k) {
+                    float sum = 0.0f;
+                    for (int l = 0; l != 3; ++l) {
+                        avgRatios[k][l] /= avgCount;
+                        sum += avgRatios[k][l];
+                    }
+                    for (int l = 0; l != 3; ++l)
+                        avgRatios[k][l] /= sum;
+                }
+            for (Map.Entry<Integer, Integer> entry : singular.entrySet()) {
+                final IdInfo info = infos.get(entry.getKey()).get(Math.abs(sid));
+                for (int l = 0; l != 3; ++l)
+                    info.ratios[entry.getValue()][l] = avgRatios[entry.getValue()][l];
+            }
+        }
     }
 
     public Vector<Integer> getSignedLocations() { return sids; }
     public Vector<HashMap<Integer, Vector<Float>>> getConsumptions() { return consumptions; }
     public Vector<Float> getValues() { return values; }
+    public Vector<HashMap<Integer, IdInfo>> getInfos() { return infos; }
 
     public NodeAndDirection run(ExecutionTree tree, float value) {
         // TODO!
         return new NodeAndDirection(tree.getRootNode(), 0);
     }
 
+    public static class IdInfo {
+        public final int[] counts = new int[2];
+        public final float[][] ratios = new float[2][3];
+    }
+    
     private final Vector<Integer> sids;
     private final Vector<HashMap<Integer, Vector<Float>>> consumptions;
     private final Vector<Float> values;
+    private final Vector<HashMap<Integer, IdInfo>> infos;
 }

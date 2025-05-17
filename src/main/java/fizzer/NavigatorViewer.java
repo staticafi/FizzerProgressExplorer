@@ -62,6 +62,7 @@ public class NavigatorViewer extends JPanel {
                 for (int i = minIndex; i <= maxIndex; i++)
                     if (lsm.isSelectedIndex(i))
                     locationsSelection.add(locations.getModel().getElementAt(i));
+                resize();
                 redraw();
             }
         });
@@ -74,7 +75,7 @@ public class NavigatorViewer extends JPanel {
                 return self;
             }
         });
-        locationsSelection = new Vector<>();
+        locationsSelection = new HashSet<>();
         locationColors = new HashMap<>();
 
 
@@ -100,8 +101,35 @@ public class NavigatorViewer extends JPanel {
         consumptionsScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
         consumptionsScrollPane.getVerticalScrollBar().setUnitIncrement(20);
 
+        sizesPainter = new InfosPainter(font) {
+            @Override float getMaxValue(final Vector<Integer> sids) {
+                int maxValue = 0;
+                for (int i = 0; i != navigator.getInfos().size(); ++i)
+                    for (int sid : sids) {
+                        final Navigator.IdInfo info = navigator.getInfos().get(i).get(Math.abs(sid));
+                        if (info != null)
+                            maxValue = Math.max(maxValue, info.counts[sid < 0 ? 0 : 1]);
+                    }
+                return maxValue;
+            }
+            @Override float getValue(Navigator.IdInfo info, int sid) { return sid < 0 ? info.counts[0] : info.counts[1]; }
+        };
+        final JScrollPane sizesPainterScrollPane = new JScrollPane(sizesPainter);
+        sizesPainterScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
+        sizesPainterScrollPane.getVerticalScrollBar().setUnitIncrement(20);
+
+        ratiosPainters = new RatiosPainter[3];
+
         painterTabs = new JTabbedPane();
         painterTabs.addTab("Consumptions", consumptionsScrollPane);
+        painterTabs.addTab("Sizes", sizesPainterScrollPane);
+        for (int i = 0; i != 3; ++i) {
+            ratiosPainters[i] = new RatiosPainter(font, i);
+            final JScrollPane scrollPane = new JScrollPane(ratiosPainters[i]);
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(20);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(20);
+            painterTabs.addTab("Ratios" + Integer.toString(i), scrollPane);
+        }
         painterTabs.setSelectedIndex(0);
 
         final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, painterTabs);
@@ -184,11 +212,18 @@ public class NavigatorViewer extends JPanel {
 
     private void resize() {
         consumptionsPainter.resize();
+        sizesPainter.resize();
+        for (int i = 0; i != 3; ++i)
+            ratiosPainters[i].resize();
     }
 
     private void redraw() {
         switch (painterTabs.getSelectedIndex()) {
             case 0: consumptionsPainter.redraw(); break;
+            case 1: sizesPainter.redraw(); break;
+            case 2: ratiosPainters[0].redraw(); break;
+            case 3: ratiosPainters[1].redraw(); break;
+            case 4: ratiosPainters[2].redraw(); break;
         }
     }
 
@@ -228,7 +263,8 @@ public class NavigatorViewer extends JPanel {
         }
 
         void resize() {
-            setPreferredSize(new Dimension(paperWidth, (navigator.getConsumptions().size()) * samplesStride() + panelBottomMargin));
+            if (navigator != null)
+                setPreferredSize(new Dimension(paperWidth, (navigator.getConsumptions().size()) * samplesStride() + panelBottomMargin));
         }
 
         void redraw() {
@@ -308,6 +344,48 @@ public class NavigatorViewer extends JPanel {
         private static final int lineWidth = 2;
     }
 
+    private abstract class InfosPainter extends Painter {
+        InfosPainter(final Font font) { super(font); }
+
+        float getMaxValue(Vector<Integer> sids) { return 1.0f; }
+        abstract float getValue(Navigator.IdInfo info, int sid);
+
+        @Override
+        protected void render(Graphics g) {
+            renderLinesAndValues(g);
+            ((Graphics2D)g).setStroke(new BasicStroke(lineWidth));
+            final Vector<Integer> sids = new Vector<>(locationsSelection.stream().sorted().toList());
+            final float maxValue = Math.max(1.0f, getMaxValue(sids));
+            for (int i = 0; i != navigator.getInfos().size(); ++i) {
+                final int y = sampleLineY(i);
+                for (int j = 0; j != sids.size(); ++j) {
+                    final Navigator.IdInfo info = navigator.getInfos().get(i).get(Math.abs(sids.get(j)));
+                    float value = info == null ? -1.0f : getValue(info, sids.get(j));
+                    if (value > 0.0f) {
+                        value /= maxValue;
+                        g.setColor(locationColors.get(sids.get(j)));
+                        int x0 = sampleLineX(0.0f);
+                        int x1 = sampleLineX(value);
+                        int y0 = y - (j + 1) * infoStride;
+                        g.drawLine(x0, y0, x1, y0);
+                    }
+                }
+            }
+        }
+        @Override
+        protected int samplesStride() { return locationsSelection.size() * (infoStride + 1 + lineWidth) + 30; }
+
+        private static final int infoStride = 10;
+        private static final int lineWidth = 4;
+    }
+
+    private class RatiosPainter extends InfosPainter {
+        RatiosPainter(final Font font, final int index_) { super(font); index = index_; }
+        @Override float getMaxValue(Vector<Integer> sids) { return 1.0f; }
+        @Override float getValue(Navigator.IdInfo info, int sid) { return sid < 0 ? info.ratios[0][index] : info.ratios[1][index]; }
+        private final int index;
+    }
+
     private Navigator navigator;
 
     private final ExecutionTreeViewer treeViewer;
@@ -316,10 +394,12 @@ public class NavigatorViewer extends JPanel {
     private final JComboBox<FilterType> filterSelector;
     private final JTextField targetMetric;
     private final JList<Integer> locations;
-    private final Vector<Integer> locationsSelection;
+    private final HashSet<Integer> locationsSelection;
     private final HashMap<Integer, Color> locationColors;
     private final JTabbedPane painterTabs;
     private final ConsumptionsPainter consumptionsPainter;
+    private final InfosPainter sizesPainter;
+    private final RatiosPainter[] ratiosPainters;
 
     private static final String targetLabelPrefix = "Tgt: ";
 }
