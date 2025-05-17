@@ -16,7 +16,7 @@ public class Navigator {
     public static class HitCount implements Metric {
         @Override public float getValue(final Node node) {
             int count = 0;
-            for (Node n = node; n != null; n = n.getParent())
+            for (Node n = node.getParent(); n != null; n = n.getParent())
                 if (n.getLocationId().equals(node.getLocationId()))
                     ++count;
             return (float)count;
@@ -123,8 +123,6 @@ public class Navigator {
         final HashSet<Integer> sidSet = new HashSet<>();
         for (Node node : traces) {
             final HashMap<Integer, Vector<Float>> map = new HashMap<>();
-            map.put(-targetSid, new Vector<>());
-            map.get(-targetSid).add(1.0f);
             for (Node n = node.getParent(), m = node; n != null; m = n, n = n.getParent()) {
                 final int sid = (n.getChildren()[0] == m ? -1 : 1) * n.getLocationId().id;
                 final float x = n.getTraceIndex() / (float)Math.max(1, node.getTraceIndex());
