@@ -27,6 +27,15 @@ public class Navigator {
     public static class KeepAll implements Filter {
         @Override public void run(final Vector<Node> input, final Metric metric, final Vector<Node> output) { output.addAll(input); }
     }
+    public static class Signed implements Filter {
+        public Signed(float sign_) { sign = sign_; }
+        @Override public void run(final Vector<Node> input, final Metric metric, final Vector<Node> output) {
+            for (Node node : input)
+                if (metric.getValue(node) * sign >= 0.0f)
+                    output.add(node);
+        }
+        private final float sign;
+    }
     public static class InputUse implements Filter {
         @Override
         public void run(Vector<Node> input, Metric metric, Vector<Node> output) {

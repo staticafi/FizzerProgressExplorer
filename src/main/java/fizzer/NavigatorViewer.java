@@ -165,6 +165,8 @@ public class NavigatorViewer extends JPanel {
 
     private static enum FilterType {
         All,
+        Warm,
+        Cold,
         InputUse
     }
 
@@ -194,6 +196,8 @@ public class NavigatorViewer extends JPanel {
         Navigator.Filter filter;
         switch ((FilterType)filterSelector.getSelectedItem()) {
             case All: filter = new Navigator.KeepAll(); break;
+            case Warm: filter = new Navigator.Signed(1.0f); break;
+            case Cold: filter = new Navigator.Signed(-1.0f); break;
             case InputUse: filter = new Navigator.InputUse(); break;
             default: throw new RuntimeException();
         }
