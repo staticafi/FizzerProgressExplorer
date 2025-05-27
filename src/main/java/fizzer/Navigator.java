@@ -262,8 +262,14 @@ public class Navigator {
                 final IdInfo info = new IdInfo();
                 for (int j = 0; j != 2; ++j) {
                     info.counts[j] = Math.round(extra.counts[j].apply(value));
-                    for (int k = 0; k != 3; ++k)
+                    float sum = 0.0f;
+                    for (int k = 0; k != 3; ++k) {
                         info.ratios[j][k] = extra.ratios[j][k].apply(value);
+                        sum += info.ratios[j][k];
+                    }
+                    if (Math.abs(sum) > 1e-10f)
+                        for (int k = 0; k != 3; ++k)
+                            info.ratios[j][k] /= sum;
                 }
                 final Vector<Counts> cnt = new Vector<>();
                 for (int k = 0; k != 3; ++k)
