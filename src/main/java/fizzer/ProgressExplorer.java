@@ -311,7 +311,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, analysesSplitPane, tabbedPane);
         splitPane.setOneTouchExpandable(true);
-        splitPane.setDividerLocation(480);
+        splitPane.setDividerLocation(580);
 
         rootPanel = new JPanel(new BorderLayout());
         rootPanel.add(splitPane, BorderLayout.CENTER);
@@ -499,27 +499,13 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         }
 
         information.append("Strategies:\n");
-        final StrategyAnalysis.Strategy[] strategies = {
-            StrategyAnalysis.Strategy.NONE,
-            StrategyAnalysis.Strategy.LOOP_HEAD_SENSITIVE,
-            StrategyAnalysis.Strategy.LOOP_HEAD_OTHERS,
-            StrategyAnalysis.Strategy.SENSITIVE,
-            StrategyAnalysis.Strategy.UNTOUCHED,
-            StrategyAnalysis.Strategy.IID_TWINS_SENSITIVE,
-            StrategyAnalysis.Strategy.IID_TWINS_OTHERS,
-            StrategyAnalysis.Strategy.MONTE_CARLO,
-            StrategyAnalysis.Strategy.MONTE_CARLO_BACKWARD
-        };
-        HashMap<StrategyAnalysis.Strategy,Integer> strategyCounters = new HashMap<>();
-        for (StrategyAnalysis.Strategy strategy : strategies)
-            strategyCounters.put(strategy, 0);
+        HashMap<String,Integer> strategyCounters = new HashMap<>();
         for (int i = 0; i < executionTree.getAnalyses().length; ++i)
-            strategyCounters.computeIfPresent(executionTree.getStrategyAnalyses()[i].getStrategy(), (k,v)-> v+1);
-        for (StrategyAnalysis.Strategy strategy : strategies)
-            if (strategy != StrategyAnalysis.Strategy.NONE) {
-                information.append("    " + strategy.toString() + ": " + Integer.toString(strategyCounters.get(strategy)));
-                information.append(System.lineSeparator());
-            }
+            strategyCounters.compute(executionTree.getStrategyAnalyses()[i].getStrategy(), (k, v) -> { return v == null ? 1 : v + 1; });
+        for (String strategy : strategyCounters.keySet().stream().sorted().toList()) {
+            information.append("    " + strategy.toString() + ": " + Integer.toString(strategyCounters.get(strategy)));
+            information.append(System.lineSeparator());
+        }
 
         information.append("Nodes:\n");
         class NodesInfoCollector {

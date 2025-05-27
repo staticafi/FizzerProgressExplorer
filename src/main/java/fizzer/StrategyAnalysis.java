@@ -10,38 +10,11 @@ import org.json.*;
 
 public class StrategyAnalysis {
 
-    public static enum Strategy {
-        NONE,
-        LOOP_HEAD_SENSITIVE,
-        LOOP_HEAD_OTHERS,
-        SENSITIVE,
-        UNTOUCHED,
-        IID_TWINS_SENSITIVE,
-        IID_TWINS_OTHERS,
-        MONTE_CARLO,
-        MONTE_CARLO_BACKWARD;
-
-        public static Strategy parse(String strategyName) {
-            switch (strategyName) {
-                case "NONE": return NONE;
-                case "LOOP_HEAD_SENSITIVE": return LOOP_HEAD_SENSITIVE;
-                case "LOOP_HEAD_OTHERS": return LOOP_HEAD_OTHERS;
-                case "SENSITIVE": return SENSITIVE;
-                case "UNTOUCHED": return UNTOUCHED;
-                case "IID_TWINS_SENSITIVE": return IID_TWINS_SENSITIVE;
-                case "IID_TWINS_OTHERS": return IID_TWINS_OTHERS;
-                case "MONTE_CARLO": return MONTE_CARLO;
-                case "MONTE_CARLO_BACKWARD": return MONTE_CARLO_BACKWARD;
-                default: throw new RuntimeException("Unknown strategy name: " + strategyName);
-            }
-        }
-    }
-
-    private Strategy strategy;
+    private String strategy;
     private HashSet<Long> closedNodeGuids;
 
     public StrategyAnalysis(File analysisDir) throws Exception {
-        strategy = Strategy.NONE;
+        strategy = "";
         closedNodeGuids = new HashSet<>();
 
         File infoFile = new File(analysisDir, "strategy.json");
@@ -52,14 +25,14 @@ public class StrategyAnalysis {
             Files.lines(Paths.get(infoFile.getPath())).collect(Collectors.joining("\n"))
             );
 
-        strategy = Strategy.parse(strategyJson.getString("strategy"));
+        strategy = strategyJson.getString("strategy");
 
         JSONArray closedNodeGuidsArray = strategyJson.getJSONArray("closed_node_guids");
         for (int j = 0; j != closedNodeGuidsArray.length(); ++j)
             closedNodeGuids.add(closedNodeGuidsArray.getLong(j));
     }
 
-    public Strategy getStrategy() {
+    public String getStrategy() {
         return strategy;
     }
 
