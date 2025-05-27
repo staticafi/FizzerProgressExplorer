@@ -148,9 +148,9 @@ public class Analysis {
                 case UINT16: return Integer.parseUnsignedInt(hexBytes, 16);
                 case SINT16: return Integer.valueOf((short)Integer.parseInt(hexBytes, 16));
                 case UINT32: return Integer.parseUnsignedInt(hexBytes, 16);
-                case SINT32: return Integer.parseInt(hexBytes, 16);
+                case SINT32: return Integer.valueOf(Integer.parseUnsignedInt(hexBytes, 16));
                 case UINT64: return Long.parseUnsignedLong(hexBytes, 16);
-                case SINT64: return Long.parseLong(hexBytes, 16);
+                case SINT64: return Long.valueOf(Long.parseUnsignedLong(hexBytes, 16));
                 case FLOAT32: return Float.intBitsToFloat(Integer.parseUnsignedInt(hexBytes, 16));
                 case FLOAT64: return Double.longBitsToDouble(Long.parseUnsignedLong(hexBytes, 16));
                 case UNTYPED8: return Integer.parseUnsignedInt(hexBytes, 16);
