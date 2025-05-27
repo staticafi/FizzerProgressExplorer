@@ -292,7 +292,7 @@ public class NavigatorViewer extends JPanel {
         protected int sampleLineY(final int index) { return samplesStride() * (index + 1); }
         protected int samplesStride() { return 20; }
 
-        protected static final int paperWidth = 1250;
+        protected static final int paperWidth = 1111;
         protected static final int sampleMarginLeft = 10;
         protected static final int sampleMarginRight = paperWidth - 100;
         protected static final int sampleValueShiftX = 10;
