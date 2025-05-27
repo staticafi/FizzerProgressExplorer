@@ -502,10 +502,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         HashMap<String,Integer> strategyCounters = new HashMap<>();
         for (int i = 0; i < executionTree.getAnalyses().length; ++i)
             strategyCounters.compute(executionTree.getStrategyAnalyses()[i].getStrategy(), (k, v) -> { return v == null ? 1 : v + 1; });
-        for (String strategy : strategyCounters.keySet().stream().sorted().toList()) {
-            information.append("    " + strategy.toString() + ": " + Integer.toString(strategyCounters.get(strategy)));
-            information.append(System.lineSeparator());
-        }
+        for (String strategy : strategyCounters.keySet().stream().sorted().toList())
+            if (!strategy.isEmpty()) {
+                information.append("    " + strategy.toString() + ": " + Integer.toString(strategyCounters.get(strategy)));
+                information.append(System.lineSeparator());
+            }
 
         information.append("Nodes:\n");
         class NodesInfoCollector {
