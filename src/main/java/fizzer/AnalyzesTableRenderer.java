@@ -44,6 +44,10 @@ public class AnalyzesTableRenderer extends DefaultTableCellRenderer {
                     foregroundColor = Color.LIGHT_GRAY;
             }
         }
+
+        if (table.getSelectedRow() == row)
+            backgroundColor = Color.YELLOW;
+
         component.setForeground(foregroundColor);
         component.setBackground(backgroundColor);
         return component;
