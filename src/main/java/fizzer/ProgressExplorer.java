@@ -587,7 +587,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         sourceLL.onAnalysisChanged();
 
         if (monteCarloViewer != null || navigatorViewer != null) {
-            final StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalyses()[executionTree.getAnalysisIndex()];
+            final StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalysisSelectingNode();
             final int sid = executionTree.getUncoveredSignedLocationId(strategyAnalysis.getStrategyLocationID());
             if (monteCarloViewer != null) {
                 monteCarloViewer.clear();

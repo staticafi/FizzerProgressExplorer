@@ -225,6 +225,23 @@ public class ExecutionTree {
         return this.strategyAnalyses;
     }
 
+    public StrategyAnalysis getStrategyAnalysisSelectingNode() { return getStrategyAnalysisSelectingNode(getAnalysisIndex()); }
+
+    public StrategyAnalysis getStrategyAnalysisSelectingNode(int index) {
+        final Analysis.Type endType;
+        switch (analyses[index].getType())
+        {
+            case BITSHARE: endType = Analysis.Type.BITSHARE; break;
+            case LOCAL_SEARCH: endType = Analysis.Type.BITSHARE; break;
+            case TAINT_RES: endType = Analysis.Type.TAINT_REQ; break;
+            default: return this.strategyAnalyses[index];
+        }
+        while (index > 0 && !(analyses[index].getType().equals(endType) &&
+                              analyses[index].getStartAttribute().equals(Analysis.StartAttribute.REGULAR)))
+            --index;
+        return this.strategyAnalyses[index];
+    }
+
     public int getAnalysisIndex() {
         return this.analysisIndex;
     }
