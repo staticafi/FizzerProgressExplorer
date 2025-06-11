@@ -36,6 +36,10 @@ public class StrategyAnalysis {
         return strategy;
     }
 
+    public LocationId getStrategyLocationID() {
+        return strategy.isEmpty() ? null : new LocationId(Integer.parseUnsignedInt(strategy.substring(0, strategy.indexOf('_'))));
+    }
+
     public HashSet<Long> getClosedNodeGuids() {
         return closedNodeGuids;
     }

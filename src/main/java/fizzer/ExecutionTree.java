@@ -253,6 +253,14 @@ public class ExecutionTree {
         return coveredIds[direction ? 1 : 0].getOrDefault(id, Integer.MAX_VALUE) <= analysisIndex_;
     }
 
+    public int getUncoveredSignedLocationId(final LocationId id) { return id == null ? 0 : getUncoveredSignedLocationId(id.id); }
+
+    public int getUncoveredSignedLocationId(final int id) {
+        final boolean leftCovered = isCovered(id, false);
+        final boolean rightCovered = isCovered(id, true);
+        return leftCovered != rightCovered ?  (leftCovered ? 1 : -1) * id : 0;
+    }
+
     public ExecutionTree() {
         clear();
     }

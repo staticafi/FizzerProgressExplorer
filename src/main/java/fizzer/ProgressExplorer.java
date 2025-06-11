@@ -343,10 +343,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 if (node != null) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         if (e.isControlDown()) {
-                            final boolean leftCovered = executionTree.isCovered(node.getLocationId(), false);
-                            final boolean rightCovered = executionTree.isCovered(node.getLocationId(), true);
-                            if (leftCovered != rightCovered) {
-                                final int sid = (leftCovered ? 1 : -1) * node.getLocationId().id;
+                            final int sid = executionTree.getUncoveredSignedLocationId(node.getLocationId());
+                            if (sid != 0) {
                                 if (monteCarloViewer != null)
                                     monteCarloViewer.onTargetChanged(sid);
                                 if (navigatorViewer != null)
@@ -366,11 +364,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 int id = sourceC.getSourceViewer().getIdOfCurrentLine(e);
                 if (id != -1) {
                     if (e.isControlDown()) {
-                        final LocationId locationId = new LocationId(id);
-                        final boolean leftCovered = executionTree.isCovered(locationId, false);
-                        final boolean rightCovered = executionTree.isCovered(locationId, true);
-                        if (leftCovered != rightCovered) {
-                            final int sid = (leftCovered ? 1 : -1) * id;
+                        final int sid = executionTree.getUncoveredSignedLocationId(id);
+                        if (sid != 0) {
                             if (monteCarloViewer != null)
                                 monteCarloViewer.onTargetChanged(sid);
                             if (navigatorViewer != null)
@@ -582,10 +577,22 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.onAnalysisChanged();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
-        if (monteCarloViewer != null)
-            monteCarloViewer.clear();
-        if (navigatorViewer != null)
-            navigatorViewer.clear();
+
+        if (monteCarloViewer != null || navigatorViewer != null) {
+            final StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalyses()[executionTree.getAnalysisIndex()];
+            final int sid = executionTree.getUncoveredSignedLocationId(strategyAnalysis.getStrategyLocationID());
+            if (sid != 0) {
+                if (monteCarloViewer != null) {
+                    monteCarloViewer.clear();
+                    monteCarloViewer.onTargetChanged(sid);
+                }
+                if (navigatorViewer != null) {
+                    navigatorViewer.clear();
+                    navigatorViewer.onTargetChanged(sid);
+                }
+            }
+        }
+
         updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
     }
 
