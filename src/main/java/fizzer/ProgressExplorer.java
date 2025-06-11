@@ -559,6 +559,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysesInfo.append("Coverage Failure Resets: " + analysis.getNumCoverageFailureResets());
     }
 
+    @Override
     public void valueChanged(ListSelectionEvent e) {
         if (e.getSource() != analysesTable.getSelectionModel())
             return;
@@ -568,28 +569,35 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             return;
         executionTree.setAnalysisIndex(analysesTable.getSelectedRow());
         activeAnalysisCard();
+        onAnalysisChanged(false);
+    }
+
+    public void onAnalysisChanged(final boolean onLoad) {
         analysisStartupViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisBitshareViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisLocalSearchViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisBitflipViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisTaintRequestViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisTaintResponseViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        executionTreeViewer.onAnalysisChanged();
+        if (onLoad)
+            executionTreeViewer.onLoad();
+        else
+            executionTreeViewer.onAnalysisChanged();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
 
         if (monteCarloViewer != null || navigatorViewer != null) {
             final StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalyses()[executionTree.getAnalysisIndex()];
             final int sid = executionTree.getUncoveredSignedLocationId(strategyAnalysis.getStrategyLocationID());
-            if (sid != 0) {
-                if (monteCarloViewer != null) {
-                    monteCarloViewer.clear();
+            if (monteCarloViewer != null) {
+                monteCarloViewer.clear();
+                if (sid != 0)
                     monteCarloViewer.onTargetChanged(sid);
-                }
-                if (navigatorViewer != null) {
-                    navigatorViewer.clear();
+            }
+            if (navigatorViewer != null) {
+                navigatorViewer.clear();
+                if (sid != 0)
                     navigatorViewer.onTargetChanged(sid);
-                }
             }
         }
 
@@ -711,20 +719,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JScrollBar verticalBar = listScrollPane.getVerticalScrollBar();
         verticalBar.setValue(verticalBar.getMaximum());
 
-        analysisStartupViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisBitshareViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisLocalSearchViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisBitflipViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisTaintRequestViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        analysisTaintResponseViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        executionTreeViewer.onLoad();
-        sourceC.onAnalysisChanged();
-        sourceLL.onAnalysisChanged();
-        if (monteCarloViewer != null)
-            monteCarloViewer.clear();
-        if (navigatorViewer != null)
-            navigatorViewer.clear();
-        updateStrategyAnalysisInfo(executionTree.getAnalysisIndex());
+        onAnalysisChanged(true);
 
         String rawName = Paths.get("").toAbsolutePath().relativize(Paths.get(dir)).toString();
         ((JFrame)SwingUtilities.getWindowAncestor(rootPanel)).setTitle("Fizzer's ProgressExplorer [" + (rawName.isEmpty() ? "." : rawName) + "]");
