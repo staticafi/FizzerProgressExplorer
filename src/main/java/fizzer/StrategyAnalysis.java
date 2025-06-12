@@ -17,19 +17,22 @@ public class StrategyAnalysis {
         strategy = "";
         closedNodeGuids = new HashSet<>();
 
-        File infoFile = new File(analysisDir, "strategy.json");
-        if (!infoFile.isFile())
-            return;
-
-        JSONObject strategyJson = new JSONObject(
-            Files.lines(Paths.get(infoFile.getPath())).collect(Collectors.joining("\n"))
-            );
-
-        strategy = strategyJson.getString("strategy");
-
-        JSONArray closedNodeGuidsArray = strategyJson.getJSONArray("closed_node_guids");
-        for (int j = 0; j != closedNodeGuidsArray.length(); ++j)
-            closedNodeGuids.add(closedNodeGuidsArray.getLong(j));
+        File file = new File(analysisDir, "strategy.json");
+        if (file.isFile()) {
+            JSONObject strategyJson = new JSONObject(
+                Files.lines(Paths.get(file.getPath())).collect(Collectors.joining("\n"))
+                );
+            strategy = strategyJson.getString("strategy");
+        }
+        file = new File(analysisDir, "post.json");
+        if (file.isFile()) {
+            JSONObject postJson = new JSONObject(
+                Files.lines(Paths.get(file.getPath())).collect(Collectors.joining("\n"))
+                );
+            JSONArray closedNodeGuidsArray = postJson.getJSONArray("closed_node_guids");
+            for (int j = 0; j != closedNodeGuidsArray.length(); ++j)
+                closedNodeGuids.add(closedNodeGuidsArray.getLong(j));
+        }
     }
 
     public String getStrategy() {
