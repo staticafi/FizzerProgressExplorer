@@ -100,7 +100,7 @@ public class ExecutionTree {
                         if (!analysisNode.bitflipApplied(analysisIndex))
                             analysisNode.setBitFlipIndex(analysisIndex);
                         break;
-                    case TAINT_RES:
+                    case TAINT_RESPONSE:
                         if (!analysisNode.sensitivityApplied(analysisIndex))
                             for (Node node = analysisNode; node != null; node = node.getParent())
                                 if (!node.sensitivityApplied(analysisIndex))
@@ -233,7 +233,7 @@ public class ExecutionTree {
         {
             case BITSHARE: endType = Analysis.Type.BITSHARE; break;
             case LOCAL_SEARCH: endType = Analysis.Type.BITSHARE; break;
-            case TAINT_RES: endType = Analysis.Type.TAINT_REQ; break;
+            case TAINT_RESPONSE: endType = Analysis.Type.TAINT_REQUEST; break;
             default: return this.strategyAnalyses[index];
         }
         while (index > 0 && !(analyses[index].getType().equals(endType) &&

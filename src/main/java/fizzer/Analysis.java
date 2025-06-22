@@ -15,8 +15,8 @@ public class Analysis {
         BITSHARE,
         LOCAL_SEARCH,
         BITFLIP,
-        TAINT_REQ,
-        TAINT_RES;
+        TAINT_REQUEST,
+        TAINT_RESPONSE;
 
         public static Type parse(String typeName) {
             return Type.valueOf(typeName);
@@ -409,10 +409,10 @@ public class Analysis {
             case BITFLIP:
                 info = new BitflipInfo(infoJson);
                 break;
-            case TAINT_REQ:
+            case TAINT_REQUEST:
                 info = new TaintRequestInfo(infoJson);
                 break;
-            case TAINT_RES:
+            case TAINT_RESPONSE:
                 setSensitiveBits(index, node, infoJson.getJSONArray("sensitive_bits"), infoFile.getPath());
                 info = new TaintResponseInfo(infoJson);
                 break;

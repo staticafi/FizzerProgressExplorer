@@ -10,11 +10,25 @@ import org.json.*;
 
 public class StrategyAnalysis {
 
-    private String strategy;
+    private String metric;
+    private String filter;
+    private String navigatorName;
+    private LocationId targetId;
+    private LocationId bestNodeId;
+    private int bestNodeGuid;
+    private boolean sensitive;
+    private double target_value;
     private HashSet<Long> closedNodeGuids;
 
     public StrategyAnalysis(File analysisDir) throws Exception {
-        strategy = "";
+        metric = null;
+        filter = null;
+        navigatorName = null;
+        targetId = null;
+        bestNodeId = null;
+        bestNodeGuid = 0;
+        sensitive = false;
+        target_value = 0.0;
         closedNodeGuids = new HashSet<>();
 
         File file = new File(analysisDir, "strategy.json");
@@ -22,7 +36,14 @@ public class StrategyAnalysis {
             JSONObject strategyJson = new JSONObject(
                 Files.lines(Paths.get(file.getPath())).collect(Collectors.joining("\n"))
                 );
-            strategy = strategyJson.getString("strategy");
+            metric = strategyJson.getString("metric");
+            filter = strategyJson.getString("filter");
+            navigatorName = strategyJson.getString("navigator");
+            targetId = new LocationId((int)strategyJson.getLong("target_location_id"));
+            bestNodeId = new LocationId((int)strategyJson.getLong("best_node_location_id"));
+            bestNodeGuid = (int)strategyJson.getLong("best_node_guid");
+            sensitive = strategyJson.getInt("sensitive") != 0;
+            target_value = strategyJson.getDouble("target_value");
         }
         file = new File(analysisDir, "post.json");
         if (file.isFile()) {
@@ -35,12 +56,12 @@ public class StrategyAnalysis {
         }
     }
 
-    public String getStrategy() {
-        return strategy;
+    public String getBasicInfoString() {
+        return targetId == null ? "" : targetId.id + "_" + metric + "_" + filter + "_" + navigatorName.charAt(0) + "_" + (sensitive ? 1 : 0);
     }
 
     public LocationId getStrategyLocationID() {
-        return strategy.isEmpty() ? null : new LocationId(Integer.parseUnsignedInt(strategy.substring(0, strategy.indexOf('_'))));
+        return targetId;
     }
 
     public HashSet<Long> getClosedNodeGuids() {

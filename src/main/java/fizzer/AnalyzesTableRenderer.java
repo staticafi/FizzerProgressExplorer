@@ -23,9 +23,9 @@ public class AnalyzesTableRenderer extends DefaultTableCellRenderer {
         if (column == 1 && row >= 0 && executionTree.getAnalyses() != null && row < executionTree.getAnalyses().length) {
             Analysis analysis = executionTree.getAnalyses()[row];
 
-            if (analysis.getType() == Analysis.Type.TAINT_REQ)
+            if (analysis.getType() == Analysis.Type.TAINT_REQUEST)
                 foregroundColor = Color.GREEN;
-            else if (analysis.getType() == Analysis.Type.TAINT_RES)
+            else if (analysis.getType() == Analysis.Type.TAINT_RESPONSE)
                 foregroundColor = Color.GREEN;
             else {
                 if (analysis.getNode() != null

@@ -110,15 +110,15 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysisBitshareViewer = new AnalysisPlainInputsViewer(Analysis.Type.BITSHARE);
         analysisLocalSearchViewer = new AnalysisPlainInputsViewer(Analysis.Type.LOCAL_SEARCH);
         analysisBitflipViewer = new AnalysisPlainInputsViewer(Analysis.Type.BITFLIP);
-        analysisTaintRequestViewer = new AnalysisPlainInputsViewer(Analysis.Type.TAINT_REQ);
-        analysisTaintResponseViewer = new AnalysisPlainInputsViewer(Analysis.Type.TAINT_RES);
+        analysisTaintRequestViewer = new AnalysisPlainInputsViewer(Analysis.Type.TAINT_REQUEST);
+        analysisTaintResponseViewer = new AnalysisPlainInputsViewer(Analysis.Type.TAINT_RESPONSE);
         analysisPanel = new JPanel(new CardLayout());
         analysisPanel.add(analysisStartupViewer, Analysis.Type.STARTUP.toString());
         analysisPanel.add(analysisBitshareViewer, Analysis.Type.BITSHARE.toString());
         analysisPanel.add(analysisLocalSearchViewer, Analysis.Type.LOCAL_SEARCH.toString());
         analysisPanel.add(analysisBitflipViewer, Analysis.Type.BITFLIP.toString());
-        analysisPanel.add(analysisTaintRequestViewer, Analysis.Type.TAINT_REQ.toString());
-        analysisPanel.add(analysisTaintResponseViewer, Analysis.Type.TAINT_RES.toString());
+        analysisPanel.add(analysisTaintRequestViewer, Analysis.Type.TAINT_REQUEST.toString());
+        analysisPanel.add(analysisTaintResponseViewer, Analysis.Type.TAINT_RESPONSE.toString());
 
         zoomSlider = new JSlider(JSlider.HORIZONTAL, 10, 100, 100);
         zoomSlider.addChangeListener(this);
@@ -452,8 +452,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             Analysis.Type.BITSHARE,
             Analysis.Type.LOCAL_SEARCH,
             Analysis.Type.BITFLIP,
-            Analysis.Type.TAINT_REQ,
-            Analysis.Type.TAINT_RES,
+            Analysis.Type.TAINT_REQUEST,
+            Analysis.Type.TAINT_RESPONSE,
         };
         class AnalysisSummary {
             int numCalls = 0;
@@ -482,7 +482,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         for (Analysis.Type type : types) {
             AnalysisSummary summary = summaries.get(type);
             information.append("    " + type.toString() + ": calls: " + Integer.toString(summary.numCalls));
-            if (type != Analysis.Type.TAINT_REQ && type != Analysis.Type.TAINT_RES) {
+            if (type != Analysis.Type.TAINT_REQUEST && type != Analysis.Type.TAINT_RESPONSE) {
                 information.append(
                     ", covered: " + Integer.toString(summary.numCovered) +
                         " (" + String.format(Locale.US, "%.2f", 100 * summary.coveredPercentage) + '%' + ')' +
@@ -496,7 +496,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         information.append("Strategies:\n");
         HashMap<String,Integer> strategyCounters = new HashMap<>();
         for (int i = 0; i < executionTree.getAnalyses().length; ++i)
-            strategyCounters.compute(executionTree.getStrategyAnalyses()[i].getStrategy(), (k, v) -> { return v == null ? 1 : v + 1; });
+            strategyCounters.compute(executionTree.getStrategyAnalyses()[i].getBasicInfoString(), (k, v) -> { return v == null ? 1 : v + 1; });
         for (String strategy : strategyCounters.keySet().stream().sorted().toList())
             if (!strategy.isEmpty()) {
                 information.append("    " + strategy.toString() + ": " + Integer.toString(strategyCounters.get(strategy)));
@@ -705,7 +705,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 analysis.getStartAttribute().toString().toLowerCase(),
                 analysis.getStopAttribute().toString().toLowerCase(),
                 analysis.getNumTraces(),
-                strategyAnalysis.getStrategy()
+                strategyAnalysis.getBasicInfoString()
             });
         }
         analysesTable.scrollRectToVisible(analysesTable.getCellRect(executionTree.getAnalysisIndex(), 0, true));
