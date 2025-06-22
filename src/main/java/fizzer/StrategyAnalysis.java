@@ -3,7 +3,7 @@ package fizzer;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.json.*;
@@ -12,6 +12,7 @@ public class StrategyAnalysis {
 
     private String metric;
     private String filter;
+    private Vector<Pair<Double, Integer>> valuesAndGuids;
     private String navigatorName;
     private LocationId targetId;
     private LocationId bestNodeId;
@@ -23,6 +24,7 @@ public class StrategyAnalysis {
     public StrategyAnalysis(File analysisDir) throws Exception {
         metric = null;
         filter = null;
+        valuesAndGuids = new Vector<>();
         navigatorName = null;
         targetId = null;
         bestNodeId = null;
@@ -38,6 +40,11 @@ public class StrategyAnalysis {
                 );
             metric = strategyJson.getString("metric");
             filter = strategyJson.getString("filter");
+            final JSONArray valuesAndGuidsArray = strategyJson.getJSONArray("values_and_node_guids");
+            if (valuesAndGuidsArray.length() % 2 != 0)
+                throw new RuntimeException("StrategyAnalysis[" + analysisDir + "]: JSON array 'values_and_node_guids' has odd count of elements.");
+            for (int j = 0; j != valuesAndGuidsArray.length(); j += 2)
+                valuesAndGuids.add(new Pair<Double, Integer>(valuesAndGuidsArray.getDouble(j), (int)valuesAndGuidsArray.getLong(j+1)));
             navigatorName = strategyJson.getString("navigator");
             targetId = new LocationId((int)strategyJson.getLong("target_location_id"));
             bestNodeId = new LocationId((int)strategyJson.getLong("best_node_location_id"));
