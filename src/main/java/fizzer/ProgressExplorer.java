@@ -351,6 +351,9 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                                     navigatorViewer.onTargetChanged(sid);
                                 tabbedPane.setSelectedIndex(4);
                             }
+                        } else if (e.isShiftDown()) {
+                            executionTreeViewer.setMark(node.getParent(), node.getDirectionFromParent());
+                            executionTreeViewer.makeMarkNodeVisible();
                         } else
                             navigateFromTree(node);
                     }
