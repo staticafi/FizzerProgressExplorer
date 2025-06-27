@@ -91,7 +91,7 @@ public class ExecutionTreeViewer extends JPanel {
         zoom = 1.0f;
         setBackground(Color.white);
 
-        locationViewType = LocationViewType.C;
+        locationViewType = LocationViewType.ID;
 
         viewRect = getVisibleRect();
         visibleNodes = new ArrayList<>();
