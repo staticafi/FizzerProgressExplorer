@@ -161,6 +161,10 @@ public class Node {
         setChildLabel(analysisIndex, direction, ChildLabel.max(label, prevEntry == null ? label : prevEntry.getValue()));
     }
 
+    public boolean getDirectionFromParent() {
+        return parent == null ? false : (parent.children[0] == this ? false : true);
+    }
+
     public Double getBestValue(int analysisIndex) {
         return bestValue.floorEntry(analysisIndex).getValue();
     }
