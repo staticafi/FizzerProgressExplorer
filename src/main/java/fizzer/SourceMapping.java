@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.json.*;
@@ -87,6 +88,31 @@ public class SourceMapping {
             fromColumnMap.put(valueArray.getInt(1), id);
 
             invCondMapLL.put(condMapLL.get(id), id);
+        }
+
+        insertComments(sourceC, invCondMapC, "//");
+        insertComments(sourceLL, invCondMapLL, ";");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> void insertComments(List<String> source, HashMap<Integer, T> invCondMap, String comment) {
+        for (Map.Entry<Integer, T> entry : invCondMap.entrySet()) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(source.get(entry.getKey() - 1));
+            stringBuilder.append("    ");
+            stringBuilder.append(comment);
+            stringBuilder.append(" ABE: ");
+            if (entry.getValue() instanceof Integer)
+                stringBuilder.append((Integer)entry.getValue());
+            else if (entry.getValue() instanceof Map<?, ?>) {
+                boolean first = true;
+                for (Map.Entry<Integer, Integer> columnAndID : ((Map<Integer, Integer>)entry.getValue()).entrySet()) {
+                    if (first) { first = false; } else { stringBuilder.append(", "); }
+                    stringBuilder.append(columnAndID.getValue());
+                }
+            } else
+                throw new RuntimeException("SourceMapping.insertComments(): Unexpected record in the inverse map.");
+            source.set(entry.getKey() - 1, stringBuilder.toString());
         }
     }
     
