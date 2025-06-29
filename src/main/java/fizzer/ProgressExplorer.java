@@ -59,6 +59,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JMenuItem menuViewTraceIndex;
     private JMenuItem menuViewNodeGuid;
 
+    private JMenuItem menuNavMarkNode;
+
     private JMenuItem menuHelpDocumentation;
     private JMenuItem menuHelpLicense;
     private JMenuItem menuHelpAbout;
@@ -223,6 +225,10 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuViewNodeGuid.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, KeyEvent.ALT_DOWN_MASK));
         menuViewNodeGuid.addActionListener(this);
 
+        menuNavMarkNode = new JMenuItem("Mark node by guid");
+        menuNavMarkNode.setMnemonic(KeyEvent.VK_M);
+        menuNavMarkNode.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.CTRL_DOWN_MASK));
+        menuNavMarkNode.addActionListener(this);
         
         menuHelpDocumentation = new JMenuItem("Documentation");
         menuHelpDocumentation.addActionListener(this);
@@ -681,6 +687,19 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.TRACE_INDEX);
         } else if (e.getSource() == menuViewNodeGuid) {
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.NODE_GUID);
+        } else if (e.getSource() == menuNavMarkNode) {
+            String input = JOptionPane.showInputDialog(null, "Insert node GUID (sign defines mark's direction).", "Mark Node by GUID", JOptionPane.PLAIN_MESSAGE);
+            if (input != null)
+                try {
+                    final int sid = Integer.parseInt(input);
+                    final Node node = executionTree.getNodeByGuid(Math.abs(sid));
+                    if (node == null) throw new Exception();
+                    final boolean dir = sid < 0 ? false : true;
+                    executionTreeViewer.setMark(node, dir);
+                    executionTreeViewer.makeMarkNodeVisible();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "The GUID is invalid.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
         } else if (e.getSource() == menuHelpDocumentation) {
             Resource.show("/documentation.html", "Documentation", JOptionPane.PLAIN_MESSAGE, 800, 600);
         } else if (e.getSource() == menuHelpLicense) {
@@ -806,6 +825,10 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuView.add(explorer.menuViewTraceIndex);
         menuView.add(explorer.menuViewNodeGuid);
 
+        JMenu menuNavigation = new JMenu("Navigation");
+        menuNavigation.setMnemonic(KeyEvent.VK_A);
+        menuNavigation.add(explorer.menuNavMarkNode);
+
         JMenu menuHelp = new JMenu("Help");
         menuHelp.setMnemonic(KeyEvent.VK_H);
         menuHelp.add(explorer.menuHelpDocumentation);
@@ -815,6 +838,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(menuFile);
         menuBar.add(menuView);
+        menuBar.add(menuNavigation);
         menuBar.add(menuHelp);
         frame.setJMenuBar(menuBar);
         
