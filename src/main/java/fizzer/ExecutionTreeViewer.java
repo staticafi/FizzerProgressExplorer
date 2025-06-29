@@ -59,8 +59,9 @@ public class ExecutionTreeViewer extends JPanel {
         return font = new Font("Monospaced", Font.PLAIN, Math.round((1.0f * nodeHeight) * zoom));
     }
 
-    private class NodeAndDirection {
+    public class NodeAndDirection {
         public NodeAndDirection(final Node node_, final boolean direction_) { node = node_; direction = direction_; }
+        public boolean valid() { return node != null; }
         public final Node node;
         public final boolean direction;
     } 
@@ -274,6 +275,7 @@ public class ExecutionTreeViewer extends JPanel {
 
     public void clearMark() { mark = new NodeAndDirection(null, false); revalidate(); repaint(); }
     public void setMark(Node node, boolean dir) { mark = new NodeAndDirection(node, dir); revalidate(); repaint(); }
+    public NodeAndDirection getMark() { return mark; }
 
     public List<TrNode> getVisibleNodes() {
         return Collections.unmodifiableList(visibleNodes);

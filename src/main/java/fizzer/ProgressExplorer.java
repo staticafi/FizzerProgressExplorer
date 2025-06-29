@@ -60,6 +60,10 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JMenuItem menuViewNodeGuid;
 
     private JMenuItem menuNavMarkNode;
+    private JMenuItem menuNavMarkParent;
+    private JMenuItem menuNavMarkChild;
+    private JMenuItem menuNavMarkRed;
+    private JMenuItem menuNavMarkBlue;
 
     private JMenuItem menuHelpDocumentation;
     private JMenuItem menuHelpLicense;
@@ -229,6 +233,22 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuNavMarkNode.setMnemonic(KeyEvent.VK_M);
         menuNavMarkNode.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.CTRL_DOWN_MASK));
         menuNavMarkNode.addActionListener(this);
+        menuNavMarkParent = new JMenuItem("Mark parent node");
+        menuNavMarkParent.setMnemonic(KeyEvent.VK_UP);
+        menuNavMarkParent.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, KeyEvent.ALT_DOWN_MASK));
+        menuNavMarkParent.addActionListener(this);
+        menuNavMarkChild = new JMenuItem("Mark child node");
+        menuNavMarkChild.setMnemonic(KeyEvent.VK_DOWN);
+        menuNavMarkChild.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, KeyEvent.ALT_DOWN_MASK));
+        menuNavMarkChild.addActionListener(this);
+        menuNavMarkRed = new JMenuItem("Mark color RED");
+        menuNavMarkRed.setMnemonic(KeyEvent.VK_LEFT);
+        menuNavMarkRed.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, KeyEvent.ALT_DOWN_MASK));
+        menuNavMarkRed.addActionListener(this);
+        menuNavMarkBlue = new JMenuItem("Mark color BLUE");
+        menuNavMarkBlue.setMnemonic(KeyEvent.VK_RIGHT);
+        menuNavMarkBlue.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, KeyEvent.ALT_DOWN_MASK));
+        menuNavMarkBlue.addActionListener(this);
         
         menuHelpDocumentation = new JMenuItem("Documentation");
         menuHelpDocumentation.addActionListener(this);
@@ -354,7 +374,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 Node node = executionTreeViewer.getNodeBasedOnMousePosition(e.getX(), e.getY());
                 if (node != null) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
-                        if (e.isControlDown()) {
+                        if (e.isShiftDown()) {
                             final int sid = executionTree.getUncoveredSignedLocationId(node.getLocationId());
                             if (sid != 0) {
                                 if (monteCarloViewer != null)
@@ -363,9 +383,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                                     navigatorViewer.onTargetChanged(sid);
                                 tabbedPane.setSelectedIndex(4);
                             }
-                        } else if (e.isShiftDown()) {
-                            executionTreeViewer.setMark(node.getParent(), node.getDirectionFromParent());
-                            executionTreeViewer.makeMarkNodeVisible();
+                        } else if (e.isAltDown()) {
+                            executionTreeViewer.setMark(node, node.getChildLabel(executionTree.getAnalysisIndex(), 1).equals(Node.ChildLabel.NOT_VISITED));
                         } else
                             navigateFromTree(node);
                     }
@@ -378,7 +397,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             case 2: { // C
                 int id = sourceC.getSourceViewer().getIdOfCurrentLine(e);
                 if (id != -1) {
-                    if (e.isControlDown()) {
+                    if (e.isShiftDown()) {
                         final int sid = executionTree.getUncoveredSignedLocationId(id);
                         if (sid != 0) {
                             if (monteCarloViewer != null)
@@ -700,6 +719,27 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "The GUID is invalid.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
+        } else if (e.getSource() == menuNavMarkParent) {
+            if (executionTreeViewer.getMark().valid()) {
+                final Node parent = executionTreeViewer.getMark().node.getParent();
+                if (parent != null)
+                    executionTreeViewer.setMark(parent, executionTreeViewer.getMark().node.getDirectionFromParent());
+            }
+        } else if (e.getSource() == menuNavMarkChild) {
+            if (executionTreeViewer.getMark().valid()) {
+                if (executionTreeViewer.getMark().node.getChildLabel(executionTree.getAnalysisIndex(),
+                                                                     executionTreeViewer.getMark().direction ? 1 : 0)
+                                                      .equals(Node.ChildLabel.VISITED)) {
+                    final Node child = executionTreeViewer.getMark().node.getChildren()[executionTreeViewer.getMark().direction ? 1 : 0];
+                    executionTreeViewer.setMark(child, executionTreeViewer.getMark().direction);
+                }
+            }
+        } else if (e.getSource() == menuNavMarkRed) {
+            if (executionTreeViewer.getMark().valid())
+                executionTreeViewer.setMark(executionTreeViewer.getMark().node, false);
+        } else if (e.getSource() == menuNavMarkBlue) {
+            if (executionTreeViewer.getMark().valid())
+                executionTreeViewer.setMark(executionTreeViewer.getMark().node, true);
         } else if (e.getSource() == menuHelpDocumentation) {
             Resource.show("/documentation.html", "Documentation", JOptionPane.PLAIN_MESSAGE, 800, 600);
         } else if (e.getSource() == menuHelpLicense) {
@@ -828,6 +868,10 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JMenu menuNavigation = new JMenu("Navigation");
         menuNavigation.setMnemonic(KeyEvent.VK_A);
         menuNavigation.add(explorer.menuNavMarkNode);
+        menuNavigation.add(explorer.menuNavMarkParent);
+        menuNavigation.add(explorer.menuNavMarkChild);
+        menuNavigation.add(explorer.menuNavMarkRed);
+        menuNavigation.add(explorer.menuNavMarkBlue);
 
         JMenu menuHelp = new JMenu("Help");
         menuHelp.setMnemonic(KeyEvent.VK_H);
