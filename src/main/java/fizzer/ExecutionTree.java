@@ -278,6 +278,10 @@ public class ExecutionTree {
         return leftCovered != rightCovered ?  (leftCovered ? 1 : -1) * id : 0;
     }
 
+    public Node getNodeByGuid(long guid) {
+        return fromGuidsToNodes.get(guid);
+    }
+
     public ExecutionTree() {
         clear();
     }
