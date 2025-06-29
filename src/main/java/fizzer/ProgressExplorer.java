@@ -43,6 +43,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
     private JMenuItem menuSummaryDlg;
     private JMenuItem menuViewAnalysisNode;
+    private JMenuItem menuViewMarkedNode;
     private JMenuItem menuViewAnalysisTab;
     private JMenuItem menuViewTreeTab;
     private JMenuItem menuViewCTab;
@@ -154,10 +155,15 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuSummaryDlg.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, KeyEvent.ALT_DOWN_MASK));
         menuSummaryDlg.addActionListener(this);
 
-        menuViewAnalysisNode = new JMenuItem("Analisis node");
+        menuViewAnalysisNode = new JMenuItem("Analysis node");
         menuViewAnalysisNode.setMnemonic(KeyEvent.VK_9);
         menuViewAnalysisNode.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_9, KeyEvent.ALT_DOWN_MASK));
         menuViewAnalysisNode.addActionListener(this);
+
+        menuViewMarkedNode = new JMenuItem("Marked node");
+        menuViewMarkedNode.setMnemonic(KeyEvent.VK_M);
+        menuViewMarkedNode.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.ALT_DOWN_MASK));
+        menuViewMarkedNode.addActionListener(this);
 
         menuViewAnalysisTab = new JMenuItem("Analysis tab");
         menuViewAnalysisTab.setMnemonic(KeyEvent.VK_1);
@@ -656,6 +662,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             showSummary();
         } else if (e.getSource() == menuViewAnalysisNode) {
             executionTreeViewer.makeAnalysisNodeVisible();
+        } else if (e.getSource() == menuViewMarkedNode) {
+            executionTreeViewer.makeMarkNodeVisible();
         } else if (e.getSource() == menuViewTreeId) {
             executionTreeViewer.setLocationViewType(ExecutionTreeViewer.LocationViewType.ID);
         } else if (e.getSource() == menuViewTreeC) {
@@ -777,6 +785,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuView.add(explorer.menuSummaryDlg);
         menuView.addSeparator();
         menuView.add(explorer.menuViewAnalysisNode);
+        menuView.add(explorer.menuViewMarkedNode);
         menuView.addSeparator();
         menuView.add(explorer.menuViewAnalysisTab);
         menuView.add(explorer.menuViewTreeTab);
