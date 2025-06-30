@@ -69,7 +69,7 @@ public class MonteCarloViewer extends JPanel {
                     final MonteCarlo.NodeAndDirection nd = monteCarlo.selectNodeForValue(Float.parseFloat(targetValue.getText()));
                     treeViewer.setMark(nd.node, nd.direction == 0 ? false : true);
                     treeViewer.makeMarkNodeVisible();
-                    getParentTabbedPane().setSelectedIndex(1);
+                    getParentTabbedPane().setSelectedIndex(ProgressExplorer.tabIndices.get(ProgressExplorer.TabName.Tree));
                 } catch (NumberFormatException e) {}
                 redraw();
             }

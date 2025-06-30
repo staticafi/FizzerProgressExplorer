@@ -43,7 +43,7 @@ public class NavigatorViewer extends JPanel {
                     final Navigator.NodeAndDirection nd = navigator.run(treeViewer.getTree(), Float.parseFloat(targetMetric.getText()));
                     treeViewer.setMark(nd.node, nd.direction);
                     treeViewer.makeMarkNodeVisible();
-                    ((JTabbedPane)getParent()).setSelectedIndex(1); // Tree view tab.
+                    ((JTabbedPane)getParent()).setSelectedIndex(ProgressExplorer.tabIndices.get(ProgressExplorer.TabName.Tree));
                 } catch (NumberFormatException e) {}
                 redraw();
             }
