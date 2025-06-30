@@ -22,6 +22,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JTextArea analysesInfo;
     private JSplitPane analysesSplitPane;
 
+    private JSlider zoomSlider;
+    private ExecutionTreeViewer executionTreeViewer;
+
+    private StrategyViewer strategyViewer;
+
     private AnalysisPlainInputsViewer analysisStartupViewer;
     private AnalysisPlainInputsViewer analysisBitshareViewer;
     private AnalysisPlainInputsViewer analysisLocalSearchViewer;
@@ -30,15 +35,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private AnalysisPlainInputsViewer analysisTaintResponseViewer;
     private JPanel analysisPanel;
 
-    private StrategyViewer strategyViewer;
-
-    private JSlider zoomSlider;
-    private ExecutionTreeViewer executionTreeViewer;
-    private MonteCarloViewer monteCarloViewer;
-    private NavigatorViewer navigatorViewer;
-
     private SourceViewerC sourceC;
     private SourceViewerLL sourceLL;
+
+    private MonteCarloViewer monteCarloViewer;
+    private NavigatorViewer navigatorViewer;
 
     private JMenuItem menuFileOpen;
     private JMenuItem menuFileExit;
@@ -129,6 +130,23 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysesInfo = new JTextArea();
         analysesInfo.setEditable(false);
 
+        executionTreeViewer = new ExecutionTreeViewer(executionTree, sourceMapping);
+        zoomSlider = new JSlider(JSlider.HORIZONTAL, 10, 100, 10);
+        zoomSlider.addChangeListener(this);
+        zoomSlider.setMajorTickSpacing(10);
+        zoomSlider.setMinorTickSpacing(1);
+        zoomSlider.setPaintTicks(true);
+        zoomSlider.setPaintLabels(true);
+        zoomSlider.addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                zoomSlider.setValue(zoomSlider.getValue() + zoomScrollMultiplier * e.getWheelRotation());
+            }
+        });
+        executionTreeViewer.onZoomChanged((int)zoomSlider.getValue());
+
+        strategyViewer = new StrategyViewer();
+
         analysisStartupViewer = new AnalysisPlainInputsViewer(Analysis.Type.STARTUP);
         analysisBitshareViewer = new AnalysisPlainInputsViewer(Analysis.Type.BITSHARE);
         analysisLocalSearchViewer = new AnalysisPlainInputsViewer(Analysis.Type.LOCAL_SEARCH);
@@ -143,27 +161,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysisPanel.add(analysisTaintRequestViewer, Analysis.Type.TAINT_REQUEST.toString());
         analysisPanel.add(analysisTaintResponseViewer, Analysis.Type.TAINT_RESPONSE.toString());
 
-        zoomSlider = new JSlider(JSlider.HORIZONTAL, 10, 100, 100);
-        zoomSlider.addChangeListener(this);
-        zoomSlider.setMajorTickSpacing(10);
-        zoomSlider.setMinorTickSpacing(1);
-        zoomSlider.setPaintTicks(true);
-        zoomSlider.setPaintLabels(true);
-        zoomSlider.addMouseWheelListener(new MouseWheelListener() {
-            @Override
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                zoomSlider.setValue(zoomSlider.getValue() + zoomScrollMultiplier * e.getWheelRotation());
-            }
-        });
-
-        strategyViewer = new StrategyViewer();
-
-        executionTreeViewer = new ExecutionTreeViewer(executionTree, sourceMapping);
-        monteCarloViewer = options.contains("--showMonteCarloTab") ? new MonteCarloViewer(executionTreeViewer) : null;
-        navigatorViewer = options.contains("--showNavigatorTab") ? new NavigatorViewer(executionTreeViewer) : null;
-
         sourceC = new SourceViewerC(sourceMapping, executionTree);
         sourceLL = new SourceViewerLL(sourceMapping, executionTree);
+
+        monteCarloViewer = options.contains("--showMonteCarloTab") ? new MonteCarloViewer(executionTreeViewer) : null;
+        navigatorViewer = options.contains("--showNavigatorTab") ? new NavigatorViewer(executionTreeViewer) : null;
 
         menuFileOpen = new JMenuItem("Open directory");
         menuFileOpen.setMnemonic(KeyEvent.VK_O);
@@ -189,15 +191,15 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuViewMarkedNode.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.ALT_DOWN_MASK));
         menuViewMarkedNode.addActionListener(this);
 
-        menuViewAnalysisTab = new JMenuItem(TabName.Analysis.name() + " tab");
-        menuViewAnalysisTab.setMnemonic(KeyEvent.VK_1);
-        menuViewAnalysisTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, KeyEvent.ALT_DOWN_MASK));
+        menuViewTreeTab = new JMenuItem(TabName.Tree.name() + " tab");
+        menuViewTreeTab.setMnemonic(KeyEvent.VK_1);
+        menuViewTreeTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, KeyEvent.ALT_DOWN_MASK));
         menuViewStrategyTab = new JMenuItem(TabName.Strategy.name() + " tab");
         menuViewStrategyTab.setMnemonic(KeyEvent.VK_2);
         menuViewStrategyTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, KeyEvent.ALT_DOWN_MASK));
-        menuViewTreeTab = new JMenuItem(TabName.Tree.name() + " tab");
-        menuViewTreeTab.setMnemonic(KeyEvent.VK_3);
-        menuViewTreeTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_3, KeyEvent.ALT_DOWN_MASK));
+        menuViewAnalysisTab = new JMenuItem(TabName.Analysis.name() + " tab");
+        menuViewAnalysisTab.setMnemonic(KeyEvent.VK_3);
+        menuViewAnalysisTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_3, KeyEvent.ALT_DOWN_MASK));
         menuViewCTab = new JMenuItem(TabName.C.name() + " tab");
         menuViewCTab.setMnemonic(KeyEvent.VK_4);
         menuViewCTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_4, KeyEvent.ALT_DOWN_MASK));
@@ -321,9 +323,9 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
         int tabIndex = 0;
         tabbedPane = new JTabbedPane();
-        tabbedPane.addTab(TabName.Analysis.name(), analysisPanel); tabIndices.put(TabName.Analysis, tabIndex++);
-        tabbedPane.addTab(TabName.Strategy.name(), strategyViewer); tabIndices.put(TabName.Strategy, tabIndex++);
         tabbedPane.addTab(TabName.Tree.name(), treePanel); tabIndices.put(TabName.Tree, tabIndex++);
+        tabbedPane.addTab(TabName.Strategy.name(), strategyViewer); tabIndices.put(TabName.Strategy, tabIndex++);
+        tabbedPane.addTab(TabName.Analysis.name(), analysisPanel); tabIndices.put(TabName.Analysis, tabIndex++);
         tabbedPane.addTab(TabName.C.name(), sourceC); tabIndices.put(TabName.C, tabIndex++);
         tabbedPane.addTab(TabName.LL.name(), sourceLL); tabIndices.put(TabName.LL, tabIndex++);
         if (monteCarloViewer != null) {
@@ -893,9 +895,9 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuView.add(explorer.menuViewAnalysisNode);
         menuView.add(explorer.menuViewMarkedNode);
         menuView.addSeparator();
-        menuView.add(explorer.menuViewAnalysisTab);
-        menuView.add(explorer.menuViewStrategyTab);
         menuView.add(explorer.menuViewTreeTab);
+        menuView.add(explorer.menuViewStrategyTab);
+        menuView.add(explorer.menuViewAnalysisTab);
         menuView.add(explorer.menuViewCTab);
         menuView.add(explorer.menuViewLLTab);
         if (explorer.monteCarloViewer != null)
