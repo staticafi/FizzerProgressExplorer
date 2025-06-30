@@ -5,8 +5,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collections;
@@ -307,6 +309,7 @@ public class ExecutionTreeViewer extends JPanel {
         }
         if (executionTree.isLoaded()) {
             g.setFont(font);
+            ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             if (getAnalysis().getNode() != null)
                 drawCross(g, getAnalysis().getNode().getViewProps().x, getAnalysis().getNode().getViewProps().y, getAnalysis(getNumAnalyses() - 1).getViewProps().area);
             visibleNodes.clear();
