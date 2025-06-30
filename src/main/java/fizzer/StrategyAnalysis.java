@@ -20,6 +20,7 @@ public class StrategyAnalysis {
     private boolean sensitive;
     private double target_value;
     private HashSet<Long> closedNodeGuids;
+    private String strategyJsonText;
 
     public StrategyAnalysis(File analysisDir) throws Exception {
         metric = null;
@@ -32,12 +33,12 @@ public class StrategyAnalysis {
         sensitive = false;
         target_value = 0.0;
         closedNodeGuids = new HashSet<>();
+        strategyJsonText = "";
 
         File file = new File(analysisDir, "strategy.json");
         if (file.isFile()) {
-            JSONObject strategyJson = new JSONObject(
-                Files.lines(Paths.get(file.getPath())).collect(Collectors.joining("\n"))
-                );
+            strategyJsonText = Files.readString(Paths.get(file.getPath()));
+            JSONObject strategyJson = new JSONObject(strategyJsonText);
             metric = strategyJson.getString("metric");
             filter = strategyJson.getString("filter");
             final JSONArray valuesAndGuidsArray = strategyJson.getJSONArray("values_and_node_guids");
@@ -73,5 +74,9 @@ public class StrategyAnalysis {
 
     public HashSet<Long> getClosedNodeGuids() {
         return closedNodeGuids;
+    }
+
+    public String getJsonText() {
+        return strategyJsonText;
     }
 }

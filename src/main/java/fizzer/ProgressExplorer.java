@@ -30,6 +30,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private AnalysisPlainInputsViewer analysisTaintResponseViewer;
     private JPanel analysisPanel;
 
+    private StrategyViewer strategyViewer;
+
     private JSlider zoomSlider;
     private ExecutionTreeViewer executionTreeViewer;
     private MonteCarloViewer monteCarloViewer;
@@ -45,6 +47,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JMenuItem menuViewAnalysisNode;
     private JMenuItem menuViewMarkedNode;
     private JMenuItem menuViewAnalysisTab;
+    private JMenuItem menuViewStrategyTab;
     private JMenuItem menuViewTreeTab;
     private JMenuItem menuViewCTab;
     private JMenuItem menuViewLLTab;
@@ -82,6 +85,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
     public static enum TabName {
         Analysis,
+        Strategy,
         Tree,
         C,
         LL,
@@ -152,6 +156,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             }
         });
 
+        strategyViewer = new StrategyViewer();
+
         executionTreeViewer = new ExecutionTreeViewer(executionTree, sourceMapping);
         monteCarloViewer = options.contains("--showMonteCarloTab") ? new MonteCarloViewer(executionTreeViewer) : null;
         navigatorViewer = options.contains("--showNavigatorTab") ? new NavigatorViewer(executionTreeViewer) : null;
@@ -183,26 +189,29 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuViewMarkedNode.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.ALT_DOWN_MASK));
         menuViewMarkedNode.addActionListener(this);
 
-        menuViewAnalysisTab = new JMenuItem("Analysis tab");
+        menuViewAnalysisTab = new JMenuItem(TabName.Analysis.name() + " tab");
         menuViewAnalysisTab.setMnemonic(KeyEvent.VK_1);
         menuViewAnalysisTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, KeyEvent.ALT_DOWN_MASK));
-        menuViewTreeTab = new JMenuItem("Tree tab");
-        menuViewTreeTab.setMnemonic(KeyEvent.VK_2);
-        menuViewTreeTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, KeyEvent.ALT_DOWN_MASK));
-        menuViewCTab = new JMenuItem("C tab");
-        menuViewCTab.setMnemonic(KeyEvent.VK_3);
-        menuViewCTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_3, KeyEvent.ALT_DOWN_MASK));
-        menuViewLLTab = new JMenuItem("LL tab");
-        menuViewLLTab.setMnemonic(KeyEvent.VK_4);
-        menuViewLLTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_4, KeyEvent.ALT_DOWN_MASK));
+        menuViewStrategyTab = new JMenuItem(TabName.Strategy.name() + " tab");
+        menuViewStrategyTab.setMnemonic(KeyEvent.VK_2);
+        menuViewStrategyTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, KeyEvent.ALT_DOWN_MASK));
+        menuViewTreeTab = new JMenuItem(TabName.Tree.name() + " tab");
+        menuViewTreeTab.setMnemonic(KeyEvent.VK_3);
+        menuViewTreeTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_3, KeyEvent.ALT_DOWN_MASK));
+        menuViewCTab = new JMenuItem(TabName.C.name() + " tab");
+        menuViewCTab.setMnemonic(KeyEvent.VK_4);
+        menuViewCTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_4, KeyEvent.ALT_DOWN_MASK));
+        menuViewLLTab = new JMenuItem(TabName.LL.name() + " tab");
+        menuViewLLTab.setMnemonic(KeyEvent.VK_5);
+        menuViewLLTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_5, KeyEvent.ALT_DOWN_MASK));
         if (monteCarloViewer != null) {
-            menuViewMonteCarloTab = new JMenuItem("MonteCarlo tab");
-            menuViewMonteCarloTab.setMnemonic(KeyEvent.VK_5);
-            menuViewMonteCarloTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_5, KeyEvent.ALT_DOWN_MASK));
+            menuViewMonteCarloTab = new JMenuItem(TabName.MonteCarlo.name() + " tab");
+            menuViewMonteCarloTab.setMnemonic(KeyEvent.VK_6);
+            menuViewMonteCarloTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_6, KeyEvent.ALT_DOWN_MASK));
         }
         if (navigatorViewer != null) {
-            final int key = monteCarloViewer == null ? KeyEvent.VK_5 : KeyEvent.VK_6;
-            menuViewNavigatorTab = new JMenuItem("Navigator tab");
+            final int key = monteCarloViewer == null ? KeyEvent.VK_6 : KeyEvent.VK_7;
+            menuViewNavigatorTab = new JMenuItem(TabName.Navigator.name() + " tab");
             menuViewNavigatorTab.setMnemonic(key);
             menuViewNavigatorTab.setAccelerator(KeyStroke.getKeyStroke(key, KeyEvent.ALT_DOWN_MASK));
         }
@@ -313,6 +322,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         int tabIndex = 0;
         tabbedPane = new JTabbedPane();
         tabbedPane.addTab(TabName.Analysis.name(), analysisPanel); tabIndices.put(TabName.Analysis, tabIndex++);
+        tabbedPane.addTab(TabName.Strategy.name(), strategyViewer); tabIndices.put(TabName.Strategy, tabIndex++);
         tabbedPane.addTab(TabName.Tree.name(), treePanel); tabIndices.put(TabName.Tree, tabIndex++);
         tabbedPane.addTab(TabName.C.name(), sourceC); tabIndices.put(TabName.C, tabIndex++);
         tabbedPane.addTab(TabName.LL.name(), sourceLL); tabIndices.put(TabName.LL, tabIndex++);
@@ -329,6 +339,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuViewAnalysisTab.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 tabbedPane.setSelectedIndex(tabIndices.get(TabName.Analysis));
+            }
+        });
+        menuViewStrategyTab.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                tabbedPane.setSelectedIndex(tabIndices.get(TabName.Strategy));
             }
         });
         menuViewTreeTab.addActionListener(new ActionListener() {
@@ -388,6 +403,9 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         final TabName tabName = tabIndicesInv.get(tabbedPane.getSelectedIndex());
         switch (tabName) {
             case Analysis: {
+                break;
+            }
+            case Strategy: {
                 break;
             }
             case Tree: {
@@ -640,6 +658,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysisBitflipViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisTaintRequestViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisTaintResponseViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
+        strategyViewer.onAnalysisChanged(executionTree.getStrategyAnalysisSelectingNode());
         if (onLoad)
             executionTreeViewer.onLoad();
         else
@@ -835,6 +854,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysisBitflipViewer.clear();
         analysisTaintRequestViewer.clear();
         analysisTaintResponseViewer.clear();
+        strategyViewer.clear();
         executionTreeViewer.clear();
         sourceC.clear();
         sourceLL.clear();
@@ -874,6 +894,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuView.add(explorer.menuViewMarkedNode);
         menuView.addSeparator();
         menuView.add(explorer.menuViewAnalysisTab);
+        menuView.add(explorer.menuViewStrategyTab);
         menuView.add(explorer.menuViewTreeTab);
         menuView.add(explorer.menuViewCTab);
         menuView.add(explorer.menuViewLLTab);
