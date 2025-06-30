@@ -15,10 +15,7 @@ public class StrategyAnalysis {
     private Vector<Pair<Double, Integer>> valuesAndGuids;
     private String navigatorName;
     private LocationId targetId;
-    private LocationId bestNodeId;
-    private int bestNodeGuid;
     private boolean sensitive;
-    private double target_value;
     private HashSet<Long> closedNodeGuids;
     private String strategyJsonText;
 
@@ -28,10 +25,7 @@ public class StrategyAnalysis {
         valuesAndGuids = new Vector<>();
         navigatorName = null;
         targetId = null;
-        bestNodeId = null;
-        bestNodeGuid = 0;
         sensitive = false;
-        target_value = 0.0;
         closedNodeGuids = new HashSet<>();
         strategyJsonText = "";
 
@@ -48,10 +42,7 @@ public class StrategyAnalysis {
                 valuesAndGuids.add(new Pair<Double, Integer>(valuesAndGuidsArray.getDouble(j), (int)valuesAndGuidsArray.getLong(j+1)));
             navigatorName = strategyJson.getString("navigator");
             targetId = new LocationId((int)strategyJson.getLong("target_location_id"));
-            bestNodeId = new LocationId((int)strategyJson.getLong("best_node_location_id"));
-            bestNodeGuid = (int)strategyJson.getLong("best_node_guid");
             sensitive = strategyJson.getInt("sensitive") != 0;
-            target_value = strategyJson.getDouble("target_value");
         }
         file = new File(analysisDir, "post.json");
         if (file.isFile()) {
