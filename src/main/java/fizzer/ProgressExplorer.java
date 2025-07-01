@@ -115,7 +115,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         {
             final TableColumnModel columnModel = analysesTable.getColumnModel();
             columnModel.getColumn(0).setPreferredWidth(40);
-            columnModel.getColumn(1).setPreferredWidth(100);
+            columnModel.getColumn(1).setPreferredWidth(130);
             columnModel.getColumn(2).setPreferredWidth(60);
             columnModel.getColumn(3).setPreferredWidth(70);
             columnModel.getColumn(4).setPreferredWidth(45);
@@ -509,7 +509,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
         scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-        scrollPane.setPreferredSize(new Dimension(250,250));
+        scrollPane.setPreferredSize(new Dimension(270,270));
         JOptionPane.showMessageDialog(rootPanel, scrollPane, "Node Information", JOptionPane.PLAIN_MESSAGE);
     }
 
@@ -626,7 +626,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JTextArea ta = new JTextArea(information.toString());
         ta.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(ta);
-        scrollPane.setPreferredSize(new Dimension(450,420));
+        scrollPane.setPreferredSize(new Dimension(600,600));
         JOptionPane.showMessageDialog(null, scrollPane, "Summary", JOptionPane.PLAIN_MESSAGE);
 
     }
@@ -873,7 +873,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             if (args[i].startsWith("--"))
                 options.add(args[i]);
 
-        // try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
+        try { UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatDarkLaf()); } catch (Exception e) {}
 
         JFrame frame = new JFrame("Fizzer's ProgressExplorer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -8,9 +8,9 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 public class StrategyViewer extends JPanel {
     private class JSONViewer extends RSyntaxTextArea {
         public JSONViewer() {
+            TextViewerBase.setDarkTheme(this);
             setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
         }
-
     }
 
     private JSONViewer viewer;

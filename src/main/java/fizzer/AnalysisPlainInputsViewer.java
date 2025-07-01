@@ -67,7 +67,7 @@ public class AnalysisPlainInputsViewer extends JPanel {
 
         @Override
         public Color getCharacterHighlightColor(int charIdx) {
-            return LIGHT_RED;
+            return ExecutionTreeViewer.DARK_RED;
         }
     }
 

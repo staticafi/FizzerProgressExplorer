@@ -14,13 +14,13 @@ public abstract class SourceViewerBase extends TextViewerBase {
         boolean isLeftCovered = isCovered(id, false);
         boolean isRightCovered = isCovered(id, true);
         if (isLeftCovered && isRightCovered)
-            return LIGHT_MAGENTA;
+            return ExecutionTreeViewer.DARK_MAGENTA;
         else if (isLeftCovered)
-            return LIGHT_RED;
+            return ExecutionTreeViewer.DARK_RED;
         else if (isRightCovered)
-            return LIGHT_BLUE;
+            return ExecutionTreeViewer.DARK_BLUE;
         else
-            return LIGHT_ORANGE;
+            return ExecutionTreeViewer.DARK_YELLOW;
     }
 
     protected int numLineColumnChars;

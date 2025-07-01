@@ -5,15 +5,19 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Shape;
 import javax.swing.text.*;
+import java.io.IOException;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.Theme;
 
 public class TextViewerBase extends RSyntaxTextArea {
 
-    public static final Color LIGHT_RED = new Color(255, 128, 128);
-    public static final Color LIGHT_GREEN = new Color(128, 255, 128);
-    public static final Color LIGHT_BLUE = new Color(150, 150, 255);
-    public static final Color LIGHT_MAGENTA = new Color(255, 128, 255);
-    public static final Color LIGHT_ORANGE = new Color(255, 200, 100);
+    public static boolean setDarkTheme(final RSyntaxTextArea area) {
+        try {
+            Theme dark = Theme.load(area.getClass().getResourceAsStream("/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
+            dark.apply(area);
+            return true;
+        } catch (IOException e) { return false; }
+    }
 
     public class TextHighlightPainter extends DefaultHighlighter.DefaultHighlightPainter {
 
@@ -43,6 +47,7 @@ public class TextViewerBase extends RSyntaxTextArea {
     }
 
     public TextViewerBase() {
+        setDarkTheme(this);
         textHighlightPainter = new TextHighlightPainter();
         clear();
         setFont(new Font("Monospaced", Font.PLAIN, ProgressExplorer.textFontSize));

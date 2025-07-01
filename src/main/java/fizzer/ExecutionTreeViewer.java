@@ -24,6 +24,15 @@ public class ExecutionTreeViewer extends JPanel {
     public static final int nodeWidth = 100;
     public static final int nodeHeight = 14;
 
+    public static final Color DARK_BACKGROUND = new Color(41, 49, 52);
+    public static final Color DARK_FOREGROUND = new Color(169, 183, 198);
+    public static final Color DARK_RED = new Color(255, 100, 100);
+    public static final Color DARK_GREEN = new Color(100,200,100);
+    public static final Color DARK_BLUE = new Color(150, 150, 255);
+    public static final Color DARK_MAGENTA = new Color(200, 100, 200);
+    public static final Color DARK_YELLOW = new Color(200, 150, 50);
+    public static final Color DARK_CYAN = new Color(100, 220, 220);
+
     private static final int separatorHorizontal = 15;
     private static final int separatorVertical = 80;
     private static final int hitCountHeight = nodeHeight / 2;
@@ -35,18 +44,18 @@ public class ExecutionTreeViewer extends JPanel {
     private static final int textShift = 2;
     private static final float textZoomLimit = 0.5f;
     private static final int borderSize = 25;
-    private static final Color[] edgeColors = new Color[] { Color.RED, Color.BLUE };
-    private static final Color nodeColorNoAnalysis = Color.BLACK;
-    private static final Color nodeColorBitshare = new Color(255,125,125);
+    private static final Color[] edgeColors = new Color[] { DARK_RED, DARK_BLUE };
+    private static final Color nodeColorNoAnalysis = Color.GRAY;
+    private static final Color nodeColorBitshare = new Color(200,100,100);
     private static final Color nodeColorLocalSearch = new Color(125,255,125);
     private static final Color nodeColorBitflip = new Color(125,125,255);
-    private static final Color nodeColorSensitivity = Color.GRAY;
-    private static final Color nodeColorBitshareLocalSearch = Color.MAGENTA;
-    private static final Color nodeNoSensitiveBitsColor = Color.ORANGE;
-    private static final Color nodeMarkColor = Color.BLACK;
-    private static final Color hitCountColor = Color.BLACK;
-    private static final Color coveredColor = Color.BLACK;
-    private static final Color fontColor = Color.BLACK;
+    private static final Color nodeColorSensitivity = DARK_GREEN;
+    private static final Color nodeColorBitshareLocalSearch = DARK_MAGENTA;
+    private static final Color nodeNoSensitiveBitsColor = DARK_YELLOW;
+    private static final Color nodeMarkColor = Color.GRAY;
+    private static final Color hitCountColor = Color.GRAY;
+    private static final Color coveredColor = Color.GRAY;
+    private static final Color fontColor = Color.WHITE;
 
     private ExecutionTree executionTree;
     private SourceMapping mapping;
@@ -92,7 +101,7 @@ public class ExecutionTreeViewer extends JPanel {
         mapping = sourceMapping;
 
         zoom = 1.0f;
-        setBackground(Color.white);
+        setBackground(DARK_BACKGROUND);
 
         locationViewType = LocationViewType.ID;
 
@@ -398,8 +407,8 @@ public class ExecutionTreeViewer extends JPanel {
         g.fillRect(
             Math.round(zoom * (node.getViewProps().x - hitRatio * nodeWidth/2)),
             Math.round(zoom * (node.getViewProps().y - nodeHeight/2 - hitCountHeight)),
-            Math.round(zoom * hitRatio * nodeWidth),
-            Math.round(zoom * hitCountHeight)
+            Math.round(zoom * hitRatio * nodeWidth) + 1,
+            Math.round(zoom * hitCountHeight) + 1
             );
 
         if (executionTree.isCovered(node.getLocationId(), false) && executionTree.isCovered(node.getLocationId(), true)) {
@@ -407,8 +416,8 @@ public class ExecutionTreeViewer extends JPanel {
             g.fillRect(
                 Math.round(zoom * (node.getViewProps().x - coverageWidth/2)),
                 Math.round(zoom * (node.getViewProps().y + nodeHeight/2)),
-                Math.round(zoom * coverageWidth),
-                Math.round(zoom * coverageHeight)
+                Math.round(zoom * coverageWidth) + 1,
+                Math.round(zoom * coverageHeight) + 1
                 );
         }
 
@@ -451,8 +460,8 @@ public class ExecutionTreeViewer extends JPanel {
                 g.fillRect(
                     Math.round(zoom * (node.getViewProps().x - nodeWidth/2)),
                     Math.round(zoom * (node.getViewProps().y - nodeHeight/2)),
-                    Math.round(zoom * nodeWidth),
-                    Math.round(zoom * nodeHeight)
+                    Math.round(zoom * nodeWidth) + 1,
+                    Math.round(zoom * nodeHeight) + 1
                     );
             }
         }

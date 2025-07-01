@@ -51,6 +51,8 @@ public class NavigatorViewer extends JPanel {
 
         locations = new JList<>(new DefaultListModel<Integer>());
         locations.setFont(font);
+        locations.setBackground(ExecutionTreeViewer.DARK_BACKGROUND);
+        locations.setSelectionBackground(Color.DARK_GRAY);
         locations.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         locations.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -122,7 +124,7 @@ public class NavigatorViewer extends JPanel {
 
         final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, painterTabs);
         splitPane.setOneTouchExpandable(true);
-        splitPane.setDividerLocation(100);
+        splitPane.setDividerLocation(110);
 
         setLayout(new BorderLayout());
         add(splitPane);
@@ -198,7 +200,7 @@ public class NavigatorViewer extends JPanel {
 
         final Vector<Integer> sids = navigator.getSignedLocations();
         for (int i = 0; i < sids.size(); ++i)
-            locationColors.put(sids.get(i), Color.getHSBColor(i/(float)(sids.size() + 1), 1.0f, 0.8f));
+            locationColors.put(sids.get(i), Color.getHSBColor(i/(float)(sids.size() + 1), 0.6f, 0.9f));
         for (int sid : sids)
             ((DefaultListModel<Integer>)(locations.getModel())).addElement(sid);
         locations.setSelectedIndices(locationIndices.stream().mapToInt(Integer::intValue).toArray());
@@ -226,7 +228,8 @@ public class NavigatorViewer extends JPanel {
     private class Painter extends JPanel {
         Painter(final Font font) {
             setFont(font);
-            setBackground(Color.white);
+            setBackground(ExecutionTreeViewer.DARK_BACKGROUND);
+            setForeground(ExecutionTreeViewer.DARK_FOREGROUND);
             setAutoscrolls(true);
             setOpaque(true);
             MouseAdapter ma = new MouseAdapter() {
@@ -278,12 +281,10 @@ public class NavigatorViewer extends JPanel {
         protected void render(Graphics g) {}
 
         protected void renderLinesAndValues(Graphics g) {
-            g.setColor(Color.LIGHT_GRAY);
+            g.setColor(ExecutionTreeViewer.DARK_FOREGROUND);
             for (int i = 0, n = navigator.getValues().size(); i != n; ++i) {
                 final int y = samplesStride() * (i+1);
-                g.setColor(Color.LIGHT_GRAY);
                 g.drawLine(sampleMarginLeft, y, sampleMarginRight, y);
-                g.setColor(Color.BLACK);
                 g.drawString(Float.toString(navigator.getValues().get(i)), sampleMarginRight + sampleValueShiftX, y + sampleValueShiftY);
             }
         }

@@ -19,34 +19,34 @@ public class AnalyzesTableRenderer extends DefaultTableCellRenderer {
             return this;
         Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column); 
         Color foregroundColor = table.getForeground();
-        Color backgroundColor = table.getBackground();
+        Color backgroundColor = ExecutionTreeViewer.DARK_BACKGROUND;
         if (column == 1 && row >= 0 && executionTree.getAnalyses() != null && row < executionTree.getAnalyses().length) {
             Analysis analysis = executionTree.getAnalyses()[row];
 
             if (analysis.getType() == Analysis.Type.TAINT_REQUEST)
-                foregroundColor = Color.GREEN;
+                foregroundColor = ExecutionTreeViewer.DARK_GREEN;
             else if (analysis.getType() == Analysis.Type.TAINT_RESPONSE)
-                foregroundColor = Color.GREEN;
+                foregroundColor = ExecutionTreeViewer.DARK_GREEN;
             else {
                 if (analysis.getNode() != null
                         && analysis.getNode().getChildLabel(row, 0) != Node.ChildLabel.NOT_VISITED
                         && analysis.getNode().getChildLabel(row, 1) != Node.ChildLabel.NOT_VISITED)
-                    foregroundColor = Color.MAGENTA;
+                    foregroundColor = ExecutionTreeViewer.DARK_MAGENTA;
                 else if (!analysis.getCoveredLocationIds().isEmpty()) {
                     if (analysis.getNode() != null && analysis.getCoveredLocationIds().contains(analysis.getNode().getLocationId()))
-                        foregroundColor = Color.CYAN;
+                        foregroundColor = ExecutionTreeViewer.DARK_CYAN;
                     else
-                        foregroundColor = Color.ORANGE;
+                        foregroundColor = ExecutionTreeViewer.DARK_YELLOW;
                 }
                 else if (analysis.getStopAttribute() != Analysis.StopAttribute.INTERRUPTED)
-                    foregroundColor = Color.RED;
+                    foregroundColor = ExecutionTreeViewer.DARK_RED;
                 else if (analysis.getStartAttribute() == Analysis.StartAttribute.RESUMED)
                     foregroundColor = Color.LIGHT_GRAY;
             }
         }
 
         if (table.getSelectedRow() == row)
-            backgroundColor = Color.YELLOW;
+            backgroundColor = Color.DARK_GRAY;
 
         component.setForeground(foregroundColor);
         component.setBackground(backgroundColor);
