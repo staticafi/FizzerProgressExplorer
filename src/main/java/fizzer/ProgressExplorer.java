@@ -111,6 +111,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTree = new ExecutionTree();
 
         analysesTable = new JTable(new DefaultTableModel(null, new Object[]{"Index", "Type", "Start", "Stop", "Traces", "Strategy"}));
+        analysesTable.setBackground(ExecutionTreeViewer.DARK_BACKGROUND);
         analysesTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         {
             final TableColumnModel columnModel = analysesTable.getColumnModel();
@@ -129,6 +130,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
         analysesInfo = new JTextArea();
         analysesInfo.setEditable(false);
+        analysesInfo.setBackground(ExecutionTreeViewer.DARK_BACKGROUND);
 
         executionTreeViewer = new ExecutionTreeViewer(executionTree, sourceMapping);
         zoomSlider = new JSlider(JSlider.HORIZONTAL, 10, 100, 10);
