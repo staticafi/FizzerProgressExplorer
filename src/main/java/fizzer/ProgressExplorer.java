@@ -11,78 +11,78 @@ import java.util.*;
 import fizzer.SourceMapping.LineColumn;
 
 public class ProgressExplorer implements MouseListener, ActionListener, ListSelectionListener, ChangeListener {
-    final Vector<String> options;
+    private final Vector<String> options;
 
-    private SourceMapping sourceMapping;
-    private ExecutionTree executionTree;
+    private final SourceMapping sourceMapping;
+    private final ExecutionTree executionTree;
 
-    private JPanel rootPanel;
+    private final JPanel rootPanel;
 
-    private JTable analysesTable;
-    private JTextArea analysesInfo;
-    private JSplitPane analysesSplitPane;
+    private final JTable analysesTable;
+    private final JTextArea analysesInfo;
+    private final JSplitPane analysesSplitPane;
 
-    private JSlider zoomSlider;
-    private ExecutionTreeViewer executionTreeViewer;
+    private final JSlider zoomSlider;
+    private final ExecutionTreeViewer executionTreeViewer;
 
-    private StrategyViewer strategyViewer;
+    private final StrategyViewer strategyViewer;
 
-    private AnalysisPlainInputsViewer analysisStartupViewer;
-    private AnalysisPlainInputsViewer analysisBitshareViewer;
-    private AnalysisPlainInputsViewer analysisLocalSearchViewer;
-    private AnalysisPlainInputsViewer analysisBitflipViewer;
-    private AnalysisPlainInputsViewer analysisTaintRequestViewer;
-    private AnalysisPlainInputsViewer analysisTaintResponseViewer;
-    private JPanel analysisPanel;
+    private final AnalysisPlainInputsViewer analysisStartupViewer;
+    private final AnalysisPlainInputsViewer analysisBitshareViewer;
+    private final AnalysisPlainInputsViewer analysisLocalSearchViewer;
+    private final AnalysisPlainInputsViewer analysisBitflipViewer;
+    private final AnalysisPlainInputsViewer analysisTaintRequestViewer;
+    private final AnalysisPlainInputsViewer analysisTaintResponseViewer;
+    private final JPanel analysisPanel;
 
-    private SourceViewerC sourceC;
-    private SourceViewerLL sourceLL;
+    private final SourceViewerC sourceC;
+    private final SourceViewerLL sourceLL;
 
-    private MonteCarloViewer monteCarloViewer;
-    private NavigatorViewer navigatorViewer;
+    private final MonteCarloViewer monteCarloViewer;
+    private final NavigatorViewer navigatorViewer;
 
-    private JMenuItem menuFileOpen;
-    private JMenuItem menuFileExit;
+    private final JMenuItem menuFileOpen;
+    private final JMenuItem menuFileExit;
 
-    private JMenuItem menuSummaryDlg;
-    private JMenuItem menuViewAnalysisNode;
-    private JMenuItem menuViewMarkedNode;
-    private JMenuItem menuViewAnalysisTab;
-    private JMenuItem menuViewStrategyTab;
-    private JMenuItem menuViewTreeTab;
-    private JMenuItem menuViewCTab;
-    private JMenuItem menuViewLLTab;
-    private JMenuItem menuViewMonteCarloTab;
-    private JMenuItem menuViewNavigatorTab;
-    private JMenuItem menuViewTreeId;
-    private JMenuItem menuViewTreeC;
-    private JMenuItem menuViewTreeLL;
-    private JMenuItem menuViewSensitiveBits;
-    private JMenuItem menuViewInputBytes;
-    private JMenuItem menuViewBestValue;
-    private JMenuItem menuViewTraceIndex;
-    private JMenuItem menuViewNodeGuid;
+    private final JMenuItem menuSummaryDlg;
+    private final JMenuItem menuViewAnalysisNode;
+    private final JMenuItem menuViewMarkedNode;
+    private final JMenuItem menuViewAnalysisTab;
+    private final JMenuItem menuViewStrategyTab;
+    private final JMenuItem menuViewTreeTab;
+    private final JMenuItem menuViewCTab;
+    private final JMenuItem menuViewLLTab;
+    private final JMenuItem menuViewMonteCarloTab;
+    private final JMenuItem menuViewNavigatorTab;
+    private final JMenuItem menuViewTreeId;
+    private final JMenuItem menuViewTreeC;
+    private final JMenuItem menuViewTreeLL;
+    private final JMenuItem menuViewSensitiveBits;
+    private final JMenuItem menuViewInputBytes;
+    private final JMenuItem menuViewBestValue;
+    private final JMenuItem menuViewTraceIndex;
+    private final JMenuItem menuViewNodeGuid;
 
-    private JMenuItem menuNavMarkNode;
-    private JMenuItem menuNavMarkParent;
-    private JMenuItem menuNavMarkChild;
-    private JMenuItem menuNavMarkRed;
-    private JMenuItem menuNavMarkBlue;
+    private final JMenuItem menuNavMarkNode;
+    private final JMenuItem menuNavMarkParent;
+    private final JMenuItem menuNavMarkChild;
+    private final JMenuItem menuNavMarkRed;
+    private final JMenuItem menuNavMarkBlue;
 
-    private JMenuItem menuHelpDocumentation;
-    private JMenuItem menuHelpLicense;
-    private JMenuItem menuHelpAbout;
+    private final JMenuItem menuHelpDocumentation;
+    private final JMenuItem menuHelpLicense;
+    private final JMenuItem menuHelpAbout;
+
+    private final JScrollPane listScrollPane;
+    private final JScrollPane infoScrollPane;
+    private final JScrollPane treeScrollPane;
+    private final JScrollPane monteCarloScrollPane;
+    private final JScrollPane navigatorScrollPane;
+    private final JSplitPane splitPane;
+    private final JTabbedPane tabbedPane;
+    private final JPanel treePanel;
 
     private String openFolderStartDir;
-
-    private JScrollPane listScrollPane;
-    private JScrollPane infoScrollPane;
-    private JScrollPane treeScrollPane;
-    private JScrollPane monteCarloScrollPane;
-    private JScrollPane navigatorScrollPane;
-    private JSplitPane splitPane;
-    private JTabbedPane tabbedPane;
-    private JPanel treePanel;
 
     public static enum TabName {
         Analysis,
@@ -147,7 +147,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         });
         executionTreeViewer.onZoomChanged((int)zoomSlider.getValue());
 
-        strategyViewer = new StrategyViewer();
+        strategyViewer = new StrategyViewer(executionTree);
 
         analysisStartupViewer = new AnalysisPlainInputsViewer(Analysis.Type.STARTUP);
         analysisBitshareViewer = new AnalysisPlainInputsViewer(Analysis.Type.BITSHARE);
@@ -212,14 +212,13 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             menuViewMonteCarloTab = new JMenuItem(TabName.MonteCarlo.name() + " tab");
             menuViewMonteCarloTab.setMnemonic(KeyEvent.VK_6);
             menuViewMonteCarloTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_6, KeyEvent.ALT_DOWN_MASK));
-        }
+        } else menuViewMonteCarloTab = null;
         if (navigatorViewer != null) {
             final int key = monteCarloViewer == null ? KeyEvent.VK_6 : KeyEvent.VK_7;
             menuViewNavigatorTab = new JMenuItem(TabName.Navigator.name() + " tab");
             menuViewNavigatorTab.setMnemonic(key);
             menuViewNavigatorTab.setAccelerator(KeyStroke.getKeyStroke(key, KeyEvent.ALT_DOWN_MASK));
-        }
-
+        } else menuViewNavigatorTab = null;
         menuViewTreeId = new JMenuItem("Tree node id");
         menuViewTreeId.setMnemonic(KeyEvent.VK_I);
         menuViewTreeId.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.ALT_DOWN_MASK));
@@ -282,11 +281,6 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuHelpAbout = new JMenuItem("About");
         menuHelpAbout.addActionListener(this);
 
-
-        rootPanel = new JPanel(new BorderLayout());
-
-        openFolderStartDir = Paths.get("").toAbsolutePath().toString();
-
         listScrollPane = new JScrollPane(analysesTable);
         listScrollPane.getHorizontalScrollBar().setUnitIncrement(listScrollSpeed);
         listScrollPane.getVerticalScrollBar().setUnitIncrement(listScrollSpeed);
@@ -316,12 +310,12 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             monteCarloScrollPane = new JScrollPane(monteCarloViewer);
             monteCarloScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
             monteCarloScrollPane.getVerticalScrollBar().setUnitIncrement(20);
-        }
+        } else monteCarloScrollPane = null;
         if (navigatorViewer != null) {
             navigatorScrollPane = new JScrollPane(navigatorViewer);
             navigatorScrollPane.getHorizontalScrollBar().setUnitIncrement(20);
             navigatorScrollPane.getVerticalScrollBar().setUnitIncrement(20);
-        }
+        } else navigatorScrollPane = null;
 
         int tabIndex = 0;
         tabbedPane = new JTabbedPane();
@@ -394,6 +388,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             monteCarloViewer.addMouseListener(this);
         if (navigatorViewer != null)
             navigatorViewer.addMouseListener(this);
+
+        openFolderStartDir = Paths.get("").toAbsolutePath().toString();
     }
 
     public void mouseReleased(MouseEvent e) {
