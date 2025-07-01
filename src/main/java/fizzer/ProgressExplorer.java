@@ -658,7 +658,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         analysisBitflipViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisTaintRequestViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
         analysisTaintResponseViewer.onAnalysisChanged(executionTree.getAnalyses()[executionTree.getAnalysisIndex()]);
-        strategyViewer.onAnalysisChanged(executionTree.getStrategyAnalysisSelectingNode());
+        strategyViewer.onAnalysisChanged();
         if (onLoad)
             executionTreeViewer.onLoad();
         else
