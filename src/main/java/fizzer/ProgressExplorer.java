@@ -120,7 +120,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             columnModel.getColumn(2).setPreferredWidth(60);
             columnModel.getColumn(3).setPreferredWidth(70);
             columnModel.getColumn(4).setPreferredWidth(45);
-            columnModel.getColumn(5).setPreferredWidth(140);
+            columnModel.getColumn(5).setPreferredWidth(190);
         }
         analysesTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         analysesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -375,7 +375,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, analysesSplitPane, tabbedPane);
         splitPane.setOneTouchExpandable(true);
-        splitPane.setDividerLocation(580);
+        splitPane.setDividerLocation(620);
 
         rootPanel = new JPanel(new BorderLayout());
         rootPanel.add(splitPane, BorderLayout.CENTER);
