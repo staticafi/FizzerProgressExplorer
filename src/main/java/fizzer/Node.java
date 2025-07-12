@@ -235,4 +235,12 @@ public class Node {
     public ViewProps getViewProps() {
         return this.viewProps;
     }
+
+    public Vector<Integer> getSidPath() {
+        final Vector<Integer> result = new Vector<>();
+        for (Node n = getParent(), m = this; n != null; m = n, n = n.getParent())
+            result.add((n.getChildren()[0] == m ? -1: 1) * n.getLocationId().id);
+        Collections.reverse(result);
+        return result;
+    }
 }
