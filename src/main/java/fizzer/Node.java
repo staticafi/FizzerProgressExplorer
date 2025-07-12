@@ -210,12 +210,29 @@ public class Node {
         return sensitivityIndex <= analysisIndex;
     }
 
+    public boolean hasPendingAnalysis(int analysisIndex) {
+        return !sensitivityApplied(analysisIndex)
+                    || (!getSensitiveBits(analysisIndex).isEmpty()
+                            && (!bitshareApplied(analysisIndex) || !localSearchApplied(analysisIndex)));
+    }
+
+    public boolean isDirectionUnexplored(int analysisIndex, int direction) {
+        return getChildLabel(analysisIndex, direction) == ChildLabel.NOT_VISITED;
+    }
+
+    public boolean hasUnexploredDirection(int analysisIndex) {
+        return isDirectionUnexplored(analysisIndex, 0) || isDirectionUnexplored(analysisIndex, 1);
+    }
+
+    public boolean isPending(int analysisIndex) {
+        return hasUnexploredDirection(analysisIndex) && hasPendingAnalysis(analysisIndex);
+    }
+
     public boolean isClosed(int analysisIndex) {
         return closedIndex <= analysisIndex;
     }
 
     public ViewProps getViewProps() {
         return this.viewProps;
-
     }
 }
