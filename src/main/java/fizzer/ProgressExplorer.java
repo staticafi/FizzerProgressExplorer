@@ -504,6 +504,24 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         textArea.append("Local search applied: " + Boolean.toString(node.localSearchApplied(executionTree.getAnalysisIndex())) + "\n");
         textArea.append("Bitflip applied: " + Boolean.toString(node.bitflipApplied(executionTree.getAnalysisIndex())) + "\n");
         textArea.append("Discovery index: " + Integer.toString(node.getDiscoveryIndex() + 1) + "\n");
+        textArea.append("SidPath: ["); {
+            final int STEP = 10;
+            final int BREAK = 2 * STEP;
+            int counter = 0;
+            for (int sid : node.getSidPath()) {
+                if (counter == 0) {
+                    textArea.append(node.getTraceIndex() > BREAK ? "\n    " : " ");
+                } else {
+                    textArea.append(",");
+                    if ((counter % BREAK) == 0) textArea.append("\n");
+                    textArea.append((counter % STEP) == 0 ? "    " : " ");
+                }
+                textArea.append(Integer.toString(sid));
+                ++counter;
+            }
+            textArea.append(node.getTraceIndex() > BREAK ? "\n" : " ");
+        }
+        textArea.append("]\n");
         textArea.append("SubTreeReachability: " + SubTreeReachability.create(node, executionTree.getAnalysisIndex()).getReachabilityJSON());
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
