@@ -396,8 +396,6 @@ public class Analysis {
             );
 
         node = fromGuidsToNodes.get(infoJson.getLong("node_guid"));
-        if (node == null)
-            throw new RuntimeException("Cannot find analysis node by its guid. File: " + infoFile.getPath());
 
         switch (type) {
             case BITSHARE:
