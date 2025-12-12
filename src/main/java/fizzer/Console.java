@@ -3,14 +3,19 @@ package fizzer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 public class Console extends JPanel {
 
     private JTextArea outputArea;
     private JTextField inputField;
+    private ArrayList<String> history;
+    private int historyCursor;
     private ExecutionTree executionTree;
 
     public Console(ExecutionTree executionTree_) {
+        history = new ArrayList<>();
+        historyCursor = 0;
         executionTree = executionTree_;
 
         setLayout(new BorderLayout());
@@ -31,12 +36,34 @@ public class Console extends JPanel {
                 String command = inputField.getText();
                 inputField.setText("");
 
+                if (!command.isEmpty()) {
+                    history.remove(command);
+                    history.add(command);
+                    historyCursor = history.size();
+                }
+
                 print(">>> " + command);
                 String result = handleCommand(command);
-                print(result);
+                if (!result.isEmpty())
+                    print(result);
             }
         });
-
+        InputMap im = inputField.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap am = inputField.getActionMap();
+        im.put(KeyStroke.getKeyStroke("UP"), "arrowUpPressed");
+        im.put(KeyStroke.getKeyStroke("DOWN"), "arrowDownPressed");
+        am.put("arrowUpPressed", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onFetchPreviousCommand();
+            }
+        });
+        am.put("arrowDownPressed", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onFetchNextCommand();
+            }
+        });
         add(scrollPane, BorderLayout.CENTER);
         add(inputField, BorderLayout.SOUTH);
 
@@ -62,8 +89,34 @@ public class Console extends JPanel {
         
     }
 
+    private void onFetchPreviousCommand() {
+        if (historyCursor > 0)
+            --historyCursor;
+        if (historyCursor < history.size())
+            inputField.setText(history.get(historyCursor));
+    }
+
+    private void onFetchNextCommand() {
+        if (historyCursor < history.size())
+            ++historyCursor;
+        if (historyCursor < history.size())
+            inputField.setText(history.get(historyCursor));
+        else
+            inputField.setText("");
+    }
+
     private String handleCommand(String cmd) {
         switch (cmd.trim()) {
+            case "":
+                return "";
+            case "clear":
+                outputArea.setText("");
+                return "";
+            case "clear history":
+                history.clear();
+                historyCursor = 0;
+                outputArea.setText("History cleared.");
+                return "";
             default:
                 return "Unknown command: " + cmd;
         }
