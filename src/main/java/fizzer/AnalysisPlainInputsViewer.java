@@ -1,7 +1,5 @@
 package fizzer;
 
-import fizzer.Analysis.InputsListInfo.InputData;
-
 import java.util.Vector;
 import javax.swing.*;
 import java.awt.*;
