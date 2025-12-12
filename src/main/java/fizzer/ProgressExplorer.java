@@ -37,6 +37,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
     private SourceViewerC sourceC;
     private SourceViewerLL sourceLL;
+    private Console console;
 
     private JMenuItem menuFileOpen;
     private JMenuItem menuFileExit;
@@ -47,6 +48,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
     private JMenuItem menuViewTreeTab;
     private JMenuItem menuViewCTab;
     private JMenuItem menuViewLLTab;
+    private JMenuItem menuViewConsoleTab;
     private JMenuItem menuViewMonteCarloTab;
     private JMenuItem menuViewNavigatorTab;
     private JMenuItem menuViewTreeId;
@@ -139,6 +141,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
 
         sourceC = new SourceViewerC(sourceMapping, executionTree);
         sourceLL = new SourceViewerLL(sourceMapping, executionTree);
+        console = new Console(executionTree);
 
         menuFileOpen = new JMenuItem("Open directory");
         menuFileOpen.setMnemonic(KeyEvent.VK_O);
@@ -171,13 +174,16 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuViewLLTab = new JMenuItem("LL tab");
         menuViewLLTab.setMnemonic(KeyEvent.VK_4);
         menuViewLLTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_4, KeyEvent.ALT_DOWN_MASK));
+        menuViewConsoleTab = new JMenuItem("Console tab");
+        menuViewConsoleTab.setMnemonic(KeyEvent.VK_5);
+        menuViewConsoleTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_5, KeyEvent.ALT_DOWN_MASK));
         if (monteCarloViewer != null) {
             menuViewMonteCarloTab = new JMenuItem("MonteCarlo tab");
-            menuViewMonteCarloTab.setMnemonic(KeyEvent.VK_5);
-            menuViewMonteCarloTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_5, KeyEvent.ALT_DOWN_MASK));
+            menuViewMonteCarloTab.setMnemonic(KeyEvent.VK_6);
+            menuViewMonteCarloTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_6, KeyEvent.ALT_DOWN_MASK));
         }
         if (navigatorViewer != null) {
-            final int key = monteCarloViewer == null ? KeyEvent.VK_5 : KeyEvent.VK_6;
+            final int key = monteCarloViewer == null ? KeyEvent.VK_7 : KeyEvent.VK_7;
             menuViewNavigatorTab = new JMenuItem("Navigator tab");
             menuViewNavigatorTab.setMnemonic(key);
             menuViewNavigatorTab.setAccelerator(KeyStroke.getKeyStroke(key, KeyEvent.ALT_DOWN_MASK));
@@ -271,6 +277,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         tabbedPane.addTab("Tree", treePanel);
         tabbedPane.addTab("C", sourceC);
         tabbedPane.addTab("LL", sourceLL);
+        tabbedPane.addTab("Console", console);
         if (monteCarloViewer != null)
             tabbedPane.addTab("MonteCarlo", monteCarloViewer);
         if (navigatorViewer != null)
@@ -295,16 +302,21 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 tabbedPane.setSelectedIndex(3);
             }
         });
+        menuViewConsoleTab.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                tabbedPane.setSelectedIndex(4);
+            }
+        });
         if (monteCarloViewer != null)
             menuViewMonteCarloTab.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    tabbedPane.setSelectedIndex(4);
+                    tabbedPane.setSelectedIndex(5);
                 }
             });
         if (navigatorViewer != null)
             menuViewNavigatorTab.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    tabbedPane.setSelectedIndex(monteCarloViewer == null ? 4 : 5);
+                    tabbedPane.setSelectedIndex(monteCarloViewer == null ? 5 : 6);
                 }
             });
         tabbedPane.setSelectedIndex(1);
@@ -320,6 +332,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.addMouseListener(this);
         sourceC.getSourceViewer().addMouseListener(this);
         sourceLL.getSourceViewer().addMouseListener(this);
+        console.addMouseListener(this);
         if (monteCarloViewer != null)
             monteCarloViewer.addMouseListener(this);
         if (navigatorViewer != null)
@@ -387,8 +400,11 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
                 }
                 break;
             }
-            case 4:
-            case 5: { // MonteCarlo, Navigator
+            case 4: { // Console
+                break;
+            }
+            case 5:
+            case 6: { // MonteCarlo, Navigator
                 break;
             }
         }
@@ -585,6 +601,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
             executionTreeViewer.onAnalysisChanged();
         sourceC.onAnalysisChanged();
         sourceLL.onAnalysisChanged();
+        console.onAnalysisChanged();
 
         if (monteCarloViewer != null || navigatorViewer != null) {
             final StrategyAnalysis strategyAnalysis = executionTree.getStrategyAnalysisSelectingNode();
@@ -741,6 +758,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         executionTreeViewer.clear();
         sourceC.clear();
         sourceLL.clear();
+        console.clear();
         if (monteCarloViewer != null)
             monteCarloViewer.clear();
         if (navigatorViewer != null)
@@ -779,6 +797,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         menuView.add(explorer.menuViewTreeTab);
         menuView.add(explorer.menuViewCTab);
         menuView.add(explorer.menuViewLLTab);
+        menuView.add(explorer.menuViewConsoleTab);
         if (explorer.monteCarloViewer != null)
             menuView.add(explorer.menuViewMonteCarloTab);
         if (explorer.navigatorViewer != null)
