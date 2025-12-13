@@ -43,9 +43,7 @@ public class Console extends JPanel {
                 }
 
                 print(">>> " + command);
-                String result = handleCommand(command);
-                if (!result.isEmpty())
-                    print(result);
+                handleCommand(command);
             }
         });
         InputMap im = inputField.getInputMap(JComponent.WHEN_FOCUSED);
@@ -105,20 +103,24 @@ public class Console extends JPanel {
             inputField.setText("");
     }
 
-    private String handleCommand(String cmd) {
+    private void handleCommand(String cmd) {
         switch (cmd.trim()) {
-            case "":
-                return "";
+            case "": break;
+            case "leaves":
+                for (Node leaf : executionTree.getLeaves())
+                    print(Long.toString(leaf.guid));
+                break;
             case "clear":
                 outputArea.setText("");
-                return "";
+                break;
             case "clear history":
                 history.clear();
                 historyCursor = 0;
-                outputArea.setText("History cleared.");
-                return "";
+                print("History cleared.");
+                break;
             default:
-                return "Unknown command: " + cmd;
+                print("Unknown command.");
+                break;
         }
     }
 }
