@@ -272,6 +272,26 @@ public class ExecutionTree {
         return leftCovered != rightCovered ?  (leftCovered ? 1 : -1) * id : 0;
     }
 
+    public Vector<Node> getLeaves(int analysisIndex_) {
+        return getLeavesRec(this.analysisIndex, getRootNode(), new Vector<>());
+    }
+
+    public Vector<Node> getLeaves() {
+        return getLeaves(this.analysisIndex);
+    }
+
+    private Vector<Node> getLeavesRec(int analysisIndex_, Node node, Vector<Node> output) {
+        boolean isLeaf = true;
+        for (Node child : node.getChildren())
+            if (child != null && child.getDiscoveryIndex() <= analyses[analysisIndex_].getViewProps().maxDiscoveryIndex) {
+                getLeavesRec(analysisIndex_, child, output);
+                isLeaf = false;
+            }
+        if (isLeaf)
+            output.add(node);
+        return output;
+    }
+
     public ExecutionTree() {
         clear();
     }
