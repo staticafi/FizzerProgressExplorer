@@ -72,15 +72,16 @@ public class ExecutionTree {
                     );
                 JSONObject executionResults = traceInfo.getJSONObject("execution_results");
     
+                analyses[analysisIndex].readTraceInfo(traceInfo);
+
                 executeTrace(
-                    executionResults.getJSONArray("trace"),
+                    analyses[analysisIndex].getInfo().getInputs().lastElement(),
+                    analyses[analysisIndex].getInfo().getTraces().lastElement(),
                     analysisIndex,
                     constructionIndex,
                     executionResults.getString("termination"),
                     traceEntry.getValue()
                     );
-
-                analyses[analysisIndex].readTraceInfo(traceInfo);
 
                 ++constructionIndex;
             }
@@ -124,48 +125,39 @@ public class ExecutionTree {
     }
 
     public void executeTrace(
-            JSONArray trace,
+            InputData inputData,
+            Trace trace,
             int analysisIndex,
             int constructionIndex,
             String termination,
             String path
             ) {
 
-        if (trace.length() == 0)
+        if (trace.getRecords().isEmpty())
             return;
 
-        final int NUM_TRACE_RECORD_ITEMS = 5;
-        final int TRACE_SHIFT_ID = 0;
-        final int TRACE_SHIFT_DIRECTION = 1;
-        final int TRACE_SHIFT_INPUT_BYTES = 2;
-        final int TRACE_SHIFT_VALUE = 3;
-        final int TRACE_NODE_GUID = 4;
-
         if (rootNode == null) {
-            int id = trace.getInt(TRACE_SHIFT_ID);
-            int numInputBytes = trace.getInt(TRACE_SHIFT_INPUT_BYTES);
-            double value = trace.getDouble(TRACE_SHIFT_VALUE);
-            long nodeGuid = trace.getLong(TRACE_NODE_GUID);
             rootNode = new Node(
-                nodeGuid,
+                trace.getRecords().firstElement().getNodeGuid(),
                 null,
-                id,
-                value,
+                trace.getRecords().firstElement().getId(),
+                trace.getRecords().firstElement().getValue(),
                 0,
-                numInputBytes,
+                trace.getRecords().firstElement().getNumInputBytes(),
                 analysisIndex,
-                constructionIndex
+                constructionIndex,
+                inputData,
+                trace
                 );
-            fromGuidsToNodes.put(nodeGuid, rootNode);
+            fromGuidsToNodes.put(trace.getRecords().firstElement().getNodeGuid(), rootNode);
         }
 
         Node node = rootNode;
-        int traceIndex = 0;
-        for (int i = 0; true; i += NUM_TRACE_RECORD_ITEMS, ++traceIndex) {
-            int id = trace.getInt(i + TRACE_SHIFT_ID);
-            int direction = trace.getInt(i + TRACE_SHIFT_DIRECTION) == 0 ? 0 : 1;
-            double value = trace.getDouble(i + TRACE_SHIFT_VALUE);
-            long nodeGuid = trace.getLong(i + TRACE_NODE_GUID);
+        for (int traceIndex = 0; true; ++traceIndex) {
+            int id = trace.getRecords().get(traceIndex).getId();
+            int direction = trace.getRecords().get(traceIndex).getDirection() < 0 ? 0 : 1;
+            double value = trace.getRecords().get(traceIndex).getValue();
+            long nodeGuid = trace.getRecords().get(traceIndex).getNodeGuid();
 
             if (!node.getLocationId().equals(id) || node.guid != nodeGuid)
                 throw new RuntimeException("Inconsistency in trace: " + path);
@@ -179,8 +171,8 @@ public class ExecutionTree {
                     analyses[analysisIndex].getCoveredLocationIds().add(locationId);
             coveredIds[direction].putIfAbsent(id, analysisIndex);
 
-            int j = i + NUM_TRACE_RECORD_ITEMS;
-            if (j >= trace.length()) {
+            int j = traceIndex + 1;
+            if (j >= trace.getRecords().size()) {
                 node.updateChildLabel(
                     analysisIndex, direction,
                     termination.equals("NORMAL") ? Node.ChildLabel.END_NORMAL : Node.ChildLabel.END_EXCEPTIONAL
@@ -191,10 +183,10 @@ public class ExecutionTree {
             node.setChildLabel(analysisIndex, direction, Node.ChildLabel.VISITED);
             Node[] children = node.getChildren();
             if (children[direction] == null) {
-                int sId = trace.getInt(j + TRACE_SHIFT_ID);
-                int sNumInputBytes = trace.getInt(j + TRACE_SHIFT_INPUT_BYTES);
-                double sValue = trace.getDouble(j + TRACE_SHIFT_VALUE);
-                long sNodeGuid = trace.getLong(j + TRACE_NODE_GUID);
+                int sId = trace.getRecords().get(j).getId();
+                int sNumInputBytes = trace.getRecords().get(j).getDirection() < 0 ? 0 : 1;
+                double sValue = trace.getRecords().get(j).getValue();
+                long sNodeGuid = trace.getRecords().get(j).getNodeGuid();
                 children[direction] = new Node(
                     sNodeGuid,
                     node,
@@ -203,7 +195,9 @@ public class ExecutionTree {
                     traceIndex + 1,
                     sNumInputBytes,
                     analysisIndex,
-                    constructionIndex
+                    constructionIndex,
+                    inputData,
+                    trace
                     );
                 node.setChildLabel(analysisIndex, direction, Node.ChildLabel.VISITED);
                 fromGuidsToNodes.put(sNodeGuid, children[direction]);

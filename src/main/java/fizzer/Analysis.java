@@ -83,62 +83,72 @@ public class Analysis {
         }
 
         public abstract void readTraceInfo(JSONObject traceInfo) throws Exception;
+        public abstract Vector<InputData> getInputs();
+        public abstract Vector<Trace> getTraces();
     }
 
-    public class InputsListInfo extends Info {
+    public class ExecutionInfo extends Info {
         private Vector<InputData> inputs;
+        private Vector<Trace> traces;
 
-        public InputsListInfo() {
+        public ExecutionInfo() {
             super(StartAttribute.NONE, StopAttribute.REGULAR);
             inputs = new Vector<>();
+            traces = new Vector<>();
         }
 
-        public InputsListInfo(JSONObject infoJson) {
+        public ExecutionInfo(JSONObject infoJson) {
             super(infoJson);
             inputs = new Vector<>();
+            traces = new Vector<>();
         }
 
         public Vector<InputData> getInputs() {
             return inputs;
         }
 
+        public Vector<Trace> getTraces() {
+            return traces;
+        }
+
         @Override
         public void readTraceInfo(JSONObject executionResults) {
             inputs.add(new InputData(executionResults));
+            traces.add(new Trace(executionResults.getJSONObject("execution_results").getJSONArray("trace")));
         }
     }
 
-    public class BitshareInfo extends InputsListInfo {
+    public class BitshareInfo extends ExecutionInfo {
         public BitshareInfo(JSONObject infoJson) {
             super(infoJson);
         }
     }
 
-    public class LocalSearchInfo extends InputsListInfo {
+    public class LocalSearchInfo extends ExecutionInfo {
         public LocalSearchInfo(JSONObject infoJson) {
             super(infoJson);
         }
     }
 
-    public class BitflipInfo extends InputsListInfo {
+    public class BitflipInfo extends ExecutionInfo {
         public BitflipInfo(JSONObject infoJson) {
             super(infoJson);
         }
     }
 
-    public class TaintRequestInfo extends InputsListInfo {
+    public class TaintRequestInfo extends ExecutionInfo {
         public TaintRequestInfo(JSONObject infoJson) {
             super(infoJson);
         }
     }
 
-    public class TaintResponseInfo extends InputsListInfo {
+    public class TaintResponseInfo extends ExecutionInfo {
         public TaintResponseInfo(JSONObject infoJson) {
             super(infoJson);
         }
     }
 
-    public class StartupInfo extends InputsListInfo {
+    public class StartupInfo extends ExecutionInfo {
     }
 
     public class ViewProps {

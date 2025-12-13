@@ -13,7 +13,7 @@ public class AnalysisPlainInputsViewer extends JPanel {
 
         public void load() {
             clear();
-            Vector<InputData> inputs = ((Analysis.InputsListInfo)analysis.getInfo()).getInputs();
+            Vector<InputData> inputs = ((Analysis.ExecutionInfo)analysis.getInfo()).getInputs();
 
             int lineColumnSize = 1;
             for (int n = analysis.getNumTraces(); n > 10; n /= 10)

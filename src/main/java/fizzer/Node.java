@@ -56,6 +56,9 @@ public class Node {
 
     private int closedIndex;
 
+    private InputData inputData;
+    private Trace trace;
+
     private ViewProps viewProps;
 
     @SuppressWarnings("unchecked")
@@ -67,7 +70,9 @@ public class Node {
             int traceIndex_,
             int numInputBytes_,
             int analysisIndex_,
-            int discoveryIndex_
+            int discoveryIndex_,
+            InputData inputData_,
+            Trace trace_
             ) {
         guid = guid_;
 
@@ -101,6 +106,9 @@ public class Node {
 
         closedIndex = Integer.MAX_VALUE;
 
+        inputData = inputData_;
+        trace = trace_;
+
         viewProps = new ViewProps();
     }
 
@@ -126,6 +134,14 @@ public class Node {
 
     public Node getParent() {
         return this.parent;
+    }
+
+    public InputData getInputData() {
+        return this.inputData;
+    }
+
+    public Trace getTrace() {
+        return this.trace;
     }
 
     public void setBitShareIndex(int index) {
