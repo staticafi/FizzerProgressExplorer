@@ -253,7 +253,7 @@ public class Analysis {
         info.readTraceInfo(traceInfo);
     }
 
-    public static void setSensitiveBits(int analysisIndex, Node leafNode, JSONArray bitsAlongPath, String filePath) {
+    private static void setSensitiveBits(int analysisIndex, Node leafNode, JSONArray bitsAlongPath, String filePath) {
         Node node = leafNode;
         int i = bitsAlongPath.length() - 1;
         for ( ; node != null && i >= 0 ; --i, node = node.getParent()) {
@@ -262,6 +262,10 @@ public class Analysis {
             for (int j = 0; j != bitsArray.length(); ++j)
                 sensitiveBits.add(bitsArray.getInt(j));
             node.setSensitiveBits(analysisIndex, sensitiveBits);
+            HashSet<Integer> sensitiveVars = new HashSet<>();
+            for (int b : sensitiveBits)
+                sensitiveVars.add(node.getInputData().fromBitToVarIndex(b));
+            node.setSensitiveVars(analysisIndex, sensitiveVars);
         }
         if (node != null || i != -1)
             throw new RuntimeException("Cannot find analysis node in the empty tree. File: " + filePath);

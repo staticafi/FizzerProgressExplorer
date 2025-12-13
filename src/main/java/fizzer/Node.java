@@ -48,6 +48,7 @@ public class Node {
     private TreeMap<Integer,Integer> hitCount;
 
     private TreeMap<Integer,HashSet<Integer>> sensitiveBits;
+    private TreeMap<Integer,HashSet<Integer>> sensitiveVars;
 
     private int bitshareIndex;
     private int localSearchIndex;
@@ -98,6 +99,8 @@ public class Node {
 
         sensitiveBits = new TreeMap<Integer,HashSet<Integer>>();
         sensitiveBits.put(analysisIndex_, new HashSet<>());
+        sensitiveVars = new TreeMap<Integer,HashSet<Integer>>();
+        sensitiveVars.put(analysisIndex_, new HashSet<>());
 
         bitshareIndex = Integer.MAX_VALUE;
         localSearchIndex = Integer.MAX_VALUE;
@@ -204,6 +207,14 @@ public class Node {
 
     public void setSensitiveBits(int analysisIndex, HashSet<Integer> bitIndices) {
         sensitiveBits.put(analysisIndex, bitIndices);
+    }
+
+    public HashSet<Integer> getSensitiveVars(int analysisIndex) {
+        return sensitiveVars.floorEntry(analysisIndex).getValue();
+    }
+
+    public void setSensitiveVars(int analysisIndex, HashSet<Integer> varIndices) {
+        sensitiveVars.put(analysisIndex, varIndices);
     }
 
     public boolean bitshareApplied(int analysisIndex) {

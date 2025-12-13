@@ -437,6 +437,8 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         textArea.append("Input bytes: " + Integer.toUnsignedString(node.getNumInputBytes()) + "\n");
         textArea.append("Sensitive Bits count: " + Integer.toUnsignedString(node.getSensitiveBits(executionTree.getAnalysisIndex()).size()) + "\n");
         textArea.append("Sensitive Bits: " + node.getSensitiveBits(executionTree.getAnalysisIndex()) + "\n");
+        textArea.append("Sensitive Vars count: " + Integer.toUnsignedString(node.getSensitiveVars(executionTree.getAnalysisIndex()).size()) + "\n");
+        textArea.append("Sensitive Vars: " + node.getSensitiveVars(executionTree.getAnalysisIndex()) + "\n");
         textArea.append("Sensitivity applied: " + Boolean.toString(node.sensitivityApplied(executionTree.getAnalysisIndex())) + "\n");
         textArea.append("Bitshare applied: " + Boolean.toString(node.bitshareApplied(executionTree.getAnalysisIndex())) + "\n");
         textArea.append("Local search applied: " + Boolean.toString(node.localSearchApplied(executionTree.getAnalysisIndex())) + "\n");
@@ -444,7 +446,7 @@ public class ProgressExplorer implements MouseListener, ActionListener, ListSele
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
         scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-        scrollPane.setPreferredSize(new Dimension(250,250));
+        scrollPane.setPreferredSize(new Dimension(300,270));
         JOptionPane.showMessageDialog(rootPanel, scrollPane, "Node Information", JOptionPane.PLAIN_MESSAGE);
     }
 

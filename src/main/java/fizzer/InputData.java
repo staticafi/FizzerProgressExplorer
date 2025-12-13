@@ -1,6 +1,6 @@
 package fizzer;
 
-import java.util.Vector;
+import java.util.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -9,6 +9,7 @@ public class InputData {
     private Vector<Number> values;
     private Vector<DataType> types;
     private Vector<Byte> metadata;
+    private Map<Integer, Integer> bitToVarIndices;
     private int numBytes;
     private int traceLength;
     private int traceEndNodeGuid;
@@ -29,6 +30,9 @@ public class InputData {
             throw new RuntimeException("In trace JSON: execution_results/types: odd number of characters in the string.");
         types = new Vector<>();
 
+        bitToVarIndices = new HashMap<>();
+
+        int numBits = 0;
         int i = 0;
         for (int j = 0; j < typesString.length(); j += 2) {
             DataType dataType = DataType.fromOrdinal(Integer.parseInt(typesString.substring(j, j+2), 16));
@@ -41,6 +45,10 @@ public class InputData {
                 int idx = k - (u - i) - 2;
                 stringBuilder.append(bytesString.charAt(idx));
                 stringBuilder.append(bytesString.charAt(idx + 1));
+            }
+            for (int b = 0; b < 8 * dataType.getNumBytes(); ++b) {
+                bitToVarIndices.put(numBits, values.size());
+                ++numBits;
             }
             values.add(dataType.parseNumber(stringBuilder.toString()));
             i = k;
@@ -103,5 +111,9 @@ public class InputData {
 
     public String getProgressMessage() {
         return progressMessage;
+    }
+
+    public int fromBitToVarIndex(int bitIndex) {
+        return bitToVarIndices.get(bitIndex);
     }
 }
