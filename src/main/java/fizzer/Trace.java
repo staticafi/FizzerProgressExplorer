@@ -60,7 +60,7 @@ public class Trace {
             records.add(new Record(
                 trace.getInt(i + TRACE_SHIFT_ID),
                 trace.getInt(i + TRACE_SHIFT_DIRECTION) == 0 ? -1 : 1,
-                trace.getInt(TRACE_SHIFT_INPUT_BYTES),
+                trace.getInt(i + TRACE_SHIFT_INPUT_BYTES),
                 trace.getDouble(i + TRACE_SHIFT_VALUE),
                 trace.getLong(i + TRACE_NODE_GUID)
                 ));

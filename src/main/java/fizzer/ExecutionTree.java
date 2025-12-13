@@ -184,7 +184,7 @@ public class ExecutionTree {
             Node[] children = node.getChildren();
             if (children[direction] == null) {
                 int sId = trace.getRecords().get(j).getId();
-                int sNumInputBytes = trace.getRecords().get(j).getDirection() < 0 ? 0 : 1;
+                int sNumInputBytes = trace.getRecords().get(j).getNumInputBytes();
                 double sValue = trace.getRecords().get(j).getValue();
                 long sNodeGuid = trace.getRecords().get(j).getNodeGuid();
                 children[direction] = new Node(
