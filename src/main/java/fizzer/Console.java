@@ -1,6 +1,9 @@
 package fizzer;
 
 import javax.swing.*;
+
+import fizzer.nav.GenPaths;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -117,6 +120,9 @@ public class Console extends JPanel {
                 history.clear();
                 historyCursor = 0;
                 print("History cleared.");
+                break;
+            case "paths":
+                print(new GenPaths(executionTree).run());
                 break;
             default:
                 print("Unknown command.");
