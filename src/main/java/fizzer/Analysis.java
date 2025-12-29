@@ -249,6 +249,10 @@ public class Analysis {
         return this.viewProps;
     }
 
+    public int getMaxDiscoveryIndex() {
+        return getViewProps().maxDiscoveryIndex;
+    }
+
     public void readTraceInfo(JSONObject traceInfo) throws Exception {
         info.readTraceInfo(traceInfo);
     }
