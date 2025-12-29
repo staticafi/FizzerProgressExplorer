@@ -215,6 +215,10 @@ public class ExecutionTree {
         return this.analyses;
     }
 
+    public Node getNodeFromGuid(long guid_) {
+        return fromGuidsToNodes.get(guid_);
+    }
+
     public StrategyAnalysis[] getStrategyAnalyses() {
         return this.strategyAnalyses;
     }
