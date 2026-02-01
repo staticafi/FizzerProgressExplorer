@@ -74,7 +74,7 @@ public class ExecutionTree {
     
                 analyses[analysisIndex].readTraceInfo(traceInfo);
 
-                executeTrace(
+                Node node = executeTrace(
                     analyses[analysisIndex].getInfo().getInputs().lastElement(),
                     analyses[analysisIndex].getInfo().getTraces().lastElement(),
                     analysisIndex,
@@ -82,6 +82,9 @@ public class ExecutionTree {
                     executionResults.getString("termination"),
                     traceEntry.getValue()
                     );
+
+                if (traceInfo.getJSONObject("execution_results").has("sensitive_bits"))
+                    Analysis.setSensitiveBits(constructionIndex, node, traceInfo.getJSONObject("execution_results").getJSONArray("sensitive_bits"), traceEntry.getValue());
 
                 ++constructionIndex;
             }
@@ -124,7 +127,7 @@ public class ExecutionTree {
         loaded = true;
     }
 
-    public void executeTrace(
+    public Node executeTrace(
             InputData inputData,
             Trace trace,
             int analysisIndex,
@@ -134,7 +137,7 @@ public class ExecutionTree {
             ) {
 
         if (trace.getRecords().isEmpty())
-            return;
+            return null;
 
         if (rootNode == null) {
             rootNode = new Node(
@@ -177,7 +180,7 @@ public class ExecutionTree {
                     analysisIndex, direction,
                     termination.equals("NORMAL") ? Node.ChildLabel.END_NORMAL : Node.ChildLabel.END_EXCEPTIONAL
                     );
-                return;
+                break;
             }
 
             node.setChildLabel(analysisIndex, direction, Node.ChildLabel.VISITED);
@@ -205,6 +208,7 @@ public class ExecutionTree {
 
             node = children[direction];
         }
+        return node;
     }
 
     public Node getRootNode() {

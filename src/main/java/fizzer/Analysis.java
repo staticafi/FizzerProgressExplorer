@@ -257,7 +257,7 @@ public class Analysis {
         info.readTraceInfo(traceInfo);
     }
 
-    private static void setSensitiveBits(int analysisIndex, Node leafNode, JSONArray bitsAlongPath, String filePath) {
+    public static void setSensitiveBits(int analysisIndex, Node leafNode, JSONArray bitsAlongPath, String filePath) {
         Node node = leafNode;
         int i = bitsAlongPath.length() - 1;
         for ( ; node != null && i >= 0 ; --i, node = node.getParent()) {
